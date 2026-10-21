@@ -1,0 +1,9 @@
+{
+  "name": "origin-plot",
+  "description": "OriginLab Origin 그래프 생성·스타일링·export 전담 상담·실행 에이전트. Origin(win32com COM) 그래프를 논문 형식으로 그리거나 기존 .opju 스타일을 재현하는 요청, LabTalk/축/범례/심볼 스타일 질문을 처리한다. \"오리진으로 그래프 그려줘\", \"이 논문 그래프 형식 따라해\", \"opju 스타일 재현\", \"LabTalk으로 축/범례 설정\" 요청 시 사용. 데이터 계산·해석·물리 판단은 관할 외.",
+  "author": {
+    "name": "ohh000410"
+  },
+  "repository": "https://github.com/ohh000410/subagents",
+  "license": "MIT"
+}

@@ -1,0 +1,9 @@
+{
+  "name": "pptx-figure",
+  "description": "PowerPoint 네이티브 도형으로 그림을 만드는 상담·실행 에이전트. python-pptx 로 개념도·모식도·단면도를 그리거나 논문 figure 의 **요소 하나**를 도형으로 재현하고, 편집 가능한 .pptx 와 원본 대조 결과를 반환한다. 여러 요소를 한 그림으로 합치는 것은 호출자(메인 세션)가 한다. \"PPT 도형으로 그려줘\", \"이 논문 그림 재현해줘\", \"개념도 파워포인트로\", \"figure 따라 그려줘\", 불리언 병합·3D 돌출·투명도·그라디언트 등 PPT 도형 기능 질문에 사용한다. 데이터 플롯(→ origin-plot)·3D 모델링·물리 해석은 관할 외.",
+  "author": {
+    "name": "ohh000410"
+  },
+  "repository": "https://github.com/ohh000410/subagents",
+  "license": "MIT"
+}

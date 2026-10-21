@@ -1,0 +1,114 @@
+<div align="center">
+
+# Subagents
+
+**연구 전용 Claude Code 서브에이전트**
+
+![Claude Code 플러그인](https://img.shields.io/badge/Claude%20Code-%ED%94%8C%EB%9F%AC%EA%B7%B8%EC%9D%B8-D97757) ![에이전트 9개](https://img.shields.io/badge/%EC%97%90%EC%9D%B4%EC%A0%84%ED%8A%B8-9%EA%B0%9C-2F80ED) ![플랫폼 Windows](https://img.shields.io/badge/%ED%94%8C%EB%9E%AB%ED%8F%BC-Windows-0078D6) ![라이선스 MIT](https://img.shields.io/badge/%EB%9D%BC%EC%9D%B4%EC%84%A0%EC%8A%A4-MIT-3DA639)
+
+논문 그래프·CAD 모델링·광학 시뮬레이션처럼 Windows 데스크톱 앱을 다루는 일을 맡기면,<br>
+에이전트가 앱을 직접 다루고 결과를 스스로 검증한 뒤 보고합니다.
+
+</div>
+
+> 💡 AI 에이전트에게 설치를 맡기려면: "github.com/ohh000410/subagents 의 AGENTS.md 를 읽고 필요한 에이전트를 설치해줘"
+
+<br>
+
+## 이렇게 일합니다
+
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"lineColor": "#4F7DF3"}}}%%
+flowchart LR
+    U(["사용자<br/>Inventor 로<br/>이 부품 만들어줘"]) --> C("Claude Code<br/>메인 대화")
+    C --> A("서브에이전트<br/>inventor")
+    A --> P("앱<br/>Inventor")
+    P --> V{"되읽어<br/>검증"}
+    V --> A
+    V --> R("보고<br/>판정 + 파일 경로")
+    R --> C
+    A -.-> M[("에이전트 메모리<br/>배운 것 기록")]
+    classDef user fill:#E8F1FF,stroke:#2F80ED,color:#0B2E59
+    classDef claude fill:#D97757,stroke:#B85C3E,color:#FFFFFF,rx:14px,ry:14px
+    classDef agent fill:#7C5CFF,stroke:#5B3FE0,color:#FFFFFF,rx:14px,ry:14px
+    classDef app fill:#0EA5A4,stroke:#0B7F7E,color:#FFFFFF,rx:14px,ry:14px
+    classDef check fill:#FFC145,stroke:#D99A00,color:#3A2A00,font-size:14px,line-height:1.1
+    classDef report fill:#2DA44E,stroke:#1F7A38,color:#FFFFFF,rx:14px,ry:14px
+    classDef memory fill:#EEE7FF,stroke:#7C5CFF,color:#2E1A73
+    class U user
+    class C claude
+    class A agent
+    class P app
+    class V check
+    class R report
+    class M memory
+    linkStyle default stroke:#4F7DF3,stroke-width:2.5px
+    linkStyle 4 stroke:#E5534B,stroke-width:3px
+    linkStyle 5 stroke:#2DA44E,stroke-width:3px
+    linkStyle 7 stroke:#8E6CF5,stroke-width:2px
+```
+
+검증을 통과하면(초록) 판정과 파일 경로를 보고하고, 실패하면(빨강) 원인을 고쳐 다시 합니다. 쓰면서 배운 것은 에이전트 메모리에 남깁니다(보라 점선).
+
+<br>
+
+## 에이전트
+
+### 📄 문서·그림
+
+| 에이전트 | 하는 일 | 필요한 앱 |
+|---|---|---|
+| [doc-scan](plugins/doc-scan/README.md) | 문서 사진을 스캔본·PDF 로 만듭니다 | 없음 |
+| [plot-digitizer](plugins/plot-digitizer/README.md) | 그래프 이미지에서 수치를 뽑습니다 | 웹 브라우저 |
+| [pptx-figure](plugins/pptx-figure/README.md) | PowerPoint 도형으로 그림을 그립니다 | PowerPoint |
+| [origin-plot](plugins/origin-plot/README.md) | 논문 형식 그래프를 그립니다 | Origin 2019 |
+
+### 🛠️ CAD·광학
+
+| 에이전트 | 하는 일 | 필요한 앱 |
+|---|---|---|
+| [inventor](plugins/inventor/README.md) | 부품 3D 모델과 2D 도면을 만듭니다 | Inventor 2027 |
+| [spaceclaim](plugins/spaceclaim/README.md) | SPEOS·ANSYS 용 형상을 만듭니다 | SpaceClaim v261 |
+| [speos](plugins/speos/README.md) | 광학 시뮬레이션을 돌리고 정리합니다 | SPEOS v261 |
+
+### 🔬 시뮬레이션·계산
+
+| 에이전트 | 하는 일 | 필요한 앱 |
+|---|---|---|
+| [lumerical](plugins/lumerical/README.md) | FDTD·RCWA 시뮬레이션을 돌립니다 | Lumerical v242 |
+| [research-compute](plugins/research-compute/README.md) | RCWA·산란·열전달을 계산합니다 | 없음 |
+
+<br>
+
+## 빠른 시작
+
+Claude Code 안에서:
+
+```
+/plugin marketplace add ohh000410/subagents
+/plugin install inventor@ohh000410-subagents
+```
+
+`inventor` 자리에 원하는 에이전트 이름을 넣습니다. 설치한 뒤 새 대화에서 "Inventor 로 이 부품 만들어줘"처럼 말하면 Claude 가 그 에이전트에게 맡깁니다.
+
+<br>
+
+## 쓰는 방식
+
+- **상담과 실행:** 실행하라고 하지 않으면 상담만 합니다. 앱을 띄우거나 파일을 만들지 않고 진단과 코드만 줍니다.
+- **검증:** 실행하면 결과를 되읽어 확인하고, 판정(PASS·WARN·FAIL)과 파일 경로를 보고합니다.
+- **메모리:** 쓰면서 알게 된 것(이 PC 의 환경 값, 오류와 해결법, 걸린 시간)을 Claude 에이전트 메모리(`~/.claude/agent-memory/<플러그인>-<에이전트>/`)에 스스로 기록합니다. 처음에는 비어 있습니다.
+
+<br>
+
+## 필요한 것
+
+- Windows 와 Claude Code
+- 쓰려는 에이전트가 다루는 앱(위 표의 "필요한 앱")
+- Python. 에이전트마다 필요한 패키지와 앱 설치 경로는 각 에이전트 README 의 "필요한 것"에 있고, 경로가 다르면 처음 쓸 때 에이전트가 묻습니다.
+
+<br>
+
+## 라이선스
+
+이 저장소의 파일(에이전트 지시문·references·도구)은 MIT 라이선스입니다(`LICENSE`). 에이전트가 다루는 앱(Inventor, Ansys SpaceClaim·SPEOS·Lumerical, Origin, PowerPoint)과 도구가 쓰는 Python 패키지는 들어 있지 않으며, 각자의 라이선스로 설치하고 그 약관을 따라야 합니다.

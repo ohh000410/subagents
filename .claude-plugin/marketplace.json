@@ -1,0 +1,53 @@
+{
+  "name": "ohh000410-subagents",
+  "owner": {
+    "name": "ohh000410"
+  },
+  "plugins": [
+    {
+      "name": "doc-scan",
+      "source": "./plugins/doc-scan",
+      "description": "문서·종이를 휴대폰으로 찍은 사진을 스캔본처럼 후처리하는 에이전트. 종이 모서리를 찾아 반듯하게 펴고(원근 보정), 그림자·조명 얼룩을 지우고, 컬러·흑백 스캔 파일과 PDF 를 만든다. \"이 사진 스캔본으로 만들어줘\", \"문서 사진 펴줘\", \"스캔한 것처럼 해줘\", \"사진 여러 장 PDF 로 묶어줘\" 요청 시 사용. 글자 인식(OCR)·요약은 하지 않는다."
+    },
+    {
+      "name": "inventor",
+      "source": "./plugins/inventor",
+      "description": "Inventor 2027 COM 에이전트. 기계 부품·조립품을 3D 모델(.ipt/.iam)로 만들거나 STEP/IPT/IAM을 2D 도면(.idw/.pdf)으로 만들 때, 또는 COM API·모델링·도면 오류를 진단할 때 사용. 상담 모드는 진단(코드·근거만, memory write 금지), 실행 모드는 .ipt/.iam 또는 .idw/.pdf 생성→체적 되읽기· 충돌검사·시각검증까지 수행 후 검증된 함정만 기록. SPEOS·ANSYS용 형상과 광학 곡면은 spaceclaim 담당."
+    },
+    {
+      "name": "lumerical",
+      "source": "./plugins/lumerical",
+      "description": "Lumerical 상담·실행 에이전트 (FDTD·RCWA·STACK). 설정·수렴·mesh·PML·source/monitor·lumapi 질문은 전문가로 진단하고, 실행 요청은 lumapi 시뮬 실행→결과 추출→xlsx 저장까지만 수행. Lumerical 라이선스로 도는 solver는 전부 관할 — 순수 python RCWA(meent/grcwa/torcwa)는 research-compute 담당. 상담 모드는 시뮬 실행·memory write 금지(코드·진단만), 실행 모드만 시뮬 수행 후 검증된 실측/API 함정 기록."
+    },
+    {
+      "name": "origin-plot",
+      "source": "./plugins/origin-plot",
+      "description": "OriginLab Origin 그래프 생성·스타일링·export 전담 상담·실행 에이전트. Origin(win32com COM) 그래프를 논문 형식으로 그리거나 기존 .opju 스타일을 재현하는 요청, LabTalk/축/범례/심볼 스타일 질문을 처리한다. \"오리진으로 그래프 그려줘\", \"이 논문 그래프 형식 따라해\", \"opju 스타일 재현\", \"LabTalk으로 축/범례 설정\" 요청 시 사용. 데이터 계산·해석·물리 판단은 관할 외."
+    },
+    {
+      "name": "plot-digitizer",
+      "source": "./plugins/plot-digitizer",
+      "description": "논문·문헌 figure(polar half-circle, cartesian line/scatter)의 곡선을 정량 데이터(angle/x vs value)로 추출하는 에이전트. cross-validation·선행연구 참고값 추출 등 그래프에서 수치를 읽어내야 할 때 use proactively. 이미지가 없거나 저해상도면 원본 PDF에서 직접 고해상도로 확보하고(벡터/raster 구분), half-circle polar는 축 클릭 없이 자동 캘리브(반원 기하 교차검증)를 시도하며, 필요 시 picker 서버로 사용자 클릭 캘리브를 받는다. 항상 csv + 추출 검증 overlay + 캘리브 체크 overlay png를 반환한다. \"이 그래프 디지타이즈해줘\", \"논문 figure 값 추출\", \"polar plot 곡선 읽어줘\" 요청에 호출."
+    },
+    {
+      "name": "pptx-figure",
+      "source": "./plugins/pptx-figure",
+      "description": "PowerPoint 네이티브 도형으로 그림을 만드는 상담·실행 에이전트. python-pptx 로 개념도·모식도·단면도를 그리거나 논문 figure 의 **요소 하나**를 도형으로 재현하고, 편집 가능한 .pptx 와 원본 대조 결과를 반환한다. 여러 요소를 한 그림으로 합치는 것은 호출자(메인 세션)가 한다. \"PPT 도형으로 그려줘\", \"이 논문 그림 재현해줘\", \"개념도 파워포인트로\", \"figure 따라 그려줘\", 불리언 병합·3D 돌출·투명도·그라디언트 등 PPT 도형 기능 질문에 사용한다. 데이터 플롯(→ origin-plot)·3D 모델링·물리 해석은 관할 외."
+    },
+    {
+      "name": "research-compute",
+      "source": "./plugins/research-compute",
+      "description": "Python 기반 RCWA, TMM/Fresnel, Mie·core-shell 산란, Monte-Carlo 산란, 복사·열전달 계산을 수행하고 수렴·cross-check까지 검증하는 에이전트. FDTD와 Lumerical RCWA·STACK은 관할 밖이다."
+    },
+    {
+      "name": "spaceclaim",
+      "source": "./plugins/spaceclaim",
+      "description": "SpaceClaim 3D geometry(.scdocx/.step) 에이전트. SPEOS·ANSYS로 넘길 형상과 광학 곡면(NURBS 등)을 만들거나 SpaceClaim API·IronPython·geometry 오류를 진단할 때 사용. 상담 모드는 진단(코드·근거만, memory write 금지), 실행 모드는 .scdocx/.step 생성→검증까지 수행 후 검증된 함정만 기록. 일반 기계 부품 모델링과 2D 도면·PDF는 inventor 담당."
+    },
+    {
+      "name": "speos",
+      "source": "./plugins/speos",
+      "description": "ANSYS SPEOS Direct simulation 상담·실행 에이전트. SPEOS sim 실행(sim 돌려줘·mesh sweep· ellipse_flux 추출)이나 NbRays·mesh·sensor·Report/API 오류를 진단할 때 사용. 상담 모드는 진단(코드·근거만, memory write 금지), 실행 모드는 base.scdocx 기반 Compute→Report 파싱→xlsx 저장까지 수행 후 검증된 함정만 기록. Geometry·FDTD·분석은 관할 외."
+    }
+  ]
+}

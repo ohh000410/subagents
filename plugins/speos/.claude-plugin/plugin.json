@@ -1,0 +1,9 @@
+{
+  "name": "speos",
+  "description": "ANSYS SPEOS Direct simulation 상담·실행 에이전트. SPEOS sim 실행(sim 돌려줘·mesh sweep· ellipse_flux 추출)이나 NbRays·mesh·sensor·Report/API 오류를 진단할 때 사용. 상담 모드는 진단(코드·근거만, memory write 금지), 실행 모드는 base.scdocx 기반 Compute→Report 파싱→xlsx 저장까지 수행 후 검증된 함정만 기록. Geometry·FDTD·분석은 관할 외.",
+  "author": {
+    "name": "ohh000410"
+  },
+  "repository": "https://github.com/ohh000410/subagents",
+  "license": "MIT"
+}

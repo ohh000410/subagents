@@ -1,0 +1,20 @@
+# FDTD Resource / 병렬 구성 — 이 워크스테이션
+
+에이전트는 리소스 설정을 생성·변경하지 않는다. `fdtd.run()` 은 사용자 계정 구성(`~/AppData/Roaming/Lumerical/FDTD Solutions.ini` `[jobmanager]`) 을 따른다(워크스테이션 스크립트에 `setresource` 0건).
+
+## Resources 창 (File → Resources)
+"Local Host": processes=6, threads=1, capacity=1, preset=Remote: Microsoft MPI, engine=`fdtd-engine-msmpi.exe`, processor binding on.
+- processes = MPI 도메인 분할 프로세스 수(`fdtd-engine-msmpi` N개)
+- threads = 프로세스당 OpenMP 스레드 (총 = processes × threads)
+- capacity = job manager 큐(`runjobs`/sweep) 동시 job 수. `fdtd.run()` 순차 실행 무관
+- 기본값 = 물리 코어 자동감지(기존 행 5 로 바꿔도 신규 리소스 6 생성). i5-12400F 6코어 → 6. FDTD 권장(프로세스=물리 코어, threads=1, HT 비사용) 일치 → 변경 불필요
+- RCWA 리소스 1 proc × 6 thread — MPI 분할 미지원(`multiProcs=false`)
+
+## FDTD 객체 Advanced options "Parallel engine options" (Resources 와 별개)
+`set process grid`(기본 off) + `nx`·`ny`·`nz`(기본 1·1·1, placeholder, 스레드 아님). 켜면 nx×ny×nz = processes. 기본 off 유지.
+
+## 스크립트 API
+`getresource("FDTD")`(개수) / `getresource("FDTD", i)`(속성 20개) / `getresource·setresource("FDTD", i, "processes")` / `addresource`·`deleteresource`. 속성: active, name, hostname, processes, threads, capacity, job launching preset, mpi executable, mpi extra command line options, mpi no default options, mpi use processor binding when available, mpi bypass on localhost, solver executable, solver extra command line options, solver checkpoint directory, solver no default options, solver create log for all, scheduler command, submission script, GPU Device. design environment 리소스는 script 접근 불가(`Invalid solver`). `solver create log for all`=0 → `*_p0.log` 만 생성.
+
+## GPU
+GPU 불가(v242). 상세 → [fdtd_gpu_support.md](fdtd_gpu_support.md)

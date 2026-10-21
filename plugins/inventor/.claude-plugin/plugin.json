@@ -1,0 +1,9 @@
+{
+  "name": "inventor",
+  "description": "Inventor 2027 COM 에이전트. 기계 부품·조립품을 3D 모델(.ipt/.iam)로 만들거나 STEP/IPT/IAM을 2D 도면(.idw/.pdf)으로 만들 때, 또는 COM API·모델링·도면 오류를 진단할 때 사용. 상담 모드는 진단(코드·근거만, memory write 금지), 실행 모드는 .ipt/.iam 또는 .idw/.pdf 생성→체적 되읽기· 충돌검사·시각검증까지 수행 후 검증된 함정만 기록. SPEOS·ANSYS용 형상과 광학 곡면은 spaceclaim 담당.",
+  "author": {
+    "name": "ohh000410"
+  },
+  "repository": "https://github.com/ohh000410/subagents",
+  "license": "MIT"
+}
