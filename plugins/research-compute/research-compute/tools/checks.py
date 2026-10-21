@@ -1,7 +1,7 @@
 """checks.py -- RCWA 계산 후 판정 줄 (A 결과 경계 / B 요청 대 실사용 / C 수렴 줄 / D 미러 fixture).
 
 각 함수는 한 줄 `PASS|WARN|FAIL <이름>: ...` 을 print 하고 같은 문자열을 반환한다.
-호출 규칙 (AGENT.md 작업 3·5): 계산 뒤 A·B·C 를 실행해 판정 줄을 보고에 붙인다. 새 형상이면 D 도.
+호출 규칙 (agents/research-compute.md 작업 3·5): 계산 뒤 A·B·C 를 실행해 판정 줄을 보고에 붙인다. 새 형상이면 D 도.
 새 판정 논리가 아니라 meent_convergence.md / grcwa_convergence.md 의 기존 규칙을 출력으로 강제하는 것이다.
 """
 import numpy as np

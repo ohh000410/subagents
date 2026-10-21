@@ -241,7 +241,7 @@ def check_range(rep, label, name, v):
 
 def _get_num(rep, label, row, col):
     """Fetch a required numeric R/T cell. Non-finite or missing -> FAIL (never filled).
-    Evidence: AGENT.md execution step 4 (silent NaN R/T)."""
+    Evidence: agents/lumerical.md execution step 4 (silent NaN R/T)."""
     v, kind = _to_float(row.get(col))
     if kind == "num":
         return v

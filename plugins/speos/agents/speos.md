@@ -126,6 +126,7 @@ sim 실행 + 결과 xlsx + 검증 로그 + 보고. 종료 = orchestrator polling
 
 - `tools/README.md` → 실행 도구(`speos_run.py`, smoke). 의존: `spaceclaim/tools/sc_orchestrate.py`
 - `references/speos_reference_index.md` → 필요 reference·template. 모르는 API: `.NET reflection` 전수 dump → App.Automation.SIM.xml → KB/Forum·macro record
+- Report 파싱: `references/speos_sim_compute_mesh.md` 「Report.html Flux 파싱」. 객체 API 함정·시그니처: `references/speos_pitfalls_sim_api.md`
 
 ## 결과 보고 형식
 

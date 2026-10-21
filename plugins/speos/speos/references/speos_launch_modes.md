@@ -31,3 +31,10 @@ SpaceClaim 좌석은 spaceclaim 에이전트와 공유한다. 이름 일괄 종�
 - `AnsysSpeosLauncher` 잔존(`launcher_after > launcher_before`)은 측정만 하고 보고한다. 이름으로 죽이지 않는다.
 - 예: `tools/smoke/run_lambert_smoke.py`(10×10 mm Lambertian 1 W → 50 mm 위 200×200 mm 센서, 해석 ≈0.831 W). 자세한 내용 `tools/README.md`.
 - stdout 은 PIPE 로 받지 않는다(gui_modal_deadlock.md). Report.html 이 보여도 즉시 죽이지 않고 script 자연 종료를 기다린다(close_pid 가 30 s 대기).
+
+## 화면 모드(`/Headless=True` 없이)의 경고 창
+
+- 시뮬레이션 경고가 'Simulation warning' 창으로 뜨고, 닫을 때까지 `sim.Compute()` 가 멈춘다(9분 34초 관측, Report 는 창을 닫은 뒤에 써졌다). headless 는 같은 경고를 조용히 넘긴다.
+- 관측된 원인: `BodyCrossingIrradianceSensor` — SensorIrradiance 는 전역 z=0 평면에 고정이라 z=0 에서 시작하는 body 와 맞닿는다. 원인을 고친다: body 를 z=0 에서 띄운다.
+- 감지: `(Get-Process -Id <pid>).MainWindowTitle` 에 'warning'·'error' 가 보이면 실패로 처리한다. 자동으로 닫고 계속하지 않는다.
+- 경고 이름이 남는 세션 로그: `%APPDATA%/Ansys/v261/Optical Products/SpaceClaim_<pid>.log`. `OPTElementNotFound ... ContainBodyItf` 'critical' 줄은 정상 실행에도 나온다.

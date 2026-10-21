@@ -20,7 +20,7 @@ RCWA 작업의 최상위 라우팅. 라이브러리별 **자체완결**: 수렴/
 - **경사 금속 박막** 작업 → [rcwa_metal.md](rcwa_metal.md) (staircase 연속성 선체크·반사측 TM 한계)
 - **GPU batch/최적화 재시도** 고민 시 → [rcwa_gpu_investigation.md](rcwa_gpu_investigation.md) (전수조사 상세)
 
-## 판정 줄 — `../tools/checks.py` (계산 뒤 필수, 소유: AGENT.md 작업 3·5)
+## 판정 줄 — `../tools/checks.py` (계산 뒤 필수, 소유: agents/research-compute.md 작업 3·5)
 
 | 함수 | 시점 | 내용 |
 |---|---|---|

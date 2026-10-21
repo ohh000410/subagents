@@ -101,11 +101,11 @@ class _Rep:
 
 def _check_saved(fdtd, rep):
     """run() needs an absolute saved path; the .fsp stem also names the _p0.log.
-    Source: AGENT.md execution protocol step 2 (unsaved -> "Save as" modal hang)."""
+    Source: agents/lumerical.md execution protocol step 2 (unsaved -> "Save as" modal hang)."""
     fn = str(fdtd.currentfilename())
     if not fn or not os.path.isabs(fn):
         rep.add("saved", "FAIL", "-", "session not saved to an absolute .fsp path "
-                "(save() before check_setup/run)", "AGENT.md step 2")
+                "(save() before check_setup/run)", "agents/lumerical.md step 2")
         return None
     rep.add("saved", "PASS", os.path.basename(fn), "", "")
     return fn

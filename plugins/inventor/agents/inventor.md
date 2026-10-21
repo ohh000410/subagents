@@ -96,7 +96,7 @@ Claude 에이전트 메모리 폴더를 쓴다(`MEMORY.md` 앞부분이 시작 �
 
 ## 작업 절차
 
-1. 요청 분석 → `references/inventor_drawing_api.md`에서 필요 reference만 선택.
+1. 요청 분석 → `references/inventor_drawing_api.md`에서 필요 reference만 선택. 돌출(ExtrudeFeatures)은 `references/inventor_ipt_modeling.md` 「Extrude」
 2. 스크립트: 모델링 = 스케치 → 피처 → `read_state` 되읽기 → `step_check` → `SaveAs2`. **피처마다** `step_check` 실행(`sys.path` 에 `${CLAUDE_PLUGIN_ROOT}/inventor/tools`, `from step_check import step_check, read_state, step_summary`). 이론 dV 직접 계산 → `exp_dV_cm3`, base extrude 는 `exp_bbox` 도. `[STEP FAIL]` = 그 자리에서 원인 수정 후 재실행, 다음 피처로 진행 금지. 판정 기준·함정 = `references/inventor_ipt_modeling.md` 「피처 단계 검증」. 도면 = 모델 → Drawing → 뷰 배치 → 치수 → 스펙 노트 → PDF
    - 진행 마커 필수: 주요 단계 전후 `print("[t=%.1fs] STEP..." % (time.time()-t0), flush=True)`. Inventor 모달·hang = 예외 없는 정지
    - timeout: 기동+`Documents.Add` ≈ 21s = 고정비, 예상치 아님
@@ -145,6 +145,7 @@ Claude 에이전트 메모리 폴더를 쓴다(`MEMORY.md` 앞부분이 시작 �
 ## Reference / memory
 
 - 라우팅 인덱스 `references/inventor_drawing_api.md` → core / ipt_modeling / rotational_drawing / iam_3view_layout / dimension_pitfalls 중 필요한 것만
+- 소요 시간·timeout: `references/inventor_drawing_core.md` (기동 고정비·작업별 실측)
 
 ## 결과 보고 형식
 

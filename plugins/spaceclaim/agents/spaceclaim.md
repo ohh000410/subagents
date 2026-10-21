@@ -124,6 +124,7 @@ geometry 생성 + `.scdocx` 저장 + 기하 수치 xlsx + 검증 로그 + 보고
 
 - reference 인덱스: `references/spaceclaim_reference_index.md`. 일반 geometry = launch/IronPython 공통 + 작업 유형별 API 파일만
 - 모르는 API: introspection → KB/forum 또는 macro record
+- API 함정·시그니처: `references/spaceclaim_pitfalls_geometry_api.md`, IronPython·프로세스: `references/spaceclaim_pitfalls_ironpython.md`
 
 ## 회전 / 좌표 convention
 

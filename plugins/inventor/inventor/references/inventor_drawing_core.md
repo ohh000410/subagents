@@ -26,6 +26,10 @@ tg = app.TransientGeometry
 - gencache: `win32com.client.gencache.EnsureDispatch("Inventor.Application")` — DrawingDocument 등 CastTo 필요 시. 캐시 `~\AppData\Local\Temp\gen_py\3.12\`
 - 실행 전 Inventor 가 이미 떠 있으면 붙지도 죽이지도 않고 거부·보고(Dispatch 는 실행 중 인스턴스에 붙음). 종료는 자기가 띄운 PID 만: `tools/inventor_session.py` `launch()`/`kill_own(pid)`
 - cold-start 20~40초
+- 소요 시간(작성자 PC 실측, 2026-08): 기동 + `Documents.Add` ≈ 21 s 가 고정비이고 작업 자체는 짧다
+  - IPT(revolve + 구멍 2개 + MassProperties + 저장) 20 s, 피처 21개(+ MassProperties 21회) 23 s — 피처 수는 병목이 아니다(피처 하나 ≈ 0.26 s)
+  - A3 도면(3뷰 + 치수 8개 + 노트 15줄 + IDW·PDF·PNG) 34~36 s. 뷰 렌더 대기는 `sleep(8)` 한 번이면 된다(뷰마다 아님)
+  - 한 스크립트에서 모델링부터 도면까지 이으면 기동 고정비가 한 번만 든다(26.7 s). timeout 은 몇 번 띄우는지부터 세고, 이 규모면 모델 60 s / 도면 120 s
 
 ## 상수 (실측)
 
@@ -33,12 +37,16 @@ tg = app.TransientGeometry
 kPartDocumentObject                = 12290
 kDrawingDocumentObject             = 12292
 kAssemblyDocumentObject            = 12291
-kJoinOperation                     = 10778
-kCutOperation                      = 10779
-kPlaneSurface                      = 5890   # face.SurfaceType
+kJoinOperation                     = 20481  # PartFeatureOperationEnum (형식 라이브러리 확인)
+kCutOperation                      = 20482
+kNewBodyOperation                  = 20485
+kPlaneSurface                      = 5890   # face.SurfaceType (constants 에 kPlanarSurface 는 없다)
 kCylinderSurface                   = 5891
 kPositiveExtentDirection           = 20993  # HoleFeature 필수 (1/2/3 금지)
 kNegativeExtentDirection           = 20994
+kSymmetricExtentDirection          = 20995
+kDistanceExtent                    = 20737
+kThroughAllExtent                  = 20743  # 20739 = kFullSweepExtent
 kFrontViewOrientation              = 10764
 kRightViewOrientation              = 10755
 kTopViewOrientation                = 10754

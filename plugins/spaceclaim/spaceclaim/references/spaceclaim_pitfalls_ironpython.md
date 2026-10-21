@@ -6,6 +6,15 @@
 - `True/False/None` OK. list comprehension / generator OK. `unicode(...)` 사용 가능
 - numpy/scipy/pandas 없음 → orchestrator(CPython) 에서 계산 후 hardcode 또는 file 전달
 
+## 로그가 아예 안 생기는 무언 실패
+
+- 스크립트 최상위(log()·try 밖)에서 `__file__` 를 읽으면 NameError 로 로그 파일을 열기 전에 죽는다(0바이트 파일조차 없다). 스크립트 안의 경로는 orchestrator(CPython)가 정해 넘기고, `__file__` 은 orchestrator 에서만 쓴다
+- `/RunScript` 가 아무 일 없이 성공으로 끝나고 로그가 0바이트 = 컴파일 에러(예: 유니코드가 아닌 str 안의 한글). launch 전에 hosted IronPython 으로 컴파일 체크한다(`sc_orchestrate.run` 1단계)
+
+## 스크립트는 파일 쓰기 도구로 쓴다
+
+Claude Code 의 Bash 도구를 거친 heredoc 은 `\\` 를 `\` 로 줄인다 → `u"C:\Users.."` 의 `\U` 가 이스케이프 컴파일 에러(0바이트 로그, rc=0)가 된다(2회 재현). IronPython 스크립트는 파일 쓰기 도구(Write)로 만들고, ASCII 경로는 `r"..."` 로 쓴다.
+
 ## log = `codecs.open(..., "utf-8")`
 
 ```python
