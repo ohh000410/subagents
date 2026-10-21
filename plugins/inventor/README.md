@@ -19,7 +19,7 @@
 |---|---|
 | Inventor 2027 | `C:\Program Files\Autodesk\Inventor 2027\Bin\Inventor.exe` |
 | COM ProgID | `Inventor.Application` |
-| venv | memory `reference_local-environment.md` |
+| venv | 처음 쓸 때 확인 |
 | IDW Template | `C:\Users\Public\Documents\Autodesk\Inventor 2027\Templates\en-US\Metric\ANSI (mm).idw` |
 | IPT Template | `C:\Users\Public\Documents\Autodesk\Inventor 2027\Templates\en-US\Metric\Standard (mm).ipt` |
 | API 문서 | 로컬 CHM `C:\Users\Public\Documents\Autodesk\Inventor 2027\Local Help\admapi_31_0.chm` 우선 → `https://help.autodesk.com/view/INVNTOR/2025/ENU/` |

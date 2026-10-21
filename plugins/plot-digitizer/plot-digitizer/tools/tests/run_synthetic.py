@@ -9,13 +9,12 @@ matplotlib 로 참값 매핑(ax.transData)을 아는 그림을 메모리에서 �
 임시 폴더에 CSV·calib.json·png 를 써서 읽기/CLI 경로까지 검사한 뒤 지운다.
 기대: 결함 -> 해당 flag, 정상 -> flag 0건. 하나라도 어긋나면 종료코드 1.
 
-유형 (근거 leaf)
-1 눈금 돌출 오염     feedback_tick_protrusion_depth_must_be_measured_not_assumed
-2 가파른 구간 삭제   feedback_steep_edge_breaks_local_median_outlier_rejection
-  (+ 고립 실제 특징 오탐 가드 feedback_isolated_curve_outlier_may_be_real_not_artifact)
-3 로컬/전체 이중 차감 feedback_local_vs_full_image_row_coordinate_bug
-4 끝 눈금-테두리 겹침 feedback_cartesian_last_tick_coincides_with_border (+ 눈금 하나 오검출)
-5 polar 지름 끝 돌출 R 과대 feedback_polar_radial_scale_from_printed_grid_rings
+유형
+1 눈금 돌출 오염
+2 가파른 구간 삭제 (+ 고립 실제 특징 오탐 가드)
+3 로컬/전체 이중 차감
+4 끝 눈금-테두리 겹침 (+ 눈금 하나 오검출)
+5 polar 지름 끝 돌출 R 과대
 6 long CSV (series,x,y) 읽기 — wide 와 같은 flag, 곡선별 x, 행 삭제 gap
 7 calib.json 저장·로드·값<->픽셀 왕복, check_calibration --overlay (cartesian·polar, flag 눈금 빨강)
 """
@@ -114,7 +113,7 @@ def run_extract(x, curves, interp=None, calib=None):
 
 # ---------------------------------------------------------------- 1 눈금 돌출 오염
 def measure_tick_len(img, box, row):
-    """leaf 방식: y 눈금 행 띠에서 테두리 안쪽으로 dark 픽셀이 사라지는 거리."""
+    """y 눈금 행 띠에서 테두리 안쪽으로 dark 픽셀이 사라지는 거리."""
     d = dark(img)
     r = int(round(row))
     c = int(round(box["left"])) + 1
@@ -151,7 +150,7 @@ def resample(xv, yv, grid, half):
 
 
 def local_median_reject(x, y, win=0.15, thr=0.05):
-    """leaf 의 필터 그대로: 원시 열 산점에서 +-win 안 이웃(자기 제외) 중앙값과 thr 넘게 다르면 제거."""
+    """실제 쓰던 필터 그대로: 원시 열 산점에서 +-win 안 이웃(자기 제외) 중앙값과 thr 넘게 다르면 제거."""
     keep = np.ones(len(y), bool)
     for i in range(len(y)):
         m = np.abs(x - x[i]) <= win
@@ -162,7 +161,7 @@ def local_median_reject(x, y, win=0.15, thr=0.05):
 
 
 def case_steep_edge():
-    # 페인트 UV 흡수단: 0.07 -> 0.85 를 ~0.12 um 에, 데이터 시작 근처 (leaf 실측 사례)
+    # 페인트 UV 흡수단: 0.07 -> 0.85 를 ~0.12 um 에, 데이터 시작 근처 (실측 사례)
     x = np.linspace(0.22, 2.5, 4000)
     edge = lambda xx: 0.07 + 0.78 / (1 + np.exp(-(xx - 0.38) / 0.027))
     dip = lambda xx: 0.4 - 0.25 * np.exp(-((xx - 1.6) / 0.01) ** 2)   # 실제 좁은 dip (오탐 가드)
@@ -231,7 +230,7 @@ def case_double_subtract():
 
 # ---------------------------------------------------------------- 4 끝 눈금-테두리 겹침
 def detect_bottom_ticks(img, box, band, exclude_border_px):
-    """leaf 의 결함 탐지기: 바닥 테두리 바로 위 띠에서 세로 dark 획 클러스터, 테두리 근처 클러스터 제외."""
+    """결함 탐지기: 바닥 테두리 바로 위 띠에서 세로 dark 획 클러스터, 테두리 근처 클러스터 제외."""
     d = dark(img)
     r1 = int(round(box["bottom"])) - 3
     prof = d[r1 - band:r1, :].sum(axis=0) >= band // 2

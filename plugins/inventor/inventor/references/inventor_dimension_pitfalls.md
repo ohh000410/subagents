@@ -144,7 +144,3 @@ scale 20 에서 hw=4.98 → cx_min 8.0, NOTE 공간 부족 → scale 15 (hw 3.73
 FRONT 아래 BOTTOM(projected) 배치: `plan_cy = groove_cy - groove_hh - 4.0 - plan_hh` (GAP 4.0 = label 1.0 + spare 0.5 + gap 2.5). BOTTOM dim 하단 > TitleBlock top 4.5 + 0.5.
 
 한계: ISO bbox 는 AABB 과대추정(false positive) / TitleBlock·윤곽선 좌표는 A3 ANSI(mm).idw 실측·추정값 / 치수 bbox 는 `DIM_OFF` 근사 — verify.png 병행.
-
-## 완성 예제
-
-memory `reference_local-environment.md` — IPT(블록+groove CutExtrude) → STEP → IDW(A3 3각법, AddProjectedView BOTTOM) → PDF → verify.png.

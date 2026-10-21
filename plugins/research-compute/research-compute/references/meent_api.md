@@ -14,7 +14,7 @@ meent 0.12.0: GPU 지원 RCWA(numpy/torch/jax backend) + autodiff(gradient 최�
 5. **fto (Fourier order)**: **fto_half** = 0차 중심으로 한쪽 최대 차수, 총 유지 orders = **2·fto_half + 1**. 경사 입사면 propagating 차수가 비대칭((1+|sinθ_inc|)·L/λ 쪽이 큼)이지만 fto_half는 ±대칭이라 큰 쪽을 커버하면 된다. ★ 수렴점은 [[meent_convergence]] 2D path가 s로 찾으니 하한을 미리 계산할 필요 없음(시작 경량, path가 올림).
 
 ## 검증
-- 교차검증 게이트 통과 — 수치·조건은 memory `reference_rcwa_wedge_s1_values.md`.
+- 교차검증 게이트 통과.
 
 ## 속도
 - **fto_half=67·N_z=320 solve ~19–21s** (2026-07-10~13 반복 실측 일치; 초기 기록 38s는 재현 안 됨 — 환경 차 추정, 폐기). 전각도(22각도) ~13분(numpy CPU, 6워커 병렬, 2026-07-08 기록). 대량 계산·형상 최적화(gradient/autodiff)에 적합.

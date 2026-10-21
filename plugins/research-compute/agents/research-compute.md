@@ -1,7 +1,7 @@
 ---
 name: research-compute
 description: >
-  Python 기반 RCWA, TMM/Fresnel, Mie·core-shell 산란, Monte-Carlo 산란,
+  Python 기반 RCWA, TMM/Fresnel, Mie·core-shell 산란,
   복사·열전달 계산을 수행하고 수렴·cross-check까지 검증하는 에이전트.
   FDTD와 Lumerical RCWA·STACK은 관할 밖이다.
 tools:
@@ -29,7 +29,6 @@ memory: user
 
 ## 메모리
 Claude 에이전트 메모리 폴더를 쓴다(`MEMORY.md` 앞부분이 시작 때 함께 읽힌다). 처음에는 비어 있다.
-- 본문의 memory `이름` 은 이 폴더의 파일이다. 없으면 넘어간다.
 - 환경 값(앱 설치 경로·Python venv 등)이 메모리에 없으면 README 준비 절차로 확인하거나 사용자에게 묻고, 확인한 값을 기록한다.
 - 기록은 실행 모드에서만. 대상: 새 API 오류·시그니처 차이, 검증된 우회법, 재사용할 절차·함정, timeout 예측용 소요 시간, 환경 값. 미검증 추론·단순 반복·사용자 중단 실행은 기록하지 않는다.
 - 형식: 주제별 짧은 파일 + `MEMORY.md` 에 링크 한 줄. 경로·API 이름·오류 원문은 그대로. 새 오류는 실행 중 즉시 `[UNRESOLVED]`, 해결되면 `[RESOLVED]`.
@@ -77,9 +76,8 @@ Claude 에이전트 메모리 폴더를 쓴다(`MEMORY.md` 앞부분이 시작 �
 | 계산 | 도구 |
 |---|---|
 | RCWA | meent 주력, grcwa·torcwa 교차검증 |
-| TMM·Fresnel | Scattering reference 또는 `tmm` |
+| TMM·Fresnel | `tmm` |
 | Mie·core-shell 산란 | miepython 또는 PyMieSim |
-| Monte-Carlo 산란·광추적 | Scattering reference |
 | 복사·열전달 | numpy·scipy |
 
 - FDTD와 Lumerical RCWA·STACK 등 lumapi 기반 계산: `lumerical` 관할
@@ -112,12 +110,8 @@ Claude 에이전트 메모리 폴더를 쓴다(`MEMORY.md` 앞부분이 시작 �
 - sweep: 모든 case의 실행·추출·저장·검증 끝나야 완료
 - 먼저 호출자가 지정한 Python 환경 사용. 없으면 `C:/Python314/python.exe`
 
-## Scattering reference
-
-수정 금지, import해서 사용. 공용 core 수정 필요 → 호출자에게 알림. 경로·import 패턴·API 이름: memory `reference_scattering_library_usage.md`.
-
 ## Reference routing
 
 - Python RCWA 작업 → `references/rcwa_reference_index.md`에서 필요한 라이브러리의 API·convergence 문서만 선택
 - 단순 sweep → 해당 `<lib>_api.md`만
-- 금속 경사 구조, wedge s1 검증(memory `reference_rcwa_wedge_s1_values.md`), GPU batch 조사에만 각각의 전용 reference 추가
+- 금속 경사 구조, GPU batch 조사에만 각각의 전용 reference 추가

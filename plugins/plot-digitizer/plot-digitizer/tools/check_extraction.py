@@ -14,18 +14,15 @@ calib.json 스키마 = calib_model.py docstring. 없으면 범위·눈금 근처
 
 flag 종류
 - empty          : 점 0개 곡선
-- gap            : 유효 점 사이 x 간격 > gap_factor * 중앙값 간격 (가파른 구간이 지워진 사례
-                   feedback_steep_edge_breaks_local_median_outlier_rejection)
+- gap            : 유효 점 사이 x 간격 > gap_factor * 중앙값 간격 (가파른 구간이 지워진 사례)
 - nan_run        : 값 없음 연속 구간 (edge = CSV 시작/끝에 붙은 구간)
 - interp_run     : `_interp` 로 표시된 보간 구간
 - out_of_range   : 캘리브 범위 밖 값. cartesian = box 밖 0.5 px 초과, polar = r/theta 범위 밖
-                   (로컬/전체 좌표 이중 차감 사례 feedback_local_vs_full_image_row_coordinate_bug)
+                   (로컬/전체 좌표 이중 차감 사례)
 - near_tick      : 안쪽 눈금 발자국(테두리에서 tick_len_px 안, 눈금 선에서 near_px 안)에 놓인 점.
                    cartesian + calib 의 tick_len_px·tick_sides 가 있을 때만
-                   (feedback_tick_protrusion_depth_must_be_measured_not_assumed)
 
-이웃과 값이 튀는 점(고립점)은 flag 하지 않는다 — 실제 데이터일 수 있다
-(feedback_isolated_curve_outlier_may_be_real_not_artifact).
+이웃과 값이 튀는 점(고립점)은 flag 하지 않는다 — 실제 데이터일 수 있다.
 
 종료코드 0 = flag 없음, 1 = flag 있음 (WARN). flag 마다 원본 확인 후 설명하거나 고친다.
 마지막 줄 `check_extraction: PASS|WARN flag N건` = 보고에 그대로 옮기는 한 줄 판정.

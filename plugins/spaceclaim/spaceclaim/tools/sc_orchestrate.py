@@ -136,7 +136,7 @@ def run(script, log, out, timeout_s: int = 300, speos: bool = False, poll_s: flo
         res["summary"] = f"[ORCH] FAIL kind=precompile_error {cc}"
         return res
 
-    # Seat: wait (measured waits 135/240/203 s; any SpaceClaim counts, incl. a GUI one), never kill other instances (memory: feedback_sc_process_diagnostics).
+    # Seat: wait (measured waits 135/240/203 s; any SpaceClaim counts, incl. a GUI one), never kill other instances.
     while sc_count() > 0 and time.time() - t0 < seat_wait_s:
         time.sleep(20)
     seat = sc_count()

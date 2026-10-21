@@ -57,4 +57,4 @@ probe(민감도) :  s_fto = eps(fto×1.5, N_z) − eps(P)      # ×1.5로 기울
 - 여러 solve 격리 배치는 **CPU 권장**(연속 GPU worker는 VRAM 미반환 → OOM; [[meent_api]]).
 
 ## 검증
-교차검증 게이트 통과 — 수치·조건은 memory `reference_rcwa_wedge_s1_values.md`.
+교차검증 게이트 통과.

@@ -11,7 +11,7 @@ torcwa = torch 기반 GPU RCWA + autodiff (SNU **Byoungho Lee** 그룹, Computer
 6. **keyword-only 인자**: `rcwa()`의 dtype 이후, `source_planewave()`·`S_parameters()`의 `*` 뒤 인자는 **이름 지정 필수**(위치 인자로 넘기면 TypeError).
 
 ## 검증
-- 교차검증 게이트 통과 — 수치·조건은 memory `reference_rcwa_wedge_s1_values.md`.
+- 교차검증 게이트 통과.
 
 ## 속도·자원 (실측 2026-07-11~13)
 - ★ **torcwa는 층수 제곱 O(N_z²)** — `solve_global_smatrix`가 층 연결마다 전 층의 모드 계수(C)를 갱신(field 재구성용 설계). CPU fp64 1스레드 실측 피팅: **t ≈ 0.36·N_z + 0.0102·N_z²** (nz 20/40/80/320 = 11.3/30.4/94.3/1164.5s, 오차 0.2%). meent는 O(N_z)라 N_z=320에서 **58배 차이**.

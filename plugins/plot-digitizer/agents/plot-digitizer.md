@@ -20,7 +20,6 @@ memory: user
 
 ## 메모리
 Claude 에이전트 메모리 폴더를 쓴다(`MEMORY.md` 앞부분이 시작 때 함께 읽힌다). 처음에는 비어 있다.
-- 본문의 memory `이름` 은 이 폴더의 파일이다. 없으면 넘어간다.
 - 환경 값(앱 설치 경로·Python venv 등)이 메모리에 없으면 README 준비 절차로 확인하거나 사용자에게 묻고, 확인한 값을 기록한다.
 - 기록은 실행 모드에서만. 대상: 새 API 오류·시그니처 차이, 검증된 우회법, 재사용할 절차·함정, timeout 예측용 소요 시간, 환경 값. 미검증 추론·단순 반복·사용자 중단 실행은 기록하지 않는다.
 - 형식: 주제별 짧은 파일 + `MEMORY.md` 에 링크 한 줄. 경로·API 이름·오류 원문은 그대로. 새 오류는 실행 중 즉시 `[UNRESOLVED]`, 해결되면 `[RESOLVED]`.
@@ -69,7 +68,7 @@ Claude 에이전트 메모리 폴더를 쓴다(`MEMORY.md` 앞부분이 시작 �
 - (있으면) 논문 본문/SI 수치 — 캘리브 기준·검증용
 
 ## 절차
-1. 이미지 확보 — dpi 350+, 곡선·격자·축 라벨 선명. 확보 후 Read 확인. 벡터/raster 구분·SMask 합성·유니코드 경로 → memory `raster-calibration-io`
+1. 이미지 확보 — dpi 350+, 곡선·격자·축 라벨 선명. 확보 후 Read 확인.
 2. 캘리브 기준 — ① 본문/SI 수치 → ② half-circle polar 자동 캘리브 → ③ 자동 부정확·경계 잘림·전제 불확실 → 클릭 picker
 3. 자동 캘리브 (half-circle polar) — 반원 기하 ≥2~3 독립 방법(최장 수평 흑색선=지름, Hough circle, 최대 흑색 연결성분 극점) 검출·교차검증. 전부 PASS → 자동 채택, 하나라도 실패 → 클릭:
    - 3방법 center 상호 편차 ≤ R의 1%, R 편차 ≤ R의 1.5%
@@ -94,7 +93,7 @@ Claude 에이전트 메모리 폴더를 쓴다(`MEMORY.md` 앞부분이 시작 �
 - crop 경계 잘림: picker 전 Read로 축선·0점·최외곽 눈금·(polar) 지름·±90° 포함 확인. 잘리면 사용자가 그 점 클릭 불가
 - 마커 전부 클릭 요구 금지 — 클릭 = 축 캘리브 소수 점만
 - 범례 아이콘 → 축 끝점 오인 금지. 외곽 호 단일 LSQ 금지. 디지타이즈 절대값 ~0.02 systematic 한계 → 정량 결론은 본문 수치 우선
-- near-white 곡선: RGB 거리 대신 채도로 배경 분리 (memory `curve-classification-cleanup`)
+- near-white 곡선: RGB 거리 대신 채도로 배경 분리
 
 ## 출력 (메인 세션 반환)
 - csv 경로 · 추출 검증 overlay png · 캘리브 체크 overlay png (3개 필수) · calib.json 경로

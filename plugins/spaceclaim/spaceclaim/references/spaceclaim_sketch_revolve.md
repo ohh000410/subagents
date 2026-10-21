@@ -73,7 +73,7 @@ opt = ExtrudeFaceOptions(); opt.ExtrudeType = getattr(ExtrudeType, "Cut")   # �
 result = ExtrudeFaces.Execute(face_sel, Direction.DirZ, MM(50), opt, None)   # (selection, direction, distance, options, info). direction 누락 → "expected Direction, got float"
 ExtrudeFaces.Execute(face_sel, Direction.Create(-1.0, 0.0, 0.0), MM(4), opt, None)   # 음수 방향
 ```
-`PullFaces` 없음. 스케치 평면이 box face 와 동일하면 흡수 → `MM(-0.001)` offset. through-hole CUT 은 진입·이탈 overshoot ≥ 0.05 mm (memory `api_quirks`).
+`PullFaces` 없음. 스케치 평면이 box face 와 동일하면 흡수 → `MM(-0.001)` offset. through-hole CUT 은 진입·이탈 overshoot ≥ 0.05 mm.
 
 ## Matrix.CreateRotation — body 회전
 

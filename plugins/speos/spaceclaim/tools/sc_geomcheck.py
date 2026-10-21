@@ -25,7 +25,7 @@ except NameError:  # CPython 3
 
 # Volume tolerance [mm^3]. Basis: v261 body.Shape.Volume matched theory to
 # 3.6e-15 mm^3 (plate + 10 V-grooves) and 1e-11 mm^3 (40x30x10 block + hole);
-# memory feedback_sc_geometry_measurement_api.md allows exact tolerance 1e-7.
+# so an exact tolerance of 1e-7 is safe.
 VOL_TOL_MM3 = 1e-7
 
 # snap() value before the first body exists.

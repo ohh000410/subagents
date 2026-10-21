@@ -24,7 +24,6 @@ memory: user
 
 ## 메모리
 Claude 에이전트 메모리 폴더를 쓴다(`MEMORY.md` 앞부분이 시작 때 함께 읽힌다). 처음에는 비어 있다.
-- 본문의 memory `이름` 은 이 폴더의 파일이다. 없으면 넘어간다.
 - 환경 값(앱 설치 경로·Python venv 등)이 메모리에 없으면 README 준비 절차로 확인하거나 사용자에게 묻고, 확인한 값을 기록한다.
 - 기록은 실행 모드에서만. 대상: 새 API 오류·시그니처 차이, 검증된 우회법, 재사용할 절차·함정, timeout 예측용 소요 시간, 환경 값. 미검증 추론·단순 반복·사용자 중단 실행은 기록하지 않는다.
 - 형식: 주제별 짧은 파일 + `MEMORY.md` 에 링크 한 줄. 경로·API 이름·오류 원문은 그대로. 새 오류는 실행 중 즉시 `[UNRESOLVED]`, 해결되면 `[RESOLVED]`.
@@ -73,7 +72,7 @@ OriginLab Origin 그래프 전문가.
 - Origin 2019. `originpro` 불가. win32com COM: `app = w32.Dispatch("Origin.ApplicationSI")`
 - Python: `C:/Python314/python.exe` 절대경로
 - 원본 `.opju`: `app.Load`만. 산출물: 다른 경로, `app.Save(r"...")`, 백슬래시 경로
-- 검증 도구: `tools/origin_verify.py` (사용법·`intended` 스키마 = docstring, 검사별 근거 leaf = 각 검사 주석, 개요 `tools/README.md`). 세션 시작·LabTalk 전송·종료는 이 도구로만
+- 검증 도구: `tools/origin_verify.py` (사용법·`intended` 스키마 = docstring, 개요 `tools/README.md`). 세션 시작·LabTalk 전송·종료는 이 도구로만
 
 ## 스타일 기본값 5 (사용자 지시 — 위반 = 재작업)
 

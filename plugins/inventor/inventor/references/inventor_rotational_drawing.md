@@ -28,7 +28,7 @@ ty_base = cy + vH/2 + 1.2
 ty2 = ty_base + 0.9;  ty3 = ty2 + 0.9;  ty4 = min(ty3 + 0.9, 27.5)
 ```
 
-전체 span = 2-curve (왼쪽 끝 curve + 오른쪽 끝 curve 각각 GI). 같은 curve 양 끝점 → driven(핑크). 단차 없는 단일 원통은 실루엣 선이 하나라 축 양 끝단의 edge-on 원(별개 curve) 을 앵커로 쓴다 (memory `drawing_dimensioning_pitfalls.md` — Same-curve driven dimension).
+전체 span = 2-curve (왼쪽 끝 curve + 오른쪽 끝 curve 각각 GI). 같은 curve 양 끝점 → driven(핑크). 단차 없는 단일 원통은 실루엣 선이 하나라 축 양 끝단의 edge-on 원(별개 curve) 을 앵커로 쓴다.
 
 ## END VIEW 지름 치수 (kFrontViewOrientation)
 

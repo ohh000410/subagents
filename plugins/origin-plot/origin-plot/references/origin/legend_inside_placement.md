@@ -29,7 +29,7 @@
    재렌더한다.
 
 5. `legend.background=0` 은 **`legend.left/top` 보다 먼저** 설정한다. 뒤에 주면 반환값은 True 인데 위치가
-   기본 위치만큼(+23,+24 page unit) 밀려 저장된다(agent-memory `feedback_origin_legend_page_coordinate_placement`).
+   기본 위치만큼(+23,+24 page unit) 밀려 저장된다.
    위치는 `verify(app, intended)` 의 `intended["legend"]` 로 되읽어 확인된다.
 
 ## ★ 함정 (실측)
@@ -48,4 +48,4 @@
 - 범례를 안으로 옮긴 뒤 **아래에 남는 옛 범례 자리(빈 여백)를 회수**한다:
   `page.height = xb.top + xb.height + 60` 으로 줄이고 `layer.top/height` 는 절대값
   보존으로 재환산. geometry 를 먼저 전부 끝낸 뒤에 범례를 측정·배치할 것
-  (속성이 한 단계 늦게 반영됨 — agent-memory `feedback_origin_equal_scale_axis_and_page_layout`).
+  (속성이 한 단계 늦게 반영됨).

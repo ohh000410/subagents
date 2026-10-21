@@ -15,8 +15,7 @@
 
 ## 1. 공식 KB 예제
 
-로컬: memory `reference_local-environment.md`
-없으면 Ansys KB 다운로드. WebFetch 403 → `curl` + Chrome UA (`fdtd_kb_resources.md`).
+Ansys KB 다운로드. WebFetch 403 → `curl` + Chrome UA (`fdtd_kb_resources.md`).
 
 ## 2. KB 예제 inspect
 

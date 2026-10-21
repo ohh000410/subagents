@@ -6,7 +6,7 @@ grcwa(순수 python RCWA + autograd, CPU) 수렴·재현성 방법론. **grcwa �
 ## 0. 측정 전제 (안 하면 나머지 무의미)
 - **BLAS=1**: `OMP/OPENBLAS/MKL_NUM_THREADS="1"`를 numpy/grcwa import 前 os.environ. (스레드만 1↔4↔8 바꿔도 15% 흔들림; thread=1만 bit-identical.)
 - **fallback OFF** — wrapper 금지·이유는 [[grcwa_api]] ★ 소유. 발산은 §3 명시 처리.
-- ★ **재현 ≠ 정확 (near-singular)**: BLAS=1은 재현이나 near-singular 점에선 값이 눌려 틀릴 수 있다 → spread(1/4/8)로 감지(§2), 배제하고 참값은 안정 능선(spread≈0). (실측 예: memory `project_blas_gate_nearsingular_plus60.md`.)
+- ★ **재현 ≠ 정확 (near-singular)**: BLAS=1은 재현이나 near-singular 점에선 값이 눌려 틀릴 수 있다 → spread(1/4/8)로 감지(§2), 배제하고 참값은 안정 능선(spread≈0).
 - **병렬·캐싱**:
   - 캐싱: `{(nG,N_z,pol):eps}` dict, solve 前 조회. ★ `get_grid_size`만 캐시하고 무거운 solve 결과 안 하는 실수 흔함.
   - 병렬: 독립 점(sweep·median 3점·전각도) 전부 Pool — 표준(워커 수·BLAS=1·메모리 가드)은 [[rcwa_reference_index]] 공통 2. 순차는 path iteration 間뿐(path는 iteration 내부만 병렬).
@@ -27,7 +27,7 @@ grcwa(순수 python RCWA + autograd, CPU) 수렴·재현성 방법론. **grcwa �
 - 소프트 이탈(R<1이나 plateau 큰 낙하): 실질 상한, 마지막 안정점.
 
 ## 4. 편광별 calibration 필수 (TE≠TM)
-near-singular 위치·수렴 N_z가 편광 의존(Fourier factorization 다름) — 편광마다 따로 calibration. 비대칭 형상은 ±θ도 다름(물리적 필연). **구체 N_z 값은 형상 관측치**(s1 각도·편광별 → memory `reference_rcwa_wedge_s1_values.md`).
+near-singular 위치·수렴 N_z가 편광 의존(Fourier factorization 다름) — 편광마다 따로 calibration. 비대칭 형상은 ±θ도 다름(물리적 필연). **구체 N_z 값은 형상 관측치**.
 
 ## 5. 전각도: calibration → production
 - ★ **새 형상 첫 calibration은 형상 확인부터** (geometry 함수 도입 시 한 번): **유효 유전율(truncation된 eps) 플롯으로 호출자 확인** — 방법·이유·참조 구현은 [[meent_convergence]] ★첫 calibration(라이브러리 무관 동일 개념). 여의치 않으면 최소한 eps grid(staircase)라도. **파라미터 스윕은 같은 함수라 재확인 불필요.**
@@ -39,7 +39,7 @@ near-singular 위치·수렴 N_z가 편광 의존(Fourier factorization 다름) 
 2. **near-singular gate**: 눌린 점마다 BLAS spread(1/4/8), >0.01 배제. 초반 1회 "없음" 단정 금지 — 전 구간 확인.
 3. **물리 floor**: nG < 2~3×propagating 저샘플링 제외.
 4. **plateau/median**: 위 다 제거한 안정 능선(연속 |Δ|<노이즈바닥)에서만.
-5. **N_z도 능선에서 재판정**: nG를 능선으로 옮겼으면 N_z도 그 능선 nG서 재확인(near-singular nG는 N_z 과요구, 능선에선 줄어듦). 편광별 다름. (s1 실측 수치 → memory `reference_rcwa_wedge_s1_values.md`.)
+5. **N_z도 능선에서 재판정**: nG를 능선으로 옮겼으면 N_z도 그 능선 nG서 재확인(near-singular nG는 N_z 과요구, 능선에선 줄어듦). 편광별 다름.
 
 ## 6. Rayleigh 각도 → meent 격리 (또는 FDTD)
 Rayleigh 각도(격자식 → [[rcwa_reference_index]] 공통 3)서 grcwa nan. offset(±0.05°) 회피는 비대칭 구조서 +≠− 편향→폐기. 그 각도만 **meent 격리 실행으로 대체**(검증·규칙 → 공통 3) 또는 FDTD(그 각은 grating projection 부정확 → net-flux R 권장).

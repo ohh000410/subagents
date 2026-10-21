@@ -18,7 +18,6 @@ RCWA 작업의 최상위 라우팅. 라이브러리별 **자체완결**: 수렴/
 
 **상황별 전용 파일 (해당될 때만 열어라 — 평시 로드 불필요):**
 - **경사 금속 박막** 작업 → [rcwa_metal.md](rcwa_metal.md) (staircase 연속성 선체크·반사측 TM 한계)
-- **wedge s1 재현/게이트** (검증 수치 대조) → memory `reference_rcwa_wedge_s1_values.md` (형상 관측값 — 새 형상엔 무의미)
 - **GPU batch/최적화 재시도** 고민 시 → [rcwa_gpu_investigation.md](rcwa_gpu_investigation.md) (전수조사 상세)
 
 ## 판정 줄 — `../tools/checks.py` (계산 뒤 필수, 소유: AGENT.md 작업 3·5)
@@ -54,4 +53,4 @@ FDTD(Lumerical 2D) 교차검증 시 **편광 라벨 스왑** 주의: Lumerical `
 - 타 무거운 프로그램(FDTD·SPEOS 등)과 동시 실행 시 공유 자원은 **시스템 RAM뿐** → worker RAM 상한으로 칸막이.
 
 ---
-*wedge s1 검증 수치(교차검증 기준값·수렴 N_z·nG↔fto 환산) → memory `reference_rcwa_wedge_s1_values.md` / 경사 금속 → [rcwa_metal.md](rcwa_metal.md)*
+*경사 금속 → [rcwa_metal.md](rcwa_metal.md)*

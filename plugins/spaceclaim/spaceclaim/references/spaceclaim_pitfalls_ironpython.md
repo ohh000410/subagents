@@ -44,7 +44,7 @@ val = getattr(SomeEnum, "from")
 
 ## 잔여 프로세스
 
-이름으로 일괄 종료 금지 — 다른 세션의 SPEOS 작업을 끊은 사례(memory `feedback_sc_process_diagnostics` §3). 남은 SpaceClaim 이 있으면 기다리고, 종료는 자기가 띄운 PID 만. `tools/sc_orchestrate.py` 가 좌석 대기·자기 PID 종료를 한다.
+이름으로 일괄 종료 금지 — 다른 세션의 SPEOS 작업을 끊은 사례. 남은 SpaceClaim 이 있으면 기다리고, 종료는 자기가 띄운 PID 만. `tools/sc_orchestrate.py` 가 좌석 대기·자기 PID 종료를 한다.
 
 ## ExitAfterScript=True 정리
 

@@ -22,8 +22,7 @@ calib.json 스키마 = calib_model.py docstring (cartesian 선형 축 / polar ra
 종료코드 0 = flag 없음, 1 = flag 있음 (WARN). 마지막 줄 `check_calibration: PASS|WARN N tick, RMS x px`
 = 보고에 그대로 옮기는 한 줄 판정 (N = 눈금 수 전체, RMS = 전체 눈금 재투영 오차 RMS).
 
-tol 1.0 px 근거: 격자 원 LSQ 잔차 <= 0.08 px, 지름선 끝 돌출로 인한 R 과대 2.5~3 px
-(feedback_polar_radial_scale_from_printed_grid_rings). 1 px 는 둘 사이를 가른다.
+tol 1.0 px 근거: 격자 원 LSQ 잔차 <= 0.08 px, 지름선 끝 돌출로 인한 R 과대 2.5~3 px. 1 px 는 둘 사이를 가른다.
 """
 import argparse
 import json
@@ -34,7 +33,7 @@ from PIL import Image, ImageDraw
 
 import calib_model as cm
 
-# 끝 눈금 = 테두리 판정 허용폭: 눈금 간격의 15% (feedback_cartesian_last_tick_coincides_with_border)
+# 끝 눈금 = 테두리 판정 허용폭: 눈금 간격의 15%
 BORDER_TICK_FRAC = 0.15
 
 

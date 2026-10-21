@@ -1,6 +1,6 @@
 # plot-digitizer/tools
 
-plot-digitizer 에이전트 도구. 검증 도구 범위 = memory 에 실패로 기록된 사고 유형만. **경고·보고만** 한다 — 점·눈금을 자동 삭제·제외·보정하지 않는다.
+plot-digitizer 에이전트 도구. 검증 도구 범위 = 실제로 일어났던 사고 유형만. **경고·보고만** 한다 — 점·눈금을 자동 삭제·제외·보정하지 않는다.
 
 | 파일 | 시점 | 입력 | 출력 |
 |---|---|---|---|
@@ -15,7 +15,6 @@ plot-digitizer 에이전트 도구. 검증 도구 범위 = memory 에 실패로 
 - `near_tick` 은 calib 에 `tick_len_px`·`tick_sides` 가 있을 때만. 이웃과 튀는 고립점은 flag 하지 않는다(실제 데이터일 수 있음).
 - 행 자체가 CSV 시작·끝에서 빠진 경우(곡선 앞부분 통째 누락)는 잡지 못한다 — overlay 로 확인.
 - 하지 않는 것: 로그·범주형 축, 패널 자동 분할, 점별 불확도 전파.
-- 검사별 근거 memory leaf = 각 파일 docstring.
 
 ```
 C:/Python314/python.exe tools/check_calibration.py calib.json --overlay 원본.png calib_overlay.png

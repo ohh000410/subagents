@@ -2,7 +2,7 @@
 """check_setup -- FDTD pre-run setup check on the LIVE lumapi session.
 
 Call between save() and run(). Never opens the .fsp separately (lum_fdtd_gui = 1 seat).
-Scope: only traps recorded as failures in lumerical agent memory.
+Scope: only traps that actually failed in past runs.
 FAIL (deterministic) -> raises SetupCheckError (report attached). Others -> WARN only.
 
     import os, sys
@@ -113,10 +113,8 @@ def _check_saved(fdtd, rep):
 
 def _check_gpu_only(fdtd, rep, engine):
     """GPU-only FDTD settings on the CPU engine: run() returns normally (Local Computer)
-    or hangs >55 min (MS-MPI); only the _p0.log says why.
-    Evidence: api_v242_fdtd_new_knobs_measured_2026-08-12,
-              api_quirks_lumerical_v242_engine_error_silent_2026-08-12."""
-    ev = "api_v242_fdtd_new_knobs_measured_2026-08-12; api_quirks_lumerical_v242_engine_error_silent_2026-08-12"
+    or hangs >55 min (MS-MPI); only the _p0.log says why."""
+    ev = ""
     if engine != "cpu":
         return
     if _have(fdtd, "FDTD", "express mode"):
@@ -137,9 +135,8 @@ def _check_gpu_only(fdtd, rep, engine):
 def _check_source_band(fdtd, rep, band):
     """Per-source override vs global source band. addplane() defaults to
     'override global source settings'=1 with its own 400-700 nm range, so
-    setglobalsource() alone does not move the source; monitors sample the GLOBAL band.
-    Evidence: api_quirk_addplane_override_global_source_2026-09-20."""
-    ev = "api_quirk_addplane_override_global_source_2026-09-20"
+    setglobalsource() alone does not move the source; monitors sample the GLOBAL band."""
+    ev = ""
     g0 = float(_scalar(fdtd.getglobalsource("wavelength start")))
     g1 = float(_scalar(fdtd.getglobalsource("wavelength stop")))
     if band:
@@ -180,12 +177,10 @@ def _check_source_band(fdtd, rep, band):
 
 
 def _check_readback(fdtd, rep, readback):
-    """intended value == getnamed readback. Silent clamps seen: mesh accuracy >8 -> 8
-    (api_quirk_mesh_accuracy_hard_clamp_8_2026-07-07); pml profile=2 raises layers
-    24 -> 32 (api_quirk_pml_profile2_layers_autoclamp_2026-07-09); layers >64 -> 64 and
-    layers-before-profile reset (api_quirks_lumerical_v232_curated)."""
-    ev = ("api_quirk_mesh_accuracy_hard_clamp_8_2026-07-07; "
-          "api_quirk_pml_profile2_layers_autoclamp_2026-07-09")
+    """intended value == getnamed readback. Silent clamps seen: mesh accuracy >8 -> 8;
+    pml profile=2 raises layers 24 -> 32; layers >64 -> 64 and
+    layers-before-profile reset."""
+    ev = ""
     for obj, props in (readback or {}).items():
         for prop, want in props.items():
             tgt = "%s.%s" % (obj, prop)
@@ -205,13 +200,13 @@ def _check_readback(fdtd, rep, readback):
             rep.add("readback", "WARN", "FDTD.pml layers",
                     "pml profile=2 and no intended layers: actual layers=%s"
                     % _scalar(fdtd.getnamed("FDTD", "pml layers")),
-                    "api_quirk_pml_profile2_layers_autoclamp_2026-07-09")
+                    "")
 
 
 def _check_disk(rep, fsp, min_gb, warn_gb):
     """Free disk on C: and on the .fsp drive. A near-full C: turned a write hiccup into
-    a 6 h hung engine pileup. Evidence: api_pitfall_disk_full_hang_overnight_batch_2026-08-03."""
-    ev = "api_pitfall_disk_full_hang_overnight_batch_2026-08-03"
+    a 6 h hung engine pileup."""
+    ev = ""
     drives = ["C:\\"]
     if fsp:
         d = os.path.splitdrive(fsp)[0].upper() + "\\"
@@ -228,9 +223,8 @@ def _check_disk(rep, fsp, min_gb, warn_gb):
 
 
 def _check_case_ids(rep, case_ids, fsp):
-    """case_id names both <case_id>.fsp and <case_id>_p0.log; collisions share a log.
-    Evidence: api_v242_fdtd_bit_identical_to_v232_2026-08-13."""
-    ev = "api_v242_fdtd_bit_identical_to_v232_2026-08-13"
+    """case_id names both <case_id>.fsp and <case_id>_p0.log; collisions share a log."""
+    ev = ""
     if case_ids is None:
         return
     seen, dup = set(), set()
@@ -250,8 +244,8 @@ def _check_case_ids(rep, case_ids, fsp):
 def _check_preset(fdtd, rep, processes):
     """'job launching preset' persists in the user config across sessions; 'Local
     Computer' silently drops production to one process. Workstation default =
-    'Remote: Microsoft MPI'. Evidence: api_quirks_lumerical_v242_engine_error_silent_2026-08-12."""
-    ev = "api_quirks_lumerical_v242_engine_error_silent_2026-08-12"
+    'Remote: Microsoft MPI'."""
+    ev = ""
     p = str(_scalar(fdtd.getresource("FDTD", 1, "job launching preset")))
     if p.strip().lower() == "local computer":
         rep.add("launch_preset", "FAIL", "FDTD resource 1",
@@ -259,7 +253,7 @@ def _check_preset(fdtd, rep, processes):
     else:
         rep.add("launch_preset", "PASS", "FDTD resource 1", p, "")
     # Switching preset to Local Computer and back left processes=1 (measured 2026-10-17,
-    # same leaf, v242) -> single-process production with the preset looking correct.
+    # v242) -> single-process production with the preset looking correct.
     n = int(float(_scalar(fdtd.getresource("FDTD", 1, "processes"))))
     if n != int(processes):
         rep.add("launch_preset", "WARN", "FDTD resource 1",
@@ -269,16 +263,14 @@ def _check_preset(fdtd, rep, processes):
 
 
 def _check_orphans(rep):
-    """Engines alive before run() = orphans from a killed controller.
-    Evidence: api_quirks_lumerical_v232_curated (orphaned engine processes),
-              api_pitfall_disk_full_hang_overnight_batch_2026-08-03."""
+    """Engines alive before run() = orphans from a killed controller."""
     out = subprocess.run(["tasklist", "/FI", "IMAGENAME eq fdtd-engine*"],
                          capture_output=True, text=True, errors="replace").stdout
     n = sum(1 for ln in out.splitlines() if ln.lower().startswith("fdtd-engine"))
     if n:
         rep.add("orphan_engines", "WARN", "tasklist",
                 "%d fdtd-engine process(es) already running before run()" % n,
-                "api_quirks_lumerical_v232_curated")
+                "")
     else:
         rep.add("orphan_engines", "PASS", "tasklist", "", "")
 

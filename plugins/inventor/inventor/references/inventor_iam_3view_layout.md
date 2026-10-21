@@ -68,4 +68,4 @@ SIDE_CX = TOP_CX + vW_top/2 + center_gap + vW_side/2;  SIDE_CY = TOP_CY
 ty_above = TOP_CY + vH_top/2 + 1.2;  tx_left = FRONT_CX - vW_front/2 - 2.0
 ```
 
-스케일: 최대 치수 100mm → 1.5 (TOP W=15cm). 2.0 → W=20cm, 우측 낭비. 검증된 part별 좌표 → memory `project_geometry_lessons.md` (BossPlate 4-view layout).
+스케일: 최대 치수 100mm → 1.5 (TOP W=15cm). 2.0 → W=20cm, 우측 낭비.

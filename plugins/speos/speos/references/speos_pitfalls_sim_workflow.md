@@ -10,7 +10,6 @@
 triangle = tessellation, face = topology.
 - `LocalMeshing` 은 face 한도에 무효 → geometry 변경 (주기 수 축소)
 - face 는 scene 전체 합산
-- 교차 V-groove face 수: memory `student_license_limits`
 - triangle: `MeshingSagLengthValue` 0.005 → 0.1~0.5 (`speos_sim_compute_mesh.md`)
 
 거부 = 예외 없이 `sim.Compute()` 0.8초 정상 리턴 + `sim.StatusInfo` 메시지. 통과 = "". `DoesRulesSucceed()` 는 정상 sim 에서도 False — 게이트 불가.

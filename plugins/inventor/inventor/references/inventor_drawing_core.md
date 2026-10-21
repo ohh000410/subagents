@@ -75,7 +75,7 @@ iProperty:
 ```python
 ps = draw_doc.PropertySets
 ps.Item("Summary Information").Item("Title").Value  = "My Part"
-ps.Item("Summary Information").Item("Author").Value = "<작성자: memory reference_local-environment.md>"
+ps.Item("Summary Information").Item("Author").Value = "<작성자 이름>"
 ps.Item("Inventor Summary Information").Item("Revision Number").Value = "A"   # "Design Tracking Properties" 에는 없음
 ```
 

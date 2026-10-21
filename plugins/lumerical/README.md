@@ -16,7 +16,7 @@ FDTD·RCWA 시뮬레이션을 돌립니다.
 ## 필요한 것
 
 - Python: `C:/Python314/python.exe` 절대경로만. `python`/`py` → Store stub·3.12 → lumapi 미기동·hang.
-- Lumerical: `C:\Program Files\Lumerical\v242`. `v232` 실행 불능, 경로 사용 금지. v232 대조 = 저장 CSV만 (앵커 승계: memory `api-environment`)
+- Lumerical: `C:\Program Files\Lumerical\v242`. `v232` 실행 불능, 경로 사용 금지. v232 대조 = 저장 CSV만
 - 회전 convention: intrinsic/body-fixed
 
 도구가 쓰는 Python 패키지: `numpy`, `openpyxl`

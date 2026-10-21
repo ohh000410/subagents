@@ -5,7 +5,6 @@
 | 로컬 | 용도 |
 |---|---|
 | `C:\Program Files\Lumerical\` | 설치·예제·Python API |
-| memory `reference_local-environment.md` | 보존한 공식 KB 예제 원본 (내려받은 예제도 여기) |
 
 | URL | 용도 |
 |---|---|

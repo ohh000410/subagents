@@ -27,7 +27,6 @@ memory: user
 
 ## 메모리
 Claude 에이전트 메모리 폴더를 쓴다(`MEMORY.md` 앞부분이 시작 때 함께 읽힌다). 처음에는 비어 있다.
-- 본문의 memory `이름` 은 이 폴더의 파일이다. 없으면 넘어간다.
 - 환경 값(앱 설치 경로·Python venv 등)이 메모리에 없으면 README 준비 절차로 확인하거나 사용자에게 묻고, 확인한 값을 기록한다.
 - 기록은 실행 모드에서만. 대상: 새 API 오류·시그니처 차이, 검증된 우회법, 재사용할 절차·함정, timeout 예측용 소요 시간, 환경 값. 미검증 추론·단순 반복·사용자 중단 실행은 기록하지 않는다.
 - 형식: 주제별 짧은 파일 + `MEMORY.md` 에 링크 한 줄. 경로·API 이름·오류 원문은 그대로. 새 오류는 실행 중 즉시 `[UNRESOLVED]`, 해결되면 `[RESOLVED]`.
@@ -88,7 +87,7 @@ Claude 에이전트 메모리 폴더를 쓴다(`MEMORY.md` 앞부분이 시작 �
 |---|---|
 | Inventor 2027 | `C:\Program Files\Autodesk\Inventor 2027\Bin\Inventor.exe` |
 | COM ProgID | `Inventor.Application` |
-| venv | memory `reference_local-environment.md` |
+| venv | 처음 쓸 때 확인 |
 | IDW Template | `C:\Users\Public\Documents\Autodesk\Inventor 2027\Templates\en-US\Metric\ANSI (mm).idw` |
 | IPT Template | `C:\Users\Public\Documents\Autodesk\Inventor 2027\Templates\en-US\Metric\Standard (mm).ipt` |
 | API 문서 | 로컬 CHM `C:\Users\Public\Documents\Autodesk\Inventor 2027\Local Help\admapi_31_0.chm` 우선 → `https://help.autodesk.com/view/INVNTOR/2025/ENU/` |
@@ -97,7 +96,7 @@ Claude 에이전트 메모리 폴더를 쓴다(`MEMORY.md` 앞부분이 시작 �
 
 ## 작업 절차
 
-1. 요청 분석 → `references/inventor_drawing_api.md`에서 필요 reference만 선택. 돌출(ExtrudeFeatures)은 memory `extrude_features_api`
+1. 요청 분석 → `references/inventor_drawing_api.md`에서 필요 reference만 선택.
 2. 스크립트: 모델링 = 스케치 → 피처 → `read_state` 되읽기 → `step_check` → `SaveAs2`. **피처마다** `step_check` 실행(`sys.path` 에 `${CLAUDE_PLUGIN_ROOT}/inventor/tools`, `from step_check import step_check, read_state, step_summary`). 이론 dV 직접 계산 → `exp_dV_cm3`, base extrude 는 `exp_bbox` 도. `[STEP FAIL]` = 그 자리에서 원인 수정 후 재실행, 다음 피처로 진행 금지. 판정 기준·함정 = `references/inventor_ipt_modeling.md` 「피처 단계 검증」. 도면 = 모델 → Drawing → 뷰 배치 → 치수 → 스펙 노트 → PDF
    - 진행 마커 필수: 주요 단계 전후 `print("[t=%.1fs] STEP..." % (time.time()-t0), flush=True)`. Inventor 모달·hang = 예외 없는 정지
    - timeout: 기동+`Documents.Add` ≈ 21s = 고정비, 예상치 아님
@@ -146,7 +145,6 @@ Claude 에이전트 메모리 폴더를 쓴다(`MEMORY.md` 앞부분이 시작 �
 ## Reference / memory
 
 - 라우팅 인덱스 `references/inventor_drawing_api.md` → core / ipt_modeling / rotational_drawing / iam_3view_layout / dimension_pitfalls 중 필요한 것만
-- hang·종료 실측: memory `inventor_hang_shutdown`
 
 ## 결과 보고 형식
 

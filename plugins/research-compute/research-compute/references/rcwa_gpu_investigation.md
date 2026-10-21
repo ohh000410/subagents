@@ -17,5 +17,5 @@
 ## 진짜 GPU batch가 필요해지면 (대량 inverse design 등)
 - **WSL2/Linux**: JAX GPU + MPS 열림. 단 RTX3050 fp64 penalty(1/64)는 그대로 → fp64 RCWA는 CPU도 못 이김. fp32는 near-singular 불안정.
 - **클라우드 A100/H100**: fp64 강력(A100 9.7 TFLOPS ≈ 3050의 ~70배) → 진짜 실익. JAX-native RCWA(**fmmax**, 미검증)가 vmap 정공법 후보.
-- 값은 세 라이브러리 어디서나 동일(memory `reference_rcwa_wedge_s1_values.md`) — 순수 성능/병렬 선택이지 정확도 문제 아님.
+- 값은 세 라이브러리 어디서나 동일 — 순수 성능/병렬 선택이지 정확도 문제 아님.
 
