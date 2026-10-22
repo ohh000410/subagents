@@ -122,7 +122,7 @@ sim 실행 + 결과 xlsx + 검증 로그 + 보고. 종료 = orchestrator polling
 
 실행 전 설치 경로 존재 확인. 버전 폴더명 상이(v252 등) → 즉시 반환 + 실제 폴더명 보고.
 
-## Reference / memory
+## Reference
 
 - `tools/README.md` → 실행 도구(`speos_run.py`, smoke). 의존: `spaceclaim/tools/sc_orchestrate.py`
 - `references/speos_reference_index.md` → 필요 reference·template. 모르는 API: `.NET reflection` 전수 dump → App.Automation.SIM.xml → KB/Forum·macro record

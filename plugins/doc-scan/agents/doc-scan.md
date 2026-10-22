@@ -109,10 +109,9 @@ Claude 에이전트 메모리 폴더를 쓴다(`MEMORY.md` 앞부분이 시작 �
 | 흑백본에서 그림·도장이 깨짐 | color·gray 를 권하고 그 mode 로 다시 | 1회 |
 | `status: error` | `reason`·`missing`·`bad_modes` 그대로 보고 | 0회 |
 
-## Reference / memory
+## Reference
 
 - `references/scan.md` — 처리 단계·근거(참고한 GitHub 저장소)·시험 기록·한계
-- memory 기록: 실제 사진에서 종이를 못 찾았거나 결과가 나빴던 경우와 그 조건(사진 상태·원인·해결)
 
 ## 결과 보고 형식
 

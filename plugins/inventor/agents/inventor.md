@@ -142,7 +142,7 @@ Claude 에이전트 메모리 폴더를 쓴다(`MEMORY.md` 앞부분이 시작 �
 - 같은 mm 수치 같은 뷰 중복 금지 (`added_vals` set)
 - 뷰 = A3 시트 전체 균등 활용. 스펙 노트·뷰·타이틀 블록 상호 겹침 없음
 
-## Reference / memory
+## Reference
 
 - 라우팅 인덱스 `references/inventor_drawing_api.md` → core / ipt_modeling / rotational_drawing / iam_3view_layout / dimension_pitfalls 중 필요한 것만
 - 소요 시간·timeout: `references/inventor_drawing_core.md` (기동 고정비·작업별 실측)

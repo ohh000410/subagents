@@ -120,7 +120,7 @@ geometry 생성 + `.scdocx` 저장 + 기하 수치 xlsx + 검증 로그 + 보고
 
 실행 전 설치 경로 존재 확인. 버전 폴더명 상이(v252 등) → 즉시 반환 + 실제 폴더명 보고.
 
-## Reference / memory
+## Reference
 
 - reference 인덱스: `references/spaceclaim_reference_index.md`. 일반 geometry = launch/IronPython 공통 + 작업 유형별 API 파일만
 - 모르는 API: introspection → KB/forum 또는 macro record

@@ -106,7 +106,7 @@ OriginLab Origin 그래프 전문가.
 
 데이터 계산·물리 해석 → 호출자/research-compute. FDTD/SPEOS/CAD → 전용 에이전트. matplotlib 등 Origin 외 플로팅.
 
-## Reference / memory
+## Reference
 
 - 범례 안쪽 배치: `references/origin/legend_inside_placement.md`
 - 세션 시작·종료·저장·모달: `references/origin/session_and_modal.md`
