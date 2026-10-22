@@ -57,7 +57,7 @@ val = getattr(SomeEnum, "from")
 
 ## ExitAfterScript=True 정리
 
-정상 종료 = 마지막 로그 줄 뒤 ~2초에 PID 가 스스로 끝난다(v261 일반 모드, 2026-10-18 실측). 초기 기록(날짜 미상)은 5~30초 cleanup — orchestrator 는 30초까지 기다린다. exception 종료 = hang 가능 → orchestrator watchdog (자기 PID `Stop-Process -Force`, headless 는 `CloseMainWindow` 무효).
+정상 종료 = 마지막 로그 줄 뒤 PID 가 스스로 끝난다 — 일반 모드 ~2초(2026-10-18 실측), SPEOS 모드는 판정 줄 뒤 13.8초(2026-10-22 smoke 1회). orchestrator 는 30초까지 기다린다. exception 종료 = hang 가능 → orchestrator watchdog (자기 PID `Stop-Process -Force`, headless 는 `CloseMainWindow` 무효).
 
 ## SpeosDes = SPEOS 모드만
 

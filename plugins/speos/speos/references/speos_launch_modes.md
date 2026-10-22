@@ -8,6 +8,8 @@ cmd = [r"C:\Program Files\ANSYS Inc\ANSYS Student\v261\scdm\SpaceClaim.exe",
 ```
 표준 API 만 (SketchCircle, SketchLine, RevolveEdges, NurbsCurve, DesignCurve). `SpeosDes.*` → NameError. cold start ~20초.
 
+v261: `/Headless=True` 를 빼거나 `/Headless=False` 를 줘도 `/RunScript` 는 실행되고 `/ExitAfterScript=True` 로 스스로 끝난다(2026-10-22 실측: 로그 줄 27~28초, 종료 30~31초 — 헤드리스와 같다). 화면 세션에서는 모달 창이 실제로 뜰 수 있어 창 감시를 함께 둔다(아래 「화면 모드의 경고 창」).
+
 ## 모드 2 — SPEOS plug-in (launcher 우회)
 
 ```python

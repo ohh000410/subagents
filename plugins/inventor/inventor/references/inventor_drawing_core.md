@@ -25,8 +25,8 @@ tg = app.TransientGeometry
 
 - gencache: `win32com.client.gencache.EnsureDispatch("Inventor.Application")` — DrawingDocument 등 CastTo 필요 시. 캐시 `~\AppData\Local\Temp\gen_py\3.12\`
 - 실행 전 Inventor 가 이미 떠 있으면 붙지도 죽이지도 않고 거부·보고(Dispatch 는 실행 중 인스턴스에 붙음). 종료는 자기가 띄운 PID 만: `tools/inventor_session.py` `launch()`/`kill_own(pid)`
-- cold-start 20~40초
-- 소요 시간(작성자 PC 실측, 2026-08): 기동 + `Documents.Add` ≈ 21 s 가 고정비이고 작업 자체는 짧다
+- 기동(`Dispatch` → `SoftwareVersion`) 5.8~10.3 s, `launch()` + 첫 `Documents.Add(part)` ≈ 11.5~12.5 s (2026-10-22, 연속 실행). 부팅 직후 첫 기동은 미측정
+- 소요 시간(작성자 PC 실측): 기동 + 첫 `Documents.Add` 가 고정비이고(2026-10-22 약 12 s, 2026-08 21 s) 작업 자체는 짧다. 아래는 2026-08 값
   - IPT(revolve + 구멍 2개 + MassProperties + 저장) 20 s, 피처 21개(+ MassProperties 21회) 23 s — 피처 수는 병목이 아니다(피처 하나 ≈ 0.26 s)
   - A3 도면(3뷰 + 치수 8개 + 노트 15줄 + IDW·PDF·PNG) 34~36 s. 뷰 렌더 대기는 `sleep(8)` 한 번이면 된다(뷰마다 아님)
   - 한 스크립트에서 모델링부터 도면까지 이으면 기동 고정비가 한 번만 든다(26.7 s). timeout 은 몇 번 띄우는지부터 세고, 이 규모면 모델 60 s / 도면 120 s
@@ -120,16 +120,20 @@ time.sleep(6)
 ## 스펙 노트 & 저장
 
 ```python
-note = gn.AddByRectangle(tg.CreatePoint2d(2.0, 14.0), tg.CreatePoint2d(12.0, 9.5), "텍스트\n줄2")  # Point1 = 상단 앵커
+note = gn.AddByRectangle(tg.CreatePoint2d(2.0, 14.0), tg.CreatePoint2d(12.0, 9.5), "NOTE LINE1\nLINE2")  # Point1 = 노트 좌상단
 note.TextStyle.FontSize = 0.25  # cm
 
-draw_doc.SaveAs2(IDW_PATH, False)  # 주 문서
+draw_doc.SaveAs2(IDW_PATH, False)  # 주 문서. 다시 저장은 draw_doc.Save() — 같은 경로 SaveAs2 두 번째는 E_INVALIDARG
 draw_doc.SaveAs2(PDF_PATH, True)   # copy
 
 draw_doc.Close(True)   # SkipSave=True. False → dirty 시 저장 모달
 part_doc.Close(True)
 app.Quit()
 ```
+
+- **PDF 로 저장할 도면의 노트는 ASCII 로 쓴다.** 노트에 한글이 있으면 PDF 저장 때 'Published with a warning(s)' 창(Font Tahoma for symbol … was replaced by font 맑은 고딕)이 떠서 `SaveAs2(pdf, True)`·TranslatorAddIn 모두 비대화형 세션이 멈춘다(PDF 파일은 창이 뜨기 전에 써진다). 제목란 iProperty 의 한글은 미확인
+- `AddByRectangle` 의 사각형 폭으로는 줄이 바뀌지 않는다 — 줄바꿈은 `\n`. `AddFitted` 도 Point1 이 노트 좌상단
+- `SaveAs2(pdf, True)` 와 TranslatorAddIn `SaveCopyAs` 는 같은 PDF 를 만든다(ASCII 노트, 바이트 동일, 2026-10-22)
 
 PDF 검증:
 ```python
