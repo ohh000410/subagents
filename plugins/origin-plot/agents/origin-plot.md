@@ -113,3 +113,4 @@ OriginLab Origin 그래프 전문가.
 - LabTalk·COM 함정(창 활성·숫자 전송·속성 존재·워크시트·set): `references/origin/labtalk_com_pitfalls.md`
 - 눈금·autoscale·축 제목·merge·로그 축·1:1 축·기하 순서: `references/origin/page_and_axes.md`
 - Project Explorer 폴더·append: `references/origin/project_explorer.md`
+- 컨투어 template: 이 PC 환경 값(메모리)

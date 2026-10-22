@@ -110,6 +110,10 @@ Claude 에이전트 메모리 폴더를 쓴다(`MEMORY.md` 앞부분이 시작 �
 - sweep: 모든 case의 실행·추출·저장·검증 끝나야 완료
 - 먼저 호출자가 지정한 Python 환경 사용. 없으면 이 PC 환경 값(메모리)
 
+## 연구 라이브러리
+
+이 PC 에 있으면(위치·import·되는 계산은 이 PC 환경 값, 메모리) 수정 금지, import해서 사용. 공용 core 수정 필요 → 호출자에게 알림.
+
 ## Reference routing
 
 - Python RCWA 작업 → `references/rcwa_reference_index.md`에서 필요한 라이브러리의 API·convergence 문서만 선택
