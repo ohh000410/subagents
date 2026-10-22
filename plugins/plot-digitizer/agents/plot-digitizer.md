@@ -84,6 +84,7 @@ Claude 에이전트 메모리 폴더를 쓴다(`MEMORY.md` 앞부분이 시작 �
 ## 클릭 picker (human-in-the-loop)
 도구: `${CLAUDE_PLUGIN_ROOT}/plot-digitizer/tools/picker_server.py <이미지> <포트>`
 1. 실행 전 이미지 폴더에 `_task.json` Write (`{"n": <점개수>, "title": ..., "steps": [...]}`, steps 개수 = n) → 화면·안내·수신 개수 자동 일치
+   - cartesian 축 캘리브 = 축마다 눈금 3개 이상. 2개 = 직선이 두 점을 지나 재투영 오차 늘 0 → `check_calibration` FAIL(`no_dof`)
 2. background 실행 → `Start-Process "http://127.0.0.1:<포트>"`
 3. 안내: 무엇을(정확히 어느 점)·왜·어떻게(클릭 순서, 방향키 1px·Shift 5px, ✅ 제출). 불확실 전제(중심 = 시작값 vs 0, 0°축 기울기, 각도 방향, radial 범위·scale) → 가정 금지, 질문
 4. `_submit.flag` 대기 → `_clicks.json` Read

@@ -22,6 +22,8 @@ rec("A R=1.738 eps=-0.738", C.result_bounds([1.738], [0.0], [-0.738]), "FAIL")
 rec("A nan", C.result_bounds([nan], [.5], [.5]), "FAIL")
 rec("A eps>1", C.result_bounds([0.0], [0.0], [1.0000001]), "FAIL")
 rec("A tol=1e-6 absorbs -1e-9", C.result_bounds([0.5], [0.5], [-1e-9], tol=1e-6), "PASS")
+rec("A empty (all points dropped)", C.result_bounds([], [], []), "FAIL")  # 2026-10-22 교차 검토
+rec("A tol=nan", C.result_bounds([.1], [.9], [0.0], tol=nan), "FAIL")
 print("--- B unit")
 used = dict(fto=5, theta_deg=30.000000000000004, pol=0.0, N_z=20, wavelength=3.0)
 rec("B match (roundoff theta)", C.requested_vs_used(dict(fto=5, theta_deg=30, pol="TE", N_z=20, wavelength=3.0), used), "PASS")
@@ -30,6 +32,9 @@ rec("B fto differs", C.requested_vs_used(dict(fto=6), used), "FAIL")
 rec("B theta differs", C.requested_vs_used(dict(theta_deg=30.1), used), "FAIL")
 rec("B pol differs", C.requested_vs_used(dict(pol="TM"), used), "FAIL")
 rec("B key not readable", C.requested_vs_used(dict(nG=40), used), "FAIL")
+rec("B empty request", C.requested_vs_used({}, used), "FAIL")  # 2026-10-22 교차 검토
+rec("B fto 7.5 silently cut to 7", C.requested_vs_used(dict(fto=7.5), dict(fto=7)), "FAIL")
+rec("B fto 5.0 vs 5", C.requested_vs_used(dict(fto=5.0), used), "PASS")
 print("--- C unit")
 
 
@@ -44,10 +49,14 @@ rec("C still decreasing -> cap", C.convergence_line(mk([.02, .01, .005, .0025]),
 rec("C nan -> cap", C.convergence_line(mk([.02, nan]), 1e-3), "FAIL")
 rec("C tol met but blas_spread>0.01", C.convergence_line(mk([.0005, .0005]), 1e-3, blas_spread=0.015), "FAIL")
 rec("C spread=0 alone gives no PASS", C.convergence_line(mk([.02, .01, .005, .0025]), 1e-3, blas_spread=0.0), "FAIL")
+rec("C tol met but blas_spread=nan", C.convergence_line(mk([.0005, .0005]), 1e-3, blas_spread=nan), "FAIL")  # 2026-10-22 교차 검토
 print("--- D unit")
 rec("D symmetric", C.mirror_fixture([.1, .2], [.1, .2 + 1e-9], 1e-6, [30, 60]), "PASS")
 rec("D asymmetric", C.mirror_fixture([.1, .2], [.1, .25], 1e-3, [30, 60]), "FAIL")
 rec("D run linear-in-theta", C.mirror_fixture_run(lambda t: 0.1 + 0.01 * t, [10, 20], 1e-3), "FAIL")
+rec("D tol=nan", C.mirror_fixture([.1, .2], [.9, .8], nan, [30, 60]), "FAIL")  # 2026-10-22 교차 검토
+rec("D empty", C.mirror_fixture([], [], 1e-3), "FAIL")
+rec("D theta=0 checks nothing", C.mirror_fixture_run(lambda t: 0.1 + 0.01 * t, [0], 1e-3), "FAIL")
 
 print("--- real: flat n=1.5 interface (slab n=1.5 on n_bot=1.5), meent + grcwa vs Fresnel")
 n = 1.5; lam = 3.0; Lx = 7.3

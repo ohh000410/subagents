@@ -50,10 +50,10 @@ sys.exit(0 if res["verdict"] == "PASS" else 1)
 
 1. hosted IronPython 컴파일 체크 — 실패 시 launch 없이 `precompile_error`
 2. 다른 SpaceClaim 이 0 이 될 때까지 최대 `seat_wait_s`(기본 300 s) 대기(kill 금지 — 공유 좌석, 사용자 GUI SpaceClaim 도 센다). 대기 후에도 점유면 launch 하지 않고 `seat_busy`(FAIL) 반환
-3. OUT·`_FAIL`·LOG 삭제 후 LOG 를 빈 파일로 생성 → `Popen`(stdout=PIPE 금지, `gui_modal_deadlock.md`)
+3. OUT·`_FAIL` 의 상태(수정 시각·크기)를 적어 두고 LOG 만 비운 뒤 `Popen`(stdout=PIPE 금지, `gui_modal_deadlock.md`). 지난 결과는 지우지 않는다 — 지우면 새 실행이 실패할 때 지난 결과까지 사라졌다
 4. polling 종료: 로그에 `[GEOM VERDICT]` 또는 `[FATAL]` / 프로세스 종료 / timeout. 파일 생성은 종료 조건이 아니다(판정 줄이 저장 뒤에 쓰임)
 5. 자기 PID 만 종료: 자체 종료 대기 → `-Force` (headless 는 창이 없어 `CloseMainWindow()` 무효, `policies/gui_modal_deadlock.md`)
-6. 로그를 정규식으로 읽어 `verdict`·`kind` 반환. 판정 줄 없으면 FAIL, 0바이트 로그는 `compile_error`(launch 시 다른 SpaceClaim 있었으면 `seat_contention`)
+6. 로그를 정규식으로 읽어 `verdict`·`kind` 반환. 판정 줄 없으면 FAIL, 판정 줄이 PASS 여도 steps 0·fail > 0·`[STEP FAIL]` 줄이면 FAIL, 0바이트 로그는 `compile_error`. PASS 는 이번 실행이 OUT 을 1KB 이상으로 썼을 때만(OUT 상태가 3 단계와 달라야 함)
 
 - 정상 종료 script: `/ExitAfterScript=True` 로 marker 후 ~2초에 자체 종료(v261 실측). exception 으로 끝난 script 는 hang 가능 → 5 단계의 PID 종료가 처리
 - 정리 대상: 자기가 띄운 `SpaceClaim` PID. SPEOS 모드의 `AnsysSpeosLauncher` 는 `speos=True` 일 때 `run` 이 launch 전·종료 후 개수를 `launcher=전->후` 로 보고(정리는 안 함). 2026-10-18 실측 1회: 0->0, +5초 뒤에도 0. `SpeosRPC_Server` 는 PySpeos 용, 무관

@@ -49,6 +49,21 @@ class StepCheck(unittest.TestCase):
     def test_nan_bbox_fails(self):
         self.assertEqual(chk("base", (0, 0), (2.0, 6, (math.nan,) * 6), exp_dV_cm3=2.0, exp_bbox=BOX).status, "FAIL")
 
+    def test_partial_nan_bbox_fails(self):  # 좌표 하나만 NaN 이어도 — 첫 좌표가 아니면 max() 가 건너뛰었다(2026-10-22 교차 검토)
+        for i in range(6):
+            bb = list(BOX); bb[i] = math.nan
+            self.assertEqual(chk("base", (0, 0), (2.0, 6, tuple(bb)), exp_dV_cm3=2.0, exp_bbox=BOX).status, "FAIL", i)
+            self.assertEqual(chk("base", (0, 0), (2.0, 6, BOX), exp_dV_cm3=2.0, exp_bbox=tuple(bb)).status, "FAIL", i)
+
+    def test_short_bbox_raises(self):  # zip() 이 앞 3개만 비교해 통과했다
+        with self.assertRaises(ValueError):
+            chk("base", (0, 0), (2.0, 6, BOX[:3]), exp_dV_cm3=2.0, exp_bbox=BOX)
+
+    def test_nan_volume_without_theory_fails(self):  # 기대 dV 가 없으면 WARN 으로 새어 "FAIL 0" 완료 기준을 통과했다
+        for bad in (math.nan, math.inf):
+            self.assertEqual(chk("fillet", (2.0, 6), (bad, 10)).status, "FAIL")
+            self.assertEqual(chk("fillet", (bad, 6), (2.0, 10)).status, "FAIL")
+
     def test_bbox_without_after_bbox_raises(self):
         with self.assertRaises(ValueError):
             chk("base", (0, 0), (2.0, 6), exp_dV_cm3=2.0, exp_bbox=BOX)

@@ -363,7 +363,8 @@ def write_csv(path, header, rows):
 
 
 def cli(script, *args):
-    r = subprocess.run([sys.executable, os.path.join(TOOLS, script), *args], capture_output=True, text=True,
+    # -B: 하네스 tools 폴더에 __pycache__ 를 만들지 않는다
+    r = subprocess.run([sys.executable, "-B", os.path.join(TOOLS, script), *args], capture_output=True, text=True,
                        encoding="utf-8")
     return r.returncode, r.stdout
 
@@ -493,16 +494,79 @@ def case_nothing_to_check():
     """검사한 것이 없으면 FAIL·종료코드 2 — flag 0건 PASS 와 구별(2026-10-22 외부 검토: 곡선 0개·눈금 0개가 PASS)."""
     out = []
     with tempfile.TemporaryDirectory() as td:
-        px, pc = os.path.join(td, "x_only.csv"), os.path.join(td, "no_ticks.json")
-        write_csv(px, ["x"], [(v,) for v in (1, 2, 3)])
-        cm.save(pc, {"type": "cartesian", "box_px": {"left": 0, "right": 100, "top": 0, "bottom": 100}})
-        for label, script, path in (("결함: 곡선 0개 CSV (x 열만)", "check_extraction.py", px),
-                                    ("결함: 눈금 없는 calib.json", "check_calibration.py", pc)):
+        p = lambda n: os.path.join(td, n)
+        write_csv(p("x_only.csv"), ["x"], [(v,) for v in (1, 2, 3)])
+        write_csv(p("header_only.csv"), ["x", "y1"], [])            # 2026-10-22 교차 검토: WARN 이었다
+        open(p("zero.csv"), "w").close()                             # 0바이트: IndexError 로 죽었다
+        box = {"left": 0, "right": 100, "top": 0, "bottom": 100}
+        cm.save(p("no_ticks.json"), {"type": "cartesian", "box_px": box})
+        cm.save(p("empty_ticks.json"), {"type": "cartesian", "box_px": box, "x_ticks": [], "y_ticks": []})
+        cm.save(p("polar_no_ticks.json"), {"type": "polar", "center_px": [50, 50], "R_px": 40, "r_min": 0, "r_max": 1,
+                                           "theta0_deg": 90, "theta_dir": -1, "theta_range": [-90, 90]})
+        nan = float("nan")
+        cm.save(p("nan_ticks.json"), {"type": "cartesian", "box_px": box, "x_ticks": [[0, nan], [10, nan], [5, nan]],
+                                      "y_ticks": [[0, nan], [1, nan], [0.5, nan]]})
+        # 축마다 눈금 2개, 변환식 없음 — 값 10 을 5 로 잘못 넣어도 오차 0 이었다(2026-10-22 교차 검토)
+        cm.save(p("two_ticks.json"), {"type": "cartesian", "box_px": box, "x_ticks": [[0, 10.0], [5, 90.0]],
+                                      "y_ticks": [[0, 90.0], [1, 10.0]]})
+        for label, script, path in (("결함: 곡선 0개 CSV (x 열만)", "check_extraction.py", p("x_only.csv")),
+                                    ("결함: 헤더만 있는 CSV", "check_extraction.py", p("header_only.csv")),
+                                    ("결함: 0바이트 CSV", "check_extraction.py", p("zero.csv")),
+                                    ("결함: 눈금 없는 calib.json", "check_calibration.py", p("no_ticks.json")),
+                                    ("결함: 눈금 빈 목록 calib.json", "check_calibration.py", p("empty_ticks.json")),
+                                    ("결함: polar 눈금 없음", "check_calibration.py", p("polar_no_ticks.json")),
+                                    ("결함: 눈금 픽셀 전부 NaN", "check_calibration.py", p("nan_ticks.json")),
+                                    ("결함: 축마다 눈금 2개, 변환식 없음", "check_calibration.py", p("two_ticks.json"))):
             code, txt = cli(script, path)
-            last = txt.strip().splitlines()[-1]
-            hit = code == 2 and last.split(": ", 1)[1].startswith("FAIL")
+            last = txt.strip().splitlines()[-1] if txt.strip() else "(출력 없음)"
+            hit = code == 2 and last.split(": ", 1)[-1].startswith("FAIL")
             out.append((label, [{"type": "nothing_checked", "msg": last}] if hit else [],
                         f"CLI 종료코드 {code}, 끝줄 '{last}'"))
+    return out
+
+
+# ---------------------------------------------------------------- 9 NaN 값
+def case_nonfinite():
+    """NaN 은 "> tol" 이 거짓이라 통과했다(2026-10-22 교차 검토). 일부만 NaN 이면 flag(WARN)."""
+    out = []
+    with tempfile.TemporaryDirectory() as td:
+        x = np.linspace(0, 10, 300)
+        img, calib = cart_figure([(x, 0.5 + 0.3 * np.sin(x), "red")], (0, 10), (0, 1), [0, 2, 4, 6, 8, 10],
+                                 [0, 0.2, 0.4, 0.6, 0.8, 1.0])
+        pc = os.path.join(td, "nan_map.json")
+        cm.save(pc, dict(calib, x_map={"a": float("nan"), "b": 0.0}))
+        code, txt = cli("check_calibration.py", pc)
+        last = txt.strip().splitlines()[-1]
+        rep, flags = cc.check(cm.load(pc))
+        out.append(("결함: x 변환식 a=NaN", flags if code == 1 and last.startswith("check_calibration: WARN") else [],
+                    f"CLI 종료코드 {code}, 끝줄 '{last}'"))
+        pe = os.path.join(td, "nan_x.csv")
+        write_csv(pe, ["x", "A"], [(v, 0.5) for v in (0.0, 1.0, 2.0, 3.0)] + [("nan", 0.999)])
+        flags, _ = ce.check_series(ce.read_csv(pe))
+        code, txt = cli("check_extraction.py", pe)
+        out.append(("결함: x 가 NaN 인 행 (y 는 유한)", flags if code == 1 else [],
+                    f"CLI 종료코드 {code}, 끝줄 '{txt.strip().splitlines()[-1]}'"))
+    return out
+
+
+# ---------------------------------------------------------------- 10 눈금 2개 (자유도 0)
+def case_two_ticks():
+    """변환식 없이 눈금 2개면 직선이 두 점을 지나 오차가 늘 0 = 검사 안 됨(2026-10-22 교차 검토).
+    한 축만 그러면 그 축만 no_dof(WARN). 독립 변환식이 있으면 2개로도 검사된다."""
+    out = []
+    x = np.linspace(0, 10, 300)
+    img, calib = cart_figure([(x, 0.5 + 0.3 * np.sin(x), "red")], (0, 10), (0, 1), [0, 2, 4, 6, 8, 10],
+                             [0, 0.2, 0.4, 0.6, 0.8, 1.0])
+    two = dict(calib, x_ticks=calib["x_ticks"][:1] + calib["x_ticks"][-1:])
+    rep, flags = cc.check(two)
+    out.append(("결함: x 축만 눈금 2개", flags if cc.summary(rep, flags).startswith("check_calibration: WARN") else [],
+                cc.summary(rep, flags)))
+    ax, bx, _ = cm.axis_map(calib, "x")
+    ay, by, _ = cm.axis_map(calib, "y")
+    given = dict(calib, x_ticks=two["x_ticks"], y_ticks=calib["y_ticks"][:2],
+                 x_map={"a": ax, "b": bx}, y_map={"a": ay, "b": by})
+    rep, flags = cc.check(given)
+    out.append(("정상: 축마다 눈금 2개 + 독립 변환식", flags, cc.summary(rep, flags)))
     return out
 
 
@@ -516,6 +580,8 @@ CASES = [
     ("6 long CSV", case_long_csv, {"gap", "nan_run"}),
     ("7 calib.json·overlay", case_calib_json, {"reproj", "dropped_candidate"}),
     ("8 검사할 것 없음", case_nothing_to_check, {"nothing_checked"}),
+    ("9 NaN 값", case_nonfinite, {"nonfinite", "nan_run"}),
+    ("10 눈금 2개", case_two_ticks, {"no_dof"}),
 ]
 
 

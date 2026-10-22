@@ -11,6 +11,7 @@
 before/after = (volume_cm3, faces[, (minx, miny, minz, maxx, maxy, maxz)]).
 dV = after - before (부호 있음: 절삭은 음수). exp_dV_cm3 도 같은 부호로 준다.
 """
+import math
 
 TOL_REL = 1e-4       # 이론 dV 대비 상대 허용 오차
 TOL_ABS_CM3 = 1e-7   # 상대 허용이 너무 작아질 때의 하한 = 1e-4 mm3 (평면 단계 일치 수준)
@@ -40,6 +41,9 @@ def step_check(name, before, after, exp_dV_cm3=None, tol=TOL_REL, abs_tol=TOL_AB
     dV, dF = v1 - v0, f1 - f0
     fails = []
 
+    # 되읽은 체적이 유한한지는 기대값과 상관없이 본다 — 기대 dV 가 없으면 NaN 이 WARN 으로 새어 완료 기준을 통과했다(2026-10-22 교차 검토)
+    if not (math.isfinite(v0) and math.isfinite(v1)):
+        fails.append("volume not finite (before=%r, after=%r)" % (v0, v1))
     if abs(dV) < NOOP_CM3 and dF == 0:
         fails.append("no-op (dV=0, dF=0)")
     # 허용치 안일 때만 통과로 쓴다 — NaN 은 어떤 비교도 거짓이라 "> 허용치" 로 쓰면 통과해 버린다(2026-10-22 외부 검토)
@@ -48,9 +52,12 @@ def step_check(name, before, after, exp_dV_cm3=None, tol=TOL_REL, abs_tol=TOL_AB
     if exp_bbox is not None:
         if bb1 is None:
             raise ValueError("exp_bbox 를 주려면 after 에 RangeBox 가 있어야 한다")
-        worst = max(abs(a - b) for a, b in zip(bb1, exp_bbox))
-        if not worst <= bbox_tol:
-            fails.append("bbox mismatch (max err=%.4f cm)" % worst)
+        if len(bb1) != 6 or len(exp_bbox) != 6:
+            raise ValueError("RangeBox·exp_bbox 는 (minx, miny, minz, maxx, maxy, maxz) 6개 값")
+        errs = [abs(a - b) for a, b in zip(bb1, exp_bbox)]
+        # 좌표마다 허용치 안일 때만 통과 — max() 는 첫 값 뒤의 NaN 을 건너뛰어 일부만 NaN 인 bbox 가 통과했다
+        if not all(e <= bbox_tol for e in errs):
+            fails.append("bbox mismatch (err=%s cm)" % ", ".join("%.4f" % e for e in errs))
 
     if fails:
         status = "FAIL"

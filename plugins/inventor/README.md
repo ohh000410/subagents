@@ -37,7 +37,7 @@
 
 - `agents/inventor.md` — 에이전트 정의(공통 규칙 + 본문)
 - `inventor/references/` — 6개 파일
-- `inventor/tools/` — 5개 파일
+- `inventor/tools/` — 6개 파일
 - `policies/` — 공통 정책(실패 처리, GUI 창 멈춤 대처)
 - `LICENSE` — MIT
 

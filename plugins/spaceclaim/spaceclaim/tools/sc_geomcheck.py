@@ -16,6 +16,7 @@ Script-side usage (see README.md):
     gc.finish(OUT, DocumentSave.Execute)   # saves OUT or *_FAIL, logs [GEOM VERDICT] last
 """
 import codecs
+import math
 import time
 
 try:
@@ -76,6 +77,10 @@ def judge(before, after, exp_dV=None, exp_dF=None, exp_bodies=None, tol=VOL_TOL_
     nb = after[3]
     fails = []
     warns = []
+    # Read-back volumes must be finite whatever is expected: without exp_dV a NaN volume passed
+    # (cross review 2026-10-22). math.isfinite is py3-only -> isnan/isinf for IronPython 2.7.
+    if not (_finite(before[0]) and _finite(after[0])):
+        fails.append("volume not finite (before %r, after %r)" % (before[0], after[0]))
     if exp_dV is None and exp_dF is None and exp_bodies is None:
         warns.append("no expectation")
     if exp_dV is not None:
@@ -103,6 +108,10 @@ def judge(before, after, exp_dV=None, exp_dF=None, exp_bodies=None, tol=VOL_TOL_
     if reasons:
         detail += " | " + "; ".join(reasons)
     return status, detail
+
+
+def _finite(x):
+    return not (math.isnan(x) or math.isinf(x))
 
 
 def _fmt(x):

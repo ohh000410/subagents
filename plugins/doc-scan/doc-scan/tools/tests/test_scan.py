@@ -76,6 +76,65 @@ class Outputs(unittest.TestCase):
             self.assertEqual((res["status"], len(res["collisions"])), ("error", 1))
             self.assertFalse(os.path.exists(out))
 
+    # ---- 2026-10-22 교차 검토 ----
+
+    def run_scan(self, *args):
+        r = subprocess.run([sys.executable, "-B", os.path.join(TOOLS, "scan.py"), *args],
+                           capture_output=True, encoding="utf-8")
+        return json.loads(r.stdout.strip().splitlines()[-1])
+
+    def photo(self, path):
+        ok, buf = cv2.imencode(os.path.splitext(path)[1], synth.photo("blank"))
+        with open(path, "wb") as f:
+            f.write(buf.tobytes())
+        with open(path, "rb") as f:
+            return f.read()
+
+    def test_output_over_input_is_error(self):  # page.png 의 결과 page_gray.png 가 입력 page_gray.png 를 덮었다
+        with tempfile.TemporaryDirectory() as td:
+            a, b = os.path.join(td, "page.png"), os.path.join(td, "page_gray.png")
+            self.photo(a)
+            before = self.photo(b)
+            res = self.run_scan(a, b, "--out", td, "--mode", "gray")
+            self.assertEqual((res["status"], res["overwrite"]), ("error", [b]))
+            with open(b, "rb") as f:
+                self.assertEqual(f.read(), before)
+
+    def test_rerun_into_photo_folder_is_error(self):  # 지난 결과가 다음 실행의 입력에 섞였다
+        with tempfile.TemporaryDirectory() as td:
+            self.photo(os.path.join(td, "receipt.jpg"))
+            self.assertEqual(self.run_scan(td, "--out", td)["status"], "ok")
+            res = self.run_scan(td, "--out", td)
+            self.assertEqual(res["status"], "error")
+            self.assertIn(os.path.join(td, "receipt_color.jpg"), res["overwrite"])
+
+    def test_empty_mode_is_error(self):  # 아무것도 안 만들고 ok 였다
+        with tempfile.TemporaryDirectory() as td:
+            a = os.path.join(td, "a.png")
+            self.photo(a)
+            for mode in ("", ",", " , "):
+                res = self.run_scan(a, "--out", os.path.join(td, "out"), "--mode", mode)
+                self.assertEqual((res["status"], res["reason"]), ("error", "mode 이름"), repr(mode))
+            self.assertFalse(os.path.exists(os.path.join(td, "out")))
+
+    def test_repeated_mode_runs_once(self):  # color,color 면 PDF 에 같은 쪽이 두 번 들어갔다
+        with tempfile.TemporaryDirectory() as td:
+            a = os.path.join(td, "a.png")
+            self.photo(a)
+            res = self.run_scan(a, "--out", os.path.join(td, "out"), "--mode", "color,color")
+            self.assertEqual((res["status"], list(res["pages"][0]["outputs"])), ("ok", ["color"]))
+
+    def test_non_photo_file_is_error_before_writing(self):  # a 의 결과를 쓴 뒤 notes.txt 에서 예외로 죽었다
+        with tempfile.TemporaryDirectory() as td:
+            a, t = os.path.join(td, "a.png"), os.path.join(td, "notes.txt")
+            self.photo(a)
+            with open(t, "w", encoding="utf-8") as f:
+                f.write("not a photo")
+            out = os.path.join(td, "out")
+            res = self.run_scan(a, t, "--out", out)
+            self.assertEqual((res["status"], res["not_photo"]), ("error", [t]))
+            self.assertFalse(os.path.exists(out))
+
 
 if __name__ == "__main__":
     unittest.main()

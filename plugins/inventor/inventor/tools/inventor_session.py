@@ -47,11 +47,17 @@ def launch():
 
 
 def kill_own(pid, wait=15):
-    """자기 PID 가 아직 살아 있으면(Quit 후 wait 초 대기) 그 PID 만 강제 종료."""
+    """자기 PID 가 아직 살아 있으면(Quit 후 wait 초 대기) 그 PID 만 강제 종료. 끝났는지는 프로세스 목록으로 본다."""
     deadline = time.time() + wait
     while time.time() < deadline:
         if pid not in [p for p, _ in list_inventor()]:
             return False
         time.sleep(0.5)
-    subprocess.run(["taskkill", "/PID", str(pid), "/F"], check=True, capture_output=True)
+    # taskkill 종료코드로 판정하지 않는다 — 대기 끝 무렵 스스로 끝나면 128(없는 PID)로 예외였다(2026-10-22 교차 검토)
+    subprocess.run(["taskkill", "/PID", str(pid), "/F"], capture_output=True)
+    deadline = time.time() + 5
+    while pid in [p for p, _ in list_inventor()]:
+        if time.time() > deadline:
+            raise RuntimeError("자기 PID %d 강제 종료 실패" % pid)
+        time.sleep(0.5)
     return True

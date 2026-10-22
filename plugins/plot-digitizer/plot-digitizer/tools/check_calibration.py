@@ -19,10 +19,14 @@ calib.json 스키마 = calib_model.py docstring (cartesian 선형 축 / polar ra
 - flag 눈금(재투영 오차 > tol, dropped 후보, 테두리에 가린 끝 눈금 후보)은 빨강
 - 좌측 상단 = 마지막 요약 줄과 같은 문구
 
-종료코드 0 = flag 없음, 1 = flag 있음 (WARN), 2 = 눈금 0개 (FAIL — 검사한 것이 없음).
+종료코드 0 = flag 없음, 1 = flag 있음 (WARN), 2 = 검사한 눈금 0개 (FAIL — 검사한 것이 없음).
 마지막 줄 `check_calibration: PASS|WARN|FAIL N tick, RMS x px`
-= 보고에 그대로 옮기는 한 줄 판정 (N = 눈금 수 전체, RMS = 전체 눈금 재투영 오차 RMS).
-cartesian 에서 한 축의 눈금이 없으면 그 축은 `no_ticks` flag (WARN).
+= 보고에 그대로 옮기는 한 줄 판정 (N = 검사한 눈금 수, RMS = 그 눈금들의 재투영 오차 RMS).
+검사한 눈금 = 재투영 오차가 유한한 눈금. NaN 좌표·NaN 변환식의 눈금은 `nonfinite` flag 로 빠진다
+(nan 은 "> tol" 이 거짓이라 PASS 로 나갔다, 2026-10-22 교차 검토).
+한 축(polar 는 r)의 눈금이 없으면(키 없음·빈 목록 같음) 그 축은 `no_ticks` flag (WARN).
+cartesian 축이 변환식(x_map/y_map) 없이 눈금 2개 이하면 그 축은 `no_dof` flag (WARN) 로 검사에서 빠진다 —
+눈금으로 맞춘 직선이 그 눈금을 지나 오차가 늘 0 이라, 값을 잘못 넣어도 PASS 였다(2026-10-22 교차 검토).
 
 tol 1.0 px 근거: 격자 원 LSQ 잔차 <= 0.08 px, 지름선 끝 돌출로 인한 R 과대 2.5~3 px
 (references/calibration_extraction.md 「반원 polar 캘리브」). 1 px 는 둘 사이를 가른다.
@@ -53,6 +57,11 @@ def _loo(values, px):
     return out
 
 
+def _ticks(c, key):
+    """눈금 목록 -> (n, 2) 배열. 키 없음과 빈 목록은 같은 '눈금 없음'(빈 목록은 IndexError 로 죽었다)."""
+    return np.asarray(c.get(key) or [], float).reshape(-1, 2)
+
+
 def _tick_table(values, px, pred, flags, label, tol):
     a_fit, b_fit = cm.lsq_line(values, px)
     fit_res = a_fit * values + b_fit - px
@@ -63,7 +72,10 @@ def _tick_table(values, px, pred, flags, label, tol):
         rows.append({"value": float(values[i]), "px": float(px[i]), "err_px": float(err[i]),
                      "fit_res_px": float(fit_res[i]),
                      "loo_px": None if loo is None else float(loo[i])})
-        if abs(err[i]) > tol:
+        if not np.isfinite(err[i]):
+            flags.append({"type": "nonfinite", "axis": label, "value": float(values[i]),
+                          "msg": f"{label} 눈금 {values[i]:g}: 재투영 오차 {err[i]} - 눈금 좌표나 변환식에 NaN/inf, 검사 못 함"})
+        elif not abs(err[i]) <= tol:
             flags.append({"type": "reproj", "axis": label, "value": float(values[i]),
                           "msg": f"{label} 눈금 {values[i]:g}: 재투영 오차 {err[i]:+.2f} px > {tol} px"})
     cand, rms_rest = _dropped_candidates(values, px, tol)
@@ -117,14 +129,18 @@ def check_cartesian(c, tol):
     flags, report = [], {"type": "cartesian", "axes": {}, "notes": []}
     box = c.get("box_px")
     for axis in ("x", "y"):
-        key = f"{axis}_ticks"
-        if key not in c:
+        t = _ticks(c, f"{axis}_ticks")
+        if not len(t):
             flags.append({"type": "no_ticks", "axis": axis, "msg": f"{axis}: 눈금 없음 - 이 축은 검사하지 못함"})
             continue
-        t = np.asarray(c[key], float)
         a, b, src = cm.axis_map(c, axis)
         tab = _tick_table(t[:, 0], t[:, 1], a * t[:, 0] + b, flags, axis, tol)
         tab["map"] = {"a": a, "b": b, "source": src}
+        tab["checked"] = not (src == "tick_lsq" and len(t) < 3)
+        if not tab["checked"]:
+            flags.append({"type": "no_dof", "axis": axis,
+                          "msg": f"{axis}: 눈금 {len(t)}개로 맞춘 직선은 재투영 오차가 늘 0 - 이 축은 검사하지 못함 "
+                                 f"(눈금 3개 이상 또는 독립 변환식 {axis}_map)"})
         report["axes"][axis] = tab
         if box is not None and len(t) >= 2:
             lo, hi = (box["left"], box["right"]) if axis == "x" else (box["top"], box["bottom"])
@@ -134,21 +150,23 @@ def check_cartesian(c, tol):
 
 def check_polar(c, tol):
     flags, report = [], {"type": "polar", "notes": []}
-    t = np.asarray(c["r_ticks"], float)
-    v, r = t[:, 0], t[:, 1]
-    pred = cm.polar_r_px(c, v)
-    tab = _tick_table(v, r, pred, flags, "r", tol)
-    span = c["r_max"] - c["r_min"]
-    # r_px = a*v + b 재적합 -> r_max 에서의 반경
-    a, b = tab["fit"]["a"], tab["fit"]["b"]
-    R_fit = a * c["r_max"] + b
-    tab["R_used_px"] = float(c["R_px"])
-    tab["R_fit_px"] = float(R_fit)
-    tab["r_min_offset_fit_px"] = float(a * c["r_min"] + b)
-    report["r"] = tab
-    report["notes"].append(f"R_used {c['R_px']:.2f} px vs 격자 원 LSQ R {R_fit:.2f} px "
-                           f"(차 {c['R_px'] - R_fit:+.2f} px, r_min 위치 {a * c['r_min'] + b:+.2f} px)")
-    if "theta_ticks" in c:
+    t = _ticks(c, "r_ticks")
+    if not len(t):
+        flags.append({"type": "no_ticks", "axis": "r", "msg": "r: 격자 원 눈금 없음 - 반경은 검사하지 못함"})
+    else:
+        v, r = t[:, 0], t[:, 1]
+        pred = cm.polar_r_px(c, v)
+        tab = _tick_table(v, r, pred, flags, "r", tol)
+        # r_px = a*v + b 재적합 -> r_max 에서의 반경
+        a, b = tab["fit"]["a"], tab["fit"]["b"]
+        R_fit = a * c["r_max"] + b
+        tab["R_used_px"] = float(c["R_px"])
+        tab["R_fit_px"] = float(R_fit)
+        tab["r_min_offset_fit_px"] = float(a * c["r_min"] + b)
+        report["r"] = tab
+        report["notes"].append(f"R_used {c['R_px']:.2f} px vs 격자 원 LSQ R {R_fit:.2f} px "
+                               f"(차 {c['R_px'] - R_fit:+.2f} px, r_min 위치 {a * c['r_min'] + b:+.2f} px)")
+    if c.get("theta_ticks"):
         cx, cy = c["center_px"]
         rows, errs = [], []
         for deg, (x, y) in c["theta_ticks"]:
@@ -158,7 +176,10 @@ def check_polar(c, tol):
             e = float(np.radians(d) * rad)          # 접선 방향 px
             rows.append({"value": deg, "px": [x, y], "err_deg": float(d), "err_px": e})
             errs.append(e)
-            if abs(e) > tol:
+            if not np.isfinite(e):
+                flags.append({"type": "nonfinite", "axis": "theta", "value": deg,
+                              "msg": f"theta 눈금 {deg:g}°: 접선 오차 {e} - 좌표나 중심에 NaN/inf, 검사 못 함"})
+            elif not abs(e) <= tol:
                 flags.append({"type": "reproj", "axis": "theta", "value": deg,
                               "msg": f"theta 눈금 {deg:g}°: 접선 오차 {e:+.2f} px ({d:+.3f}°) > {tol} px"})
         report["theta"] = {"ticks": rows, "rms_px": float(np.sqrt(np.mean(np.square(errs))))}
@@ -170,15 +191,17 @@ def check(c, tol=1.0):
 
 
 def _errs(report):
+    """검사한 눈금의 재투영 오차 = 유한한 것만, 자유도 0 인 축(no_dof) 제외."""
     errs = []
     for tab in list(report.get("axes", {}).values()) + [report[k] for k in ("r", "theta") if k in report]:
-        errs += [row["err_px"] for row in tab["ticks"]]
+        if tab.get("checked", True):
+            errs += [row["err_px"] for row in tab["ticks"] if np.isfinite(row["err_px"])]
     return errs
 
 
 def summary(report, flags):
-    """`check_calibration: PASS|WARN|FAIL N tick, RMS x px` — 전 눈금 재투영 오차 기준.
-    눈금 0개 = FAIL: 검사한 것이 없는데 PASS 로 나갔다(2026-10-22 외부 검토)."""
+    """`check_calibration: PASS|WARN|FAIL N tick, RMS x px` — 검사한 눈금 재투영 오차 기준.
+    검사한 눈금 0개 = FAIL: 검사한 것이 없는데 PASS 로 나갔다(2026-10-22 외부 검토·교차 검토)."""
     errs = _errs(report)
     rms = float(np.sqrt(np.mean(np.square(errs)))) if errs else float("nan")
     verdict = "FAIL" if not errs else "WARN" if flags else "PASS"
@@ -215,11 +238,12 @@ def draw_overlay(c, report, flags, image_path, out_path, text=None):
         scr = np.radians(cm.polar_screen_deg(c, np.linspace(*sorted(c["theta_range"]), 361)))
         d.line([(cx - 8, cy), (cx + 8, cy)], fill=CYAN)
         d.line([(cx, cy - 8), (cx, cy + 8)], fill=CYAN)
+        r_rows = report.get("r", {}).get("ticks", [])
         for rad, col in [(c["R_px"], CYAN)] + [(cm.polar_r_px(c, row["value"]), RED if isbad("r", row["value"]) else MAGENTA)
-                                                for row in report["r"]["ticks"]]:
+                                                for row in r_rows]:
             d.line(list(zip(cx + rad * np.cos(scr), cy - rad * np.sin(scr))), fill=col)
         ph0 = np.radians(cm.polar_screen_deg(c, min(c["theta_range"])))     # r 측정점·라벨은 theta_range 시작 방향에 표시
-        for row in report["r"]["ticks"]:
+        for row in r_rows:
             x, y = cx + row["px"] * np.cos(ph0), cy - row["px"] * np.sin(ph0)
             d.ellipse([x - 3, y - 3, x + 3, y + 3], fill=GREEN)
             d.text((x + 3, y - 12), f"{row['value']:g}", fill=RED if isbad("r", row["value"]) else MAGENTA)

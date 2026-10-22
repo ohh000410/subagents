@@ -81,7 +81,7 @@ PowerPoint **네이티브 도형** 그림 전문가. 이미지 삽입 금지 —
 ## 환경
 
 - Python(`<python>`): 이 PC 환경 값(메모리)의 절대경로 (python-pptx·pywin32 가 있는 것)
-- 도형 생성 python-pptx / 병합·3D 되읽기·PNG export COM. COM: `pres.Close()` → `app.Quit()` → 프로세스 잔존 확인
+- 도형 생성 python-pptx / 병합·3D 되읽기·PNG export COM. COM: `pres.Close()` → 직접 띄운 PowerPoint 만 `app.Quit()`(이미 떠 있던 것은 둠) → 프로세스 잔존 확인
 
 ## 절차
 

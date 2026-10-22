@@ -46,6 +46,13 @@ class ParseLog(unittest.TestCase):
         r = so.parse_log("")
         self.assertEqual((r["verdict"], r["kind"]), ("FAIL", "empty_log"))
 
+    def test_pass_word_alone_is_not_pass(self):  # cross review 2026-10-22
+        for text in ("x [GEOM VERDICT] PASS steps=0 warn=0 fail=0\n",
+                     "x [STEP PASS] a: ...\nx [GEOM VERDICT] PASS steps=1 warn=0 fail=1\n",
+                     "x [STEP FAIL] hole: ...\nx [GEOM VERDICT] PASS steps=1 warn=0 fail=0\n"):
+            r = so.parse_log(text)
+            self.assertEqual((r["verdict"], r["kind"]), ("FAIL", "verdict"), text)
+
     def test_marker(self):
         self.assertTrue(so.log_has_marker(PASS_LOG))
         self.assertTrue(so.log_has_marker("x [FATAL] y"))
@@ -109,18 +116,18 @@ class RunVerdict(unittest.TestCase):
         so.compile_check, so.sc_count, so.launcher_count, so.close_pid, so.subprocess.Popen = self.saved
         shutil.rmtree(self.dir)
 
-    def run_with(self, write_out, residual):
+    def run_with(self, write_out, residual, out_bytes=2048):
         log, out = self.log, self.out
 
         class Proc:
             pid = 99999
 
             def __init__(self, *a, **k):
-                with open(log, "w", encoding="utf-8") as f:
+                with open(log, "a", encoding="utf-8") as f:
                     f.write("21:30:07 [GEOM VERDICT] PASS steps=1 warn=0 fail=0\n")
                 if write_out:
                     with open(out, "wb") as f:
-                        f.write(b"scdocx")
+                        f.write(b"n" * out_bytes)
 
             def poll(self):
                 return 0
@@ -128,18 +135,71 @@ class RunVerdict(unittest.TestCase):
         so.close_pid = lambda pid, wait_s=30: residual
         return so.run(os.path.join(self.dir, "s.py"), log, out, timeout_s=5, poll_s=0.01)
 
+    def write(self, path, data):
+        with open(path, "wb") as f:
+            f.write(data)
+
     def test_pass(self):
         res = self.run_with(write_out=True, residual=0)
         self.assertEqual((res["verdict"], res["problems"]), ("PASS", []))
+        self.assertIn("out=new", res["summary"])
 
     def test_no_output_fails(self):
         res = self.run_with(write_out=False, residual=0)
         self.assertEqual((res["verdict"], res["problems"]), ("FAIL", ["no_output"]))
         self.assertIn("problems=no_output", res["summary"])
 
+    def test_tiny_output_fails(self):  # a 10-byte out passed (cross review 2026-10-22)
+        res = self.run_with(write_out=True, residual=0, out_bytes=10)
+        self.assertEqual((res["verdict"], res["problems"]), ("FAIL", ["no_output"]))
+
     def test_residual_fails(self):
         res = self.run_with(write_out=True, residual=1)
         self.assertEqual((res["verdict"], res["problems"]), ("FAIL", ["residual"]))
+
+    def test_previous_output_is_kept_and_not_counted(self):  # it was deleted before launch (cross review 2026-10-22)
+        self.write(self.out, b"o" * 4096)
+        self.write(so.fail_path(so.Path(self.out)), b"f" * 4096)
+        self.write(self.log, b"21:00:00 [GEOM VERDICT] PASS steps=3 warn=0 fail=0\n")
+        res = self.run_with(write_out=False, residual=0)
+        self.assertEqual((res["verdict"], res["problems"]), ("FAIL", ["no_output"]))
+        self.assertIn("out=old fail_out=old", res["summary"])
+        with open(self.out, "rb") as f:
+            self.assertEqual(f.read(), b"o" * 4096)
+        with open(self.log, encoding="utf-8") as f:   # the log is this run's only
+            self.assertEqual(f.read().count("[GEOM VERDICT]"), 1)
+
+    def test_previous_output_survives_failed_launch(self):
+        self.write(self.out, b"o" * 4096)
+
+        def no_exe(*a, **k):
+            raise FileNotFoundError("SpaceClaim.exe")
+        so.subprocess.Popen = no_exe
+        with self.assertRaises(FileNotFoundError):
+            so.run(os.path.join(self.dir, "s.py"), self.log, self.out, timeout_s=5, poll_s=0.01)
+        self.assertEqual(os.path.getsize(self.out), 4096)
+
+    def test_overwritten_output_counts(self):
+        self.write(self.out, b"o" * 4096)
+        res = self.run_with(write_out=True, residual=0)
+        self.assertEqual((res["verdict"], res["out_new"]), ("PASS", True))
+
+
+class PowerShell(unittest.TestCase):
+    def test_nonzero_exit_raises(self):  # a failed count read as 0 = "no SpaceClaim" (cross review 2026-10-22)
+        with self.assertRaises(RuntimeError):
+            so._ps("Write-Error 'boom' -ErrorAction Stop")
+
+    def test_compile_check_reports_missing_install(self):
+        old = so.SC_DIR
+        so.SC_DIR = tempfile.mkdtemp()
+        try:
+            msg = so.compile_check(os.path.abspath(__file__))
+        finally:
+            os.rmdir(so.SC_DIR)
+            so.SC_DIR = old
+        self.assertNotEqual(msg, "COMPILE OK")
+        self.assertIn("Microsoft.Scripting.dll", msg)
 
 
 if __name__ == "__main__":

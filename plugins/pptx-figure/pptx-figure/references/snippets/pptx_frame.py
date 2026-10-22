@@ -17,6 +17,7 @@
 """
 import copy
 import os
+import subprocess
 
 from pptx import Presentation
 from pptx.util import Inches, Pt
@@ -317,6 +318,28 @@ def solve_3d(top4, thickness_px, x0=None, square=False):
 
 
 # ── COM 후처리 (python-pptx 로는 못 하는 부분) ─────────────────────────────
+def _powerpoint_running():
+    out = subprocess.run(["tasklist", "/FI", "IMAGENAME eq POWERPNT.EXE", "/FO", "CSV", "/NH"],
+                         capture_output=True, text=True, encoding="cp949", errors="replace").stdout
+    return "powerpnt.exe" in out.lower()
+
+
+def _com_open(path):
+    """(app, pres, 직접 띄움 여부). Dispatch 는 이미 떠 있는 PowerPoint 에 붙는다(multi-use).
+    ★ 그 PowerPoint 를 Quit 하면 사용자가 열어 둔 프레젠테이션이 닫히거나 저장 확인 창이 뜬다
+      (2026-10-22 교차 검토) — 자기 pres 만 닫고, Quit 은 직접 띄웠을 때만 (_com_close)."""
+    import win32com.client
+    launched = not _powerpoint_running()
+    app = win32com.client.Dispatch("PowerPoint.Application")
+    return app, app.Presentations.Open(os.path.abspath(path), WithWindow=False), launched
+
+
+def _com_close(app, pres, launched):
+    pres.Close()          # 자기 프레젠테이션만. Close 는 저장을 묻지 않는다(MS 문서 Presentation.Close)
+    if launched:
+        app.Quit()
+
+
 def com_post(path, ops):
     """ops = [{"slide":1, "merge":(names, cmd, primary, new_name)},
               {"slide":1, "three_d":(name, {...})}]
@@ -325,9 +348,7 @@ def com_post(path, ops):
     ★ 병합 -> 3D 순서. 반대로 하면 primary 쪽 3D 만 남는다.
     ★ MsoMergeCmd: 1 Union · 2 Combine · 3 Intersect · 4 Subtract · 5 Fragment
     """
-    import win32com.client
-    app = win32com.client.Dispatch("PowerPoint.Application")
-    pres = app.Presentations.Open(os.path.abspath(path), WithWindow=False)
+    app, pres, launched = _com_open(path)
     try:
         for op in ops:
             sl = pres.Slides(op["slide"])
@@ -410,8 +431,7 @@ def com_post(path, ops):
         if not pres.Saved:
             raise RuntimeError(f"PowerPoint did not save: {path} (Saved=0)")
     finally:
-        pres.Close()
-        app.Quit()
+        _com_close(app, pres, launched)
     return path
 
 
@@ -439,18 +459,15 @@ def set_lightrig(path, rig="flat", direction="t", pages=None):
 def export_png(path, dst, slide=1, width=None):
     """★ 육안 확인은 width=1350 으로 뽑아라 — Read 토큰이 1/16 이다.
     측정(코너·색·recall)은 기본(원본 1:1 폭). 두 용도를 한 렌더로 겸하지 마라."""
-    import win32com.client
     w = width or RENDER_W
-    app = win32com.client.Dispatch("PowerPoint.Application")
-    pres = app.Presentations.Open(os.path.abspath(path), WithWindow=False)
+    app, pres, launched = _com_open(path)
     try:
         if os.path.exists(dst):
             os.remove(dst)
         pres.Slides(slide).Export(os.path.abspath(dst), "PNG", w,
                                   int(round(w * HSL / WSL)))
     finally:
-        pres.Close()
-        app.Quit()
+        _com_close(app, pres, launched)
     return dst
 
 

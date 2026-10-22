@@ -19,6 +19,11 @@ def result_bounds(R, T, eps, tol=0.0):
     주의(실측): 무손실 구조(eps_true=0)는 1-R-T 가 -1e-16~-7e-16 roundoff 로 tol=0 에서 FAIL 이 난다 -> 무손실 검증은 tol=1e-12 지정.
     R+T+A=1 은 eps=1-R-T 정의라 검사하지 않는다 (항등식)."""
     R, T, eps = (np.atleast_1d(np.asarray(x, dtype=float)) for x in (R, T, eps))
+    # 검사한 것이 없으면 FAIL — 발산점을 다 버린 뒤의 빈 배열이 PASS 였다(2026-10-22 교차 검토)
+    if eps.size == 0 or R.size == 0 or T.size == 0:
+        return _out("FAIL", "bounds", f"빈 입력 N_R={R.size} N_T={T.size} N_eps={eps.size}")
+    if not np.isfinite(tol):
+        return _out("FAIL", "bounds", f"tol={tol} 비유한값")
     bad = []
     nonfinite = int((~np.isfinite(R) | ~np.isfinite(T) | ~np.isfinite(eps)).sum())
     if nonfinite:
@@ -92,9 +97,13 @@ def _norm_pol(v):
 
 def requested_vs_used(requested, used, rtol=1e-12, atol=1e-12):
     """B. 요청 dict 의 키마다 used(read_* 반환) 값과 비교. 다르면 FAIL. 키가 used 에 없으면 FAIL(되읽기 불가 = 미검증).
-    정수 키(fto, fto_y, nG, N_z, n_layers)는 정확 일치. 실수(theta_deg, wavelength, pol ...)는 |diff| <= atol + rtol*|req|
+    정수 키(fto, fto_y, nG, N_z, n_layers)는 정확 일치 — 요청값을 int() 로 자르지 않는다: 7.5 를 요청하면 meent 가
+    조용히 7 로 자르는데, 양쪽을 잘라 비교해 PASS 였다(2026-10-22 교차 검토).
+    실수(theta_deg, wavelength, pol ...)는 |diff| <= atol + rtol*|req|
     (기본 1e-12 = 단위 변환 roundoff 수준, 물리 허용오차 아님; 인자로 조정).
-    pol 은 'TE'/'TM'/0/1 (TM 비율)."""
+    pol 은 'TE'/'TM'/0/1 (TM 비율). 빈 요청은 검사한 것이 없어 FAIL."""
+    if not requested:
+        return _out("FAIL", "used", "요청 dict 가 비어 있음")
     bad, ok = [], []
     for k, rv in requested.items():
         if k not in used:
@@ -106,7 +115,7 @@ def requested_vs_used(requested, used, rtol=1e-12, atol=1e-12):
         if isinstance(rv, str) or isinstance(uv, str):
             same = str(rv) == str(uv)
         elif k in _INT_KEYS:
-            same = int(rv) == int(uv)
+            same = float(rv) == float(uv)
         else:
             same = abs(float(uv) - float(rv)) <= atol + rtol * abs(float(rv))
         (ok if same else bad).append(f"{k}={uv}" if same else f"{k}: req={rv} used={uv}")
@@ -154,7 +163,8 @@ def convergence_line(path, tol, cap=None, blas_spread=None):
     line = (f"converge: s_fto={s_f[-1]:+.3g}, s_Nz={s_z[-1]:+.3g}, tol={tol:g}, stop={stop}"
             f" (axes fto={stops[0]} Nz={stops[1]}; steps={len(path)}; final fto={last['fto']} N_z={last['N_z']} eps={last['eps']:.6g}){extra}")
     verdict = {"tol": "PASS", "saturated": "WARN", "cap": "FAIL"}[stop]
-    if blas_spread is not None and blas_spread > 0.01:
+    # 0.01 이하일 때만 통과 — 한 스레드 결과가 nan 이면 spread 도 nan 이고 "> 0.01" 은 거짓이라 통과했다(2026-10-22 교차 검토)
+    if blas_spread is not None and not blas_spread <= 0.01:
         verdict = "FAIL"
         line += f" blas_spread={blas_spread:.3g}>0.01 near-singular"
     line = f"{verdict} {line}"
@@ -166,13 +176,19 @@ def convergence_line(path, tol, cap=None, blas_spread=None):
 def mirror_fixture(eps_plus, eps_minus, tol, theta_deg=None):
     """D. 새 형상 도입 시 필수 (첫 calibration, bare 구조).  대칭이어야 할 구조에서 eps(+theta) 와 eps(-theta) 비교.
     비대칭 구조(wedge 등)에는 쓰지 않는다 (±theta 가 물리적으로 다름).  차이가 tol 초과면 FAIL.
-    tol 은 필수 인자 (그 형상·편광의 노이즈바닥 등 호출자 근거로 지정)."""
+    tol 은 필수 인자 (그 형상·편광의 노이즈바닥 등 호출자 근거로 지정).
+    theta=0 은 +0 과 -0 이 같은 계산이라 대칭을 검사하지 못한다 -> FAIL."""
     ep, em = np.atleast_1d(np.asarray(eps_plus, dtype=float)), np.atleast_1d(np.asarray(eps_minus, dtype=float))
     d = np.abs(ep - em)
     th = "" if theta_deg is None else f" theta={np.atleast_1d(theta_deg).tolist()}"
+    if d.size == 0:
+        return _out("FAIL", "mirror", "빈 입력")
+    if theta_deg is not None and np.any(np.atleast_1d(theta_deg) == 0):
+        return _out("FAIL", "mirror", f"theta=0 은 ±가 같은 계산{th}")
     if not np.all(np.isfinite(d)):
         return _out("FAIL", "mirror", f"nonfinite eps{th}")
-    verdict = "FAIL" if d.max() > tol else "PASS"
+    # tol 안일 때만 통과 — tol=nan 이면 "> tol" 이 거짓이라 PASS 였다(2026-10-22 교차 검토)
+    verdict = "PASS" if d.max() <= tol else "FAIL"
     return _out(verdict, "mirror", f"max|eps(+t)-eps(-t)|={d.max():.3g} tol={tol:g} N={d.size}{th}")
 
 

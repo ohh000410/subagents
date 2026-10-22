@@ -37,6 +37,13 @@ class Judge(unittest.TestCase):
         after = (float("nan"),) + HOLED[1:]
         self.assertEqual(gc.judge(BLOCK, after, exp_dV=HOLE_DV)[0], "FAIL")
 
+    def test_nonfinite_volume_fails_without_exp_dV(self):  # passed as PASS/WARN (cross review 2026-10-22)
+        for bad in (float("nan"), float("inf"), float("-inf")):
+            after = (bad,) + HOLED[1:]
+            self.assertEqual(gc.judge(BLOCK, after, exp_dF=1, exp_bodies=1)[0], "FAIL")
+            self.assertEqual(gc.judge(BLOCK, after)[0], "FAIL")
+            self.assertEqual(gc.judge((bad,) + BLOCK[1:], HOLED, exp_dF=1)[0], "FAIL")
+
     def test_fail_faces_and_bodies(self):
         s, d = gc.judge(BLOCK, HOLED, exp_dV=HOLE_DV, exp_dF=2, exp_bodies=2)
         self.assertEqual(s, "FAIL")
@@ -103,6 +110,10 @@ class Session(unittest.TestCase):
         gc.step_check("note", BLOCK, HOLED)
         self.assertEqual(gc.verdict(), "PASS")
 
+    def test_nan_volume_without_expectation_fails_verdict(self):  # was "[GEOM VERDICT] PASS steps=1 warn=1"
+        gc.step_check("fillet", BLOCK, (float("nan"), 7, 10, 1))
+        self.assertEqual(gc.verdict_line(), "[GEOM VERDICT] FAIL steps=1 warn=0 fail=1")
+
     def test_zero_steps_is_fail(self):
         self.assertEqual(gc.verdict_line(), "[GEOM VERDICT] FAIL steps=0 warn=0 fail=0")
 
@@ -132,6 +143,23 @@ class IronPythonCompat(unittest.TestCase):
 
     def test_ironpython_compiles(self):
         self.assertEqual(so.compile_check(os.path.join(TOOLS, "sc_geomcheck.py")), "COMPILE OK")
+
+    def test_compile_check_quoted_path(self):  # a quote in the path returned '' (cross review 2026-10-22)
+        d = tempfile.mkdtemp()
+        try:
+            for name in ("O'Brien", u"O’Brien", u"구멍"):
+                sub = os.path.join(d, name)
+                os.mkdir(sub)
+                p = os.path.join(sub, "s.py")
+                with open(p, "w") as f:
+                    f.write("x = 1\n")
+                self.assertEqual(so.compile_check(p), "COMPILE OK", name)
+            with open(p, "w") as f:
+                f.write("def (:\n")
+            self.assertIn("LINE 1", so.compile_check(p))
+        finally:
+            import shutil
+            shutil.rmtree(d)
 
 
 if __name__ == "__main__":

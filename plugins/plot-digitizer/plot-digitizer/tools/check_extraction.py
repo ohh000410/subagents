@@ -27,7 +27,8 @@ flag 종류 (근거 = references/calibration_extraction.md 의 절)
 이웃과 값이 튀는 점(고립점)은 flag 하지 않는다 — 실제 데이터일 수 있다
 (「이상치 판정 전 원본 확인」).
 
-종료코드 0 = flag 없음, 1 = flag 있음 (WARN), 2 = 곡선 0개 (FAIL — 검사한 것이 없음).
+종료코드 0 = flag 없음, 1 = flag 있음 (WARN), 2 = 유효 점 0개 (FAIL — 검사한 것이 없음.
+곡선 0개·헤더만 있는 CSV·빈 파일 포함). 유효 점 = x 와 y 가 모두 유한한 행. x 만 비어도 값 없음(nan_run)이다.
 flag 마다 원본 확인 후 설명하거나 고친다.
 마지막 줄 `check_extraction: PASS|WARN|FAIL flag N건` = 보고에 그대로 옮기는 한 줄 판정.
 """
@@ -50,6 +51,8 @@ def read_csv(path, xcol=None):
     """CSV -> {곡선: (x, y, interp 또는 None)}. 헤더에 series 열이 있으면 long, 없으면 wide."""
     with open(path, encoding="utf-8-sig", newline="") as f:
         rows = list(csv.reader(f))
+    if not rows:            # 0바이트 파일 = 곡선 0개 (rows[0] 에서 IndexError 로 죽었다)
+        return {}
     head, body = [h.strip() for h in rows[0]], [r for r in rows[1:] if any(s.strip() for s in r)]
     if "series" in head:
         return _read_long(head, body, xcol)
@@ -111,7 +114,8 @@ def check_curve(name, x, y, interp, gap_factor):
                           "msg": f"{name}: 빈 구간 x {xv[i]:g} ~ {xv[i + 1]:g} "
                                  f"(간격 {dx[i]:g} = 중앙값 {med:g} 의 {dx[i] / med:.1f}배)"})
     n = len(y)
-    for i0, i1 in _runs(~np.isfinite(y)):
+    # x 가 비어도 값 없음 — y 만 보면 x=nan 행이 flag 없이 조용히 빠졌다(2026-10-22 교차 검토)
+    for i0, i1 in _runs(~ok):
         where = "edge" if i0 == 0 or i1 == n - 1 else "interior"
         flags.append({"type": "nan_run", "curve": name, "x0": float(x[i0]), "x1": float(x[i1]),
                       "n": i1 - i0 + 1, "where": where,
@@ -213,8 +217,10 @@ def main():
     series = read_csv(args.csv, args.x)
     calib = cm.load(args.calib) if args.calib else None
     flags, notes = check_series(series, calib, args.gap_factor, args.near_px)
-    # 곡선 0개 = 검사한 것이 없다. flag 0건과 구별한다(2026-10-22 외부 검토: 곡선 0개가 PASS 로 나갔다)
-    verdict = "FAIL" if not series else "WARN" if flags else "PASS"
+    # 유효 점 0개 = 검사한 것이 없다. flag 0건과 구별한다(2026-10-22 외부 검토: 곡선 0개가 PASS,
+    # 교차 검토: 헤더만 있는 CSV 가 WARN 으로 나갔다)
+    n_valid = sum(int((np.isfinite(x) & np.isfinite(y)).sum()) for x, y, _ in series.values())
+    verdict = "FAIL" if not n_valid else "WARN" if flags else "PASS"
     if args.json:
         print(json.dumps({"verdict": verdict, "flags": flags, "notes": notes}, ensure_ascii=False, indent=1))
     else:
@@ -223,7 +229,7 @@ def main():
             print(f"  note: {n}")
         for f in flags:
             print(f"WARN [{f['type']}] {f['msg']}")
-        print(f"check_extraction: {verdict} flag {len(flags)}건" + (" (곡선 0개)" if not series else ""))
+        print(f"check_extraction: {verdict} flag {len(flags)}건" + (" (유효 점 0개)" if not n_valid else ""))
     sys.exit({"PASS": 0, "WARN": 1, "FAIL": 2}[verdict])
 
 

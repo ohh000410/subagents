@@ -10,17 +10,19 @@ Usage (CLI):
 
     PATH may be
       *_p0.log            FDTD engine log
-      *.fsp               -> <stem>_p0.log next to it
+      *.fsp               -> <stem>_p0.log next to it (FDTD only; RCWA writes no log)
       *.csv/*.xlsx/*.json/*.jsonl   result table (xlsx: every sheet)
-      directory           every *_p0.log directly inside it
+      directory           FDTD: every *_p0.log directly inside it, also searched for
+                          <case_id>_p0.log of table rows. RCWA: .fsp folder, nothing to read
 
     options
-      --solver auto|fdtd|rcwa   (auto: rcwa if table has Rs/Ts/Rp/Tp and no log given)
+      --solver auto|fdtd|rcwa   (auto: per table -- Rs/Ts/Rp/Tp columns = rcwa, else fdtd)
       --air-only                FDTD air-only baseline: R+T must be 1
       --lossless                RCWA lossless structure: R+T must be 1 per pol
       --r-col R --t-col T       FDTD R/T column names (default R, T)
       --id-col case_id          case id column (default case_id)
-      --log-dir DIR             where <case_id>_p0.log lives (default: table dir and table dir/fsp)
+      --log-dir DIR             where <case_id>_p0.log lives (default: table dir and table dir/fsp;
+                                folders given as PATH are always searched too)
       --sheet NAME              xlsx: only this sheet
       --json OUT                write machine-readable result
       --max-lines N             human summary lines per check (default 8)
@@ -48,11 +50,31 @@ TOL_SUM_FAIL = 1e-2    # FDTD R+T-1 above this -> FAIL (sound high-angle results
 POL_GAP_WARN = 0.3     # RCWA |eps_s - eps_p| above this -> WARN (fake-plateau check)
 SHUTOFF_REL_TOL = 1e-2  # recorded shutoff_time_fs vs log (t_probe last sample lags ~0.1%)
 
+# Recorded hit_cap values. Anything else is unreadable -> FAIL: "NaN" used to read as "not cap"
+# and pass against an early-shutoff log (cross review 2026-10-22).
+CAP_TRUE = ("1", "1.0", "true", "yes", "cap")
+CAP_FALSE = ("0", "0.0", "false", "no")
+
+# Report items that are notes about the inputs, not checks of a result.
+INFO_ONLY = ("rt_columns", "solver")
+
 
 # --------------------------------------------------------------------------- helpers
 
 def _ascii(s):
     return str(s).encode("ascii", "backslashreplace").decode("ascii")
+
+
+def _norm(p):
+    """Path key: one log or folder reached by two spellings must not count twice (log_shared)."""
+    return os.path.normcase(os.path.normpath(os.path.abspath(p)))
+
+
+def _cols(rows):
+    out = []
+    for r in rows:
+        out += [k for k in r if k not in out]
+    return out
 
 
 def _to_float(v):
@@ -182,14 +204,17 @@ def judge_log(rep, info, label):
 # --------------------------------------------------------------------------- tables
 
 def load_tables(path, sheet=None):
-    """Return list of (label, rows[list of dict]). Values kept raw (no NaN filling)."""
+    """Return list of (label, rows[list of dict], columns). Values kept raw (no NaN filling).
+    Columns come from the header, so a header-only table still shows its R/T columns."""
     ext = os.path.splitext(path)[1].lower()
     base = os.path.basename(path)
     if ext == ".csv":
         import csv
         with open(path, newline="", encoding="utf-8-sig") as f:
             lines = [ln for ln in f if not ln.startswith("#")]
-        return [(base, list(csv.DictReader(lines)))]
+        rd = csv.DictReader(lines)
+        rows = list(rd)
+        return [(base, rows, list(rd.fieldnames or []))]
     if ext == ".xlsx":
         import openpyxl
         wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
@@ -205,25 +230,25 @@ def load_tables(path, sheet=None):
                 continue
             hdr = [str(h) if h is not None else "" for h in hdr]
             rows = [dict(zip(hdr, r)) for r in it if any(c is not None for c in r)]
-            out.append(("%s[%s]" % (base, name), rows))
+            out.append(("%s[%s]" % (base, name), rows, [h for h in hdr if h]))
         wb.close()
         return out
     if ext == ".jsonl":
         with open(path, encoding="utf-8") as f:
             rows = [json.loads(ln) for ln in f if ln.strip()]
-        return [(base, rows)]
+        return [(base, rows, _cols(rows))]
     if ext == ".json":
         with open(path, encoding="utf-8") as f:
             d = json.load(f)
         if isinstance(d, list):
-            return [(base, d)]
+            return [(base, d, _cols(d))]
         if isinstance(d, dict):
             if d and all(isinstance(v, list) for v in d.values()):
                 n = max(len(v) for v in d.values())
                 rows = [{k: (v[i] if i < len(v) else None) for k, v in d.items()}
                         for i in range(n)]
-                return [(base, rows)]
-            return [(base, [d])]
+                return [(base, rows, list(d))]
+            return [(base, [d], list(d))]
     raise ValueError("unsupported table: %s" % path)
 
 
@@ -317,8 +342,11 @@ def check_recorded_shutoff(rep, label, row, info):
         return
     if "hit_cap" in row and row["hit_cap"] not in (None, ""):
         rv = row["hit_cap"]
-        rec = str(rv).strip().lower() in ("1", "1.0", "true", "yes", "cap")
-        if rec != info["hit_cap"]:
+        s = str(rv).strip().lower()
+        if s not in CAP_TRUE + CAP_FALSE:
+            rep.add("shutoff_recorded", "FAIL", label,
+                    "table hit_cap=%r is not one of %s" % (rv, "/".join(CAP_TRUE + CAP_FALSE)), ev)
+        elif (s in CAP_TRUE) != info["hit_cap"]:
             rep.add("shutoff_recorded", "FAIL", label,
                     "table hit_cap=%r but log says %s" % (
                         rv, "cap" if info["hit_cap"] else "early shutoff"), ev)
@@ -327,37 +355,54 @@ def check_recorded_shutoff(rep, label, row, info):
     if "shutoff_time_fs" in row and row["shutoff_time_fs"] not in (None, ""):
         rv = row["shutoff_time_fs"]
         v, kind = _to_float(rv)
-        if kind == "text":
-            rec_cap = str(rv).strip().lower() == "cap"
-            if rec_cap != info["hit_cap"]:
-                rep.add("shutoff_recorded", "FAIL", label,
-                        "table shutoff_time_fs=%r but log says %s at %.1f fs" % (
-                            rv, "cap" if info["hit_cap"] else "early shutoff",
-                            info["sim_time_fs"]), ev)
-        elif kind == "num":
+        if kind == "num":
             ref = info["sim_time_fs"]
-            if abs(v - ref) > SHUTOFF_REL_TOL * max(abs(ref), 1.0):
+            # pass only inside tol (same rule as the volume checks)
+            if not abs(v - ref) <= SHUTOFF_REL_TOL * max(abs(ref), 1.0):
                 rep.add("shutoff_recorded", "FAIL", label,
                         "table shutoff_time_fs=%.3f vs log %.3f" % (v, ref), ev)
             else:
                 rep.add("shutoff_recorded", "PASS", label, "", "")
+        elif kind == "text" and str(rv).strip().lower() == "cap":
+            if not info["hit_cap"]:
+                rep.add("shutoff_recorded", "FAIL", label,
+                        "table shutoff_time_fs=%r but log says early shutoff at %.1f fs" % (
+                            rv, info["sim_time_fs"]), ev)
+        else:
+            # NaN / inf / other text used to pass without any check item (cross review 2026-10-22)
+            rep.add("shutoff_recorded", "FAIL", label,
+                    "table shutoff_time_fs=%r is neither a number nor 'cap'" % (rv,), ev)
 
 
-def assess_fdtd_table(rep, tpath, tlabel, rows, opts, log_cache):
+def _no_rows(rep, tlabel, rows, what):
+    """A table with R/T columns but no data row checked nothing -> FAIL (it was a WARN, cross review
+    2026-10-22: a run that wrote only the header and stopped). Tables without R/T columns (xlsx meta
+    sheets) are not judged here."""
+    if rows:
+        return False
+    rep.add("rows", "FAIL", tlabel, "%s columns but no data row" % what, "")
+    return True
+
+
+def assess_fdtd_table(rep, tpath, tlabel, rows, cols, opts, log_cache):
     r_col, t_col, id_col = opts["r_col"], opts["t_col"], opts["id_col"]
-    cols = set()
-    for r in rows:
-        cols.update(r.keys())
     check_ids(rep, tlabel, rows, id_col)
     has_r, has_t = r_col in cols, t_col in cols
     if not (has_r or has_t):
         rep.notes.append("%s: no '%s'/'%s' column, R/T checks skipped" % (tlabel, r_col, t_col))
+    elif _no_rows(rep, tlabel, rows, "'%s'/'%s'" % (r_col, t_col)):
+        return
     if opts["air_only"] and not (has_r and has_t):
         rep.add("air_only_rt", "FAIL", tlabel,
                 "--air-only needs both '%s' and '%s'" % (r_col, t_col),
                 "fdtd_detail_bfast.md")
-    log_dirs = opts["log_dirs"] or [os.path.dirname(tpath),
-                                    os.path.join(os.path.dirname(tpath), "fsp")]
+    # Folders given as PATH are searched too: they were only read for their own logs, so rows next to
+    # them stayed unlinked and recorded-shutoff / shared-log checks were skipped (cross review 2026-10-22).
+    tdir = os.path.dirname(tpath)
+    log_dirs = []
+    for d in (opts["log_dirs"] or []) + opts["link_dirs"] + ([] if opts["log_dirs"] else [tdir, os.path.join(tdir, "fsp")]):
+        if _norm(d) not in [_norm(x) for x in log_dirs]:
+            log_dirs.append(d)
     log_owner = {}
     n_linked = 0
     for i, row in enumerate(rows):
@@ -386,13 +431,14 @@ def assess_fdtd_table(rep, tpath, tlabel, rows, opts, log_cache):
             continue
         n_linked += 1
         # Evidence: fdtd_pitfalls_api.md (shared log path)
-        log_owner.setdefault(lg, []).append(label)
-        if lg not in log_cache:
-            log_cache[lg] = parse_p0_log(lg)
-        check_recorded_shutoff(rep, label, row, log_cache[lg])
-    for lg, owners in log_owner.items():
+        key = _norm(lg)
+        log_owner.setdefault(key, []).append(label)
+        if key not in log_cache:
+            log_cache[key] = parse_p0_log(lg)
+        check_recorded_shutoff(rep, label, row, log_cache[key])
+    for key, owners in log_owner.items():
         if len(owners) > 1:
-            rep.add("log_shared", "FAIL", os.path.basename(lg),
+            rep.add("log_shared", "FAIL", os.path.basename(log_cache[key]["log"]),
                     "%d rows share this log: %s" % (len(owners), ", ".join(owners)[:300]),
                     "fdtd_pitfalls_api.md")
     if not (has_r or has_t):
@@ -406,23 +452,21 @@ def assess_fdtd_table(rep, tpath, tlabel, rows, opts, log_cache):
         rep.add("log_link", "WARN", tlabel,
                 "%d/%d rows have no _p0.log" % (len(rows) - n_linked, len(rows)),
                 "fdtd_pitfalls_api.md")
-    return list(log_owner.keys())
 
 
 RCWA_COLS = ("Rs", "Ts", "Rp", "Tp")
 
 
-def assess_rcwa_table(rep, tlabel, rows, opts):
+def assess_rcwa_table(rep, tlabel, rows, cols, opts):
     """RCWA has no _p0.log (lumerical_rcwa.md s6): verify the
     numbers themselves."""
     id_col = opts["id_col"]
-    cols = set()
-    for r in rows:
-        cols.update(r.keys())
     check_ids(rep, tlabel, rows, id_col)
     have = [c for c in RCWA_COLS if c in cols]
     if not have:
         rep.notes.append("%s: no Rs/Ts/Rp/Tp columns, skipped" % tlabel)
+        return
+    if _no_rows(rep, tlabel, rows, "/".join(have)):
         return
     pols = [p for p in ("s", "p") if "R" + p in cols and "T" + p in cols]
     if len(pols) < 2:
@@ -481,55 +525,66 @@ TABLE_EXT = (".csv", ".xlsx", ".json", ".jsonl")
 def assess(paths, solver="auto", air_only=False, lossless=False, r_col="R", t_col="T",
            id_col="case_id", log_dirs=None, sheet=None):
     rep = Report()
-    logs, tables = [], []
+    tables, dirs, dir_logs, given_logs, fsp_logs = [], [], {}, [], []
     for p in paths:
         p = os.path.abspath(p)
         if os.path.isdir(p):
-            found = sorted(os.path.join(p, f) for f in os.listdir(p) if f.endswith("_p0.log"))
-            if not found:  # a wrong folder must not read as "nothing wrong" (review 2026-10-22: empty folder -> PASS)
-                rep.add("inputs", "FAIL", p, "no *_p0.log in this folder", "")
-            logs += found
+            dirs.append(p)
+            dir_logs[p] = sorted(os.path.join(p, f) for f in os.listdir(p) if f.endswith("_p0.log"))
         elif p.endswith("_p0.log"):
-            logs.append(p)
+            given_logs.append(p)
         elif p.lower().endswith(".fsp"):
-            logs.append(os.path.splitext(p)[0] + "_p0.log")
+            fsp_logs.append(os.path.splitext(p)[0] + "_p0.log")
         elif p.lower().endswith(TABLE_EXT):
             tables.append(p)
         else:
             raise ValueError("unsupported path: %s" % p)
+    # Each table's own columns decide its solver. "A log or folder was given" used to decide it for all:
+    # a sound RCWA table with its .fsp folder (the agents/lumerical.md step 4 command) FAILed, and a folder holding
+    # FDTD logs let an energy-violating RCWA table through as WARN (cross review 2026-10-22).
     loaded = []
     for t in tables:
-        for lab, rows in load_tables(t, sheet):
-            loaded.append((t, lab, rows))
+        for lab, rows, cols in load_tables(t, sheet):
+            ts = solver if solver != "auto" else ("rcwa" if any(c in cols for c in RCWA_COLS) else "fdtd")
+            loaded.append((t, lab, rows, cols, ts))
     if solver == "auto":
-        rc = any(any(c in r for c in RCWA_COLS) for _, _, rows in loaded for r in rows[:1])
-        solver = "rcwa" if (rc and not logs) else "fdtd"
-    opts = {"air_only": air_only, "lossless": lossless, "r_col": r_col, "t_col": t_col,
-            "id_col": id_col, "log_dirs": log_dirs}
-    log_cache = {}
-    table_logs = []
-    for tpath, lab, rows in loaded:
-        if solver == "rcwa":
-            assess_rcwa_table(rep, lab, rows, opts)
-        else:
-            table_logs += assess_fdtd_table(rep, tpath, lab, rows, opts, log_cache)
-    if loaded and not any(it["check"] in ("rt_range", "nan") for it in rep.items):
-        rep.add("rt_columns", "WARN", "-", "no table had usable R/T columns; R/T unchecked", "")
-    if solver == "fdtd":
-        for lg in logs + table_logs:
-            lg = os.path.normpath(lg)
-            if lg not in log_cache:
-                log_cache[lg] = parse_p0_log(lg)
-        for lg in sorted(log_cache):
-            judge_log(rep, log_cache[lg], os.path.basename(lg))
-    elif logs:
+        fdtd = not loaded or any(x[4] == "fdtd" for x in loaded)
+        solver_out = "+".join(sorted(set(x[4] for x in loaded))) or "fdtd"
+    else:
+        fdtd = solver == "fdtd"
+        solver_out = solver
+    logs = []
+    if fdtd:
+        for d in dirs:
+            if not dir_logs[d]:  # a wrong folder must not read as "nothing wrong" (review 2026-10-22: empty folder -> PASS)
+                rep.add("inputs", "FAIL", d, "no *_p0.log in this folder", "")
+            logs += dir_logs[d]
+        logs += given_logs + fsp_logs
+    elif given_logs or any(dir_logs.values()):
         rep.add("solver", "WARN", "-", "RCWA writes no _p0.log; given logs ignored",
                 "lumerical_rcwa.md s6")
-    if not rep.items:
+    link_dirs = dirs + [os.path.dirname(p) for p in given_logs + fsp_logs]
+    opts = {"air_only": air_only, "lossless": lossless, "r_col": r_col, "t_col": t_col,
+            "id_col": id_col, "log_dirs": log_dirs, "link_dirs": link_dirs}
+    log_cache = {}   # _norm(path) -> parse_p0_log result; rows link into it, then every entry is judged
+    for tpath, lab, rows, cols, ts in loaded:
+        if ts == "rcwa":
+            assess_rcwa_table(rep, lab, rows, cols, opts)
+        else:
+            assess_fdtd_table(rep, tpath, lab, rows, cols, opts, log_cache)
+    if loaded and not any(it["check"] in ("rt_range", "nan", "rows") for it in rep.items):
+        rep.add("rt_columns", "WARN", "-", "no table had usable R/T columns; R/T unchecked", "")
+    if fdtd:
+        for lg in logs:
+            if _norm(lg) not in log_cache:
+                log_cache[_norm(lg)] = parse_p0_log(lg)
+        for key in sorted(log_cache):
+            judge_log(rep, log_cache[key], os.path.basename(log_cache[key]["log"]))
+    if not any(it["check"] not in INFO_ONLY for it in rep.items):
         rep.add("inputs", "FAIL", "-", "nothing checked: no _p0.log and no table rows", "")
     return {
         "verdict": rep.verdict(),
-        "solver": solver,
+        "solver": solver_out,
         "inputs": {"logs": logs, "tables": tables},
         "options": {"air_only": air_only, "lossless": lossless, "r_col": r_col,
                     "t_col": t_col, "id_col": id_col, "sheet": sheet,

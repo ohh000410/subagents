@@ -6,7 +6,7 @@ origin-plot 에이전트 실행 모드 검증 도구. 범위 = 실제로 실패�
 |---|---|---|
 | `open_session()` | 생성 스크립트 시작 | Origin 이 이미 떠 있음 · `__ready` 왕복 실패 · `PageBases.Count != 0` → `VerifyError` |
 | `ex(app, stmts, tag, scope=None)` | LabTalk 를 보낼 때마다 | 진행 카운터로 멈춘 문장 · numpy repr(`np.float64(...)`) → `VerifyError` + 저장 없이 종료 |
-| `verify(app, intended)` | 그리기 끝, png export · Save 전 | 페이지 집합 · 레이어 수 · 축 범위 · 범례 위치/부재 · 워크시트 모양/셀 · PE 폴더 · **눈금(기본 켜짐, 모든 그래프 레이어)** → `VerifyError` + 저장 없이 종료 |
+| `verify(app, intended)` | 그리기 끝, png export · Save 전 | 페이지 집합 · 레이어 수 · 축 범위 · 범례 위치/부재 · 워크시트 모양/셀 · PE 폴더 · **눈금(기본 켜짐, 모든 그래프 레이어)** → `VerifyError` + 저장 없이 종료. 검사한 것이 0개여도 FAIL. 되읽은 값이 Origin 결측값(NANUM)·비유한값이면 어떤 기대값과도 불일치 |
 | `close(app, saved=None)` | Save 뒤 | 저장 파일 없음/0 byte → `VerifyError` (종료는 함) |
 | `origin_verify.py --after [--wait 30]` | 스크립트 종료 뒤 (별도 명령) | Origin 프로세스 잔존 → 종료코드 2, PID 별 보이는 창(모달 후보) 출력 |
 
@@ -19,5 +19,6 @@ origin-plot 에이전트 실행 모드 검증 도구. 범위 = 실제로 실패�
 
 - major 눈금 수 = `layer.x/y.inc` 의 배수(0 기준)가 `[from, to]` 안에 드는 개수, 양 끝 포함. png 픽셀과 29/29 범위 일치. 최소 기본 3 (Origin 자동 축척이 22개 범위에서 낸 최소값; 4 로 잡으면 Origin 자체 출력이 FAIL). 더 엄격히 = `intended["ticks"] = {"[Graph1]1!": {"min": (4, 4)}}`. 선형 축(`type==1`)만 센다 — 로그 등은 "not counted" 로 보고.
 - 방향 = `layer.x/y.ticks & 3 == 1` (안쪽), `layer.x2/y2.ticks & 3 == 0` (없음). 실측: 0 없음, 1 안, 2 바깥, 3 양쪽, 상위 비트는 방향에 무관(4 없음, 5 안, 8 없음, 9 안, 10 바깥, 12 없음). **Origin 기본값은 x/y = 10(바깥), x2/y2 = 5(안)** → 스타일 줄을 안 보내면 FAIL.
-- 끄기: 레이어별 `{"style": False}`(방향만), 전체 `"ticks": False`(크롬 없는 선화·3D·행렬).
+- 끄기: 레이어별 `{"style": False}`(방향만), 전체 `"ticks": False`(크롬 없는 선화·3D·행렬). 전체를 끄면 다른 키(pages·layers·axes …)를 채운다 — 검사 0개는 FAIL.
 - 시험: `tests/ticks_defect_injection.py <case>` (good, good_min4, min5, two_ticks, outward, top_tick, right_tick, untouched, off). 케이스마다 Origin 세션 하나, 사이에 `--after`. 근거 = `../references/origin/page_and_axes.md` 「눈금 방향과 개수」.
+- 판정 로직 시험(Origin 불필요, 가짜 COM): `python -m unittest discover -s tests -p "test_*.py"` — 작은 값 비교, NANUM 셀, 검사 0개, 축 값 NaN.

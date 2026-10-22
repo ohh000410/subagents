@@ -10,7 +10,8 @@
        bw     흑백 스캔 — 글자만 남김 (PNG)
   4. --pdf 면 입력 순서대로 첫 번째 mode 의 결과를 한 PDF 로 묶는다
 
-출력 폴더 기본값: 첫 입력과 같은 폴더의 scanned/. 원본은 건드리지 않는다.
+출력 폴더 기본값: 첫 입력과 같은 폴더의 scanned/. 원본은 건드리지 않는다 — 결과 파일이 입력 사진과 같은 경로가 되면
+하나도 쓰기 전에 error(overwrite) 로 멈춘다.
 마지막 줄은 JSON: status = ok | error
 """
 import argparse
@@ -136,6 +137,14 @@ def inputs(args):
     return files
 
 
+def out_name(f, mode):
+    return f"{f.stem}_{mode}{'.jpg' if mode == 'color' else '.png'}"
+
+
+def _key(p):
+    return str(p.resolve()).casefold()
+
+
 def main():
     sys.stdout.reconfigure(encoding="utf-8")
     ap = argparse.ArgumentParser()
@@ -145,12 +154,16 @@ def main():
     ap.add_argument("--pdf")
     ap.add_argument("--no-crop", action="store_true")
     a = ap.parse_args()
-    modes = [m.strip() for m in a.mode.split(",") if m.strip()]
+    # 같은 mode 를 두 번 주면 PDF 에 같은 쪽이 두 번 들어갔다. 빈 mode 는 아무것도 안 만들고 ok 였다(2026-10-22 교차 검토)
+    modes = list(dict.fromkeys(m.strip() for m in a.mode.split(",") if m.strip()))
     bad = [m for m in modes if m not in MODES]
     files = inputs(a.paths)
     missing = [str(f) for f in files if not f.is_file()]
-    if bad or not files or missing:
-        return emit(status="error", reason="mode 이름" if bad else "입력 없음", bad_modes=bad, missing=missing, allowed=MODES)
+    # 직접 준 파일도 폴더와 같은 확장자만 받는다 — 거르지 않아 앞 사진의 결과를 쓴 뒤 예외로 죽었다(2026-10-22 교차 검토)
+    not_photo = [str(f) for f in files if f.is_file() and f.suffix.lower() not in EXTS]
+    if bad or not modes or not files or missing or not_photo:
+        reason = "mode 이름" if bad or not modes else "사진이 아닌 파일" if not_photo and not missing else "입력 없음"
+        return emit(status="error", reason=reason, bad_modes=bad, missing=missing, not_photo=not_photo, allowed=MODES)
     # 출력 이름 = <원본 이름>_<mode> — 이름이 같은 사진(다른 폴더·확장자, 대소문자만 다름)은 앞 결과를 덮어쓴다
     # (2026-10-22 외부 검토: 2장 → 결과 1개, status ok). 아무것도 쓰기 전에 멈춘다
     first, collisions = {}, []
@@ -163,6 +176,12 @@ def main():
     if collisions:
         return emit(status="error", reason="출력 이름 충돌 — 이름이 같은 사진은 --out 을 나눠 따로 실행", collisions=collisions)
     out = Path(a.out) if a.out else files[0].parent / "scanned"
+    # 결과 파일이 입력 사진 자리면 원본을 덮어쓴다 — --out 을 사진 폴더로 주면 page.png 의 결과 page_gray.png 가
+    # 입력 page_gray.png 를 덮었고, 다시 돌리면 지난 결과가 입력에 섞였다(2026-10-22 교차 검토). 쓰기 전에 멈춘다
+    planned = {_key(out / out_name(f, m)) for f in files for m in modes} | ({_key(out / a.pdf)} if a.pdf else set())
+    overwrite = [str(f) for f in files if _key(f) in planned]
+    if overwrite:
+        return emit(status="error", reason="결과가 입력 사진을 덮어씀 — --out 을 사진 폴더와 다르게", overwrite=overwrite)
     out.mkdir(parents=True, exist_ok=True)
     results, pdf_pages = [], []
     for f in files:
@@ -172,7 +191,7 @@ def main():
         saved = {}
         for m in modes:
             r = render(page, m)
-            dst = out / f"{f.stem}_{m}{'.jpg' if m == 'color' else '.png'}"
+            dst = out / out_name(f, m)
             save(r, dst)
             saved[m] = str(dst)
             if m == modes[0]:

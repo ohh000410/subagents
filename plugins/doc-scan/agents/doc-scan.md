@@ -107,7 +107,7 @@ Claude 에이전트 메모리 폴더를 쓴다(`MEMORY.md` 앞부분이 시작 �
 | `page_found: false` | 종이가 사진의 1/5 보다 작음, 배경이 종이처럼 밝음(흰 책상), 종이가 많이 휘거나 접힘 → 원인을 보고하고 다시 찍는 요령 제시(어두운 바탕 위, 종이가 화면 대부분, 네 모서리 모두 보이게) | 재시도 없음 |
 | 엉뚱한 사각형을 종이로 잡음 | 결과 이미지로 확인 → `--no-crop` 으로 자르지 않은 보정본을 만들고 보고 | 1회 |
 | 흑백본에서 그림·도장이 깨짐 | color·gray 를 권하고 그 mode 로 다시 | 1회 |
-| `status: error` | `reason`·`missing`·`bad_modes`·`collisions` 그대로 보고 | 0회 |
+| `status: error` | `reason`·`missing`·`bad_modes`·`not_photo`·`collisions`·`overwrite` 그대로 보고 | 0회 |
 
 ## Reference
 

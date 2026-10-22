@@ -16,7 +16,7 @@ PowerPoint 도형으로 그림을 그립니다.
 ## 필요한 것
 
 - Python(`<python>`): 이 PC 환경 값(메모리)의 절대경로 (python-pptx·pywin32 가 있는 것)
-- 도형 생성 python-pptx / 병합·3D 되읽기·PNG export COM. COM: `pres.Close()` → `app.Quit()` → 프로세스 잔존 확인
+- 도형 생성 python-pptx / 병합·3D 되읽기·PNG export COM. COM: `pres.Close()` → 직접 띄운 PowerPoint 만 `app.Quit()`(이미 떠 있던 것은 둠) → 프로세스 잔존 확인
 
 ## 처음 쓸 때
 

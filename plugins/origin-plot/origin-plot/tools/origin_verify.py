@@ -45,7 +45,10 @@ ticks: checked by default on EVERY layer of EVERY graph page (no key needed), be
     3 both, higher bits do not change the direction (4 none, 5 in, 8 none, 9 in, 10 out, 12 none).
     Origin's default is x/y 10 (OUT) and x2/y2 5 (IN), so the style line must be sent.
   {"min": ..., "style": False} per layer keeps the count and drops the direction check (overlay layer, polar);
-  "ticks": False switches the whole check off (chrome-free line art, 3D, matrix).
+  "ticks": False switches the whole check off (chrome-free line art, 3D, matrix) -- then fill the other keys:
+  a verify that checked nothing is FAIL (cross review 2026-10-22: an empty project passed).
+Values read back as Origin's missing value (NANUM) or non-finite never match a wanted value; a property that
+does not exist reads as None (see _num).
 Returns the report dict {"verdict", "checks": [...]}; each check carries `ref`, the reference file (../references) that explains it.
 """
 import argparse
@@ -57,6 +60,7 @@ import sys
 import time
 
 SENTINEL = -987654.0
+NANUM = -1.23456789e-300  # LabTalk missing value (origin/labtalk_com_pitfalls.md: a numpy repr evaluated to it)
 LEGEND_TOL = 1.0          # page units; legend.left/top store integers (1150.5 -> 1150, 2026-10-18)
 REL_TOL = 1e-9
 MIN_TICKS = 3             # default per-axis minimum of major ticks (see docstring)
@@ -97,7 +101,10 @@ def _abort(app):
 
 
 def _same(want, got):
-    return got is not None and abs(got - want) <= REL_TOL * max(1.0, abs(want))
+    """Relative match; want 0 must read back exactly 0. The old floor max(1, |want|) made every value below
+    1e-9 match 0 and let the missing value NANUM (-1.2e-300) match 0 (cross review 2026-10-22).
+    NaN (missing / non-finite read-back) never matches."""
+    return got is not None and abs(got - want) <= REL_TOL * abs(want)
 
 
 # ------------------------------------------------------------------ process / session ---
@@ -188,12 +195,19 @@ def ex(app, stmts, tag, scope=None):
 
 
 def _num(app, scope, expr, pre=""):
+    """None = not there; nan = there but Origin's missing value (NANUM) or non-finite; else the value."""
     # Ref: origin/labtalk_com_pitfalls.md -- reading a property that does not exist
     # leaves the variable untouched without error; a surviving sentinel means "not there".
     # `pre` (e.g. a range declaration) runs in the same batch, before the sentinel.
     scope.Execute("%s __v=%r; __v=%s;" % (pre, SENTINEL, expr))
     v = float(app.LTVar("__v"))
-    return None if v == SENTINEL else v
+    if v == SENTINEL:
+        return None
+    return float("nan") if v == NANUM or not math.isfinite(v) else v
+
+
+def _ok(v):
+    return v is not None and math.isfinite(v)
 
 
 def major_ticks(lo, hi, inc):
@@ -275,10 +289,12 @@ def verify(app, intended):
         if "shape" in spec:
             nc = _num(app, app, "__s.ncols", "range __s=[%s]%s!;" % (bk, sh))
             nr = None
-            if nc is not None:
+            if _ok(nc):
                 sizes = [_num(app, app, "__c.getsize()", "range __c=[%s]%s!col(%d);" % (bk, sh, c))
                          for c in range(1, int(nc) + 1)]
-                nr = max(s for s in sizes if s is not None) if any(s is not None for s in sizes) else None
+                nr = max(s for s in sizes if _ok(s)) if any(_ok(s) for s in sizes) else None
+            else:
+                nc = None
             got = (None if nr is None else int(nr), None if nc is None else int(nc))
             _check(report, "shape", bk, got == tuple(spec["shape"]), "want %s got %s (rows, cols)" % (tuple(spec["shape"]), got),
                    "origin/labtalk_com_pitfalls.md")
@@ -320,7 +336,9 @@ def verify(app, intended):
             gl = app.FindGraphLayer(lay)
             for a in ("x", "y"):
                 v = {k: _num(app, gl, "layer.%s.%s" % (a, k)) for k in ("from", "to", "inc", "type")}
-                if None in v.values() or v["inc"] <= 0:
+                # a missing / non-finite value is unreadable: type nan read as "not linear" and passed,
+                # from nan raised in major_ticks before Exit and left Origin running (cross review 2026-10-22)
+                if not all(_ok(x) for x in v.values()) or not v["inc"] > 0:
                     _check(report, "ticks %s count" % a, lay, False, "unreadable %s" % v,
                            "origin/page_and_axes.md")
                 elif v["type"] != 1:
@@ -335,11 +353,15 @@ def verify(app, intended):
             if spec.get("style", True):
                 for a, want in (("x", 1), ("y", 1), ("x2", 0), ("y2", 0)):
                     t = _num(app, gl, "layer.%s.ticks" % a)
-                    got = None if t is None else int(t) & 3
+                    got = int(t) & 3 if _ok(t) else None
                     _check(report, "ticks %s dir" % a, lay, got == want,
                            "layer.%s.ticks=%s -> direction %s, want %d (0 none, 1 in, 2 out, 3 both)" % (a, t, got, want),
                            "origin/page_and_axes.md")
 
+    # Nothing checked is not a PASS (cross review 2026-10-22: an empty project with {"ticks": False} passed).
+    if not report["checks"]:
+        _check(report, "intended", "verify", False, "nothing checked -- fill intended (pages, layers, axes ...)",
+               "origin/session_and_modal.md")
     return _finish(report, app)
 
 

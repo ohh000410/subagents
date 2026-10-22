@@ -32,6 +32,10 @@ VERDICT_RE = re.compile(r"\[GEOM VERDICT\] (PASS|FAIL) steps=(\d+) warn=(\d+) fa
 STEP_RE = re.compile(r"\[STEP (PASS|WARN|FAIL)\].*")
 FATAL_RE = re.compile(r"\[FATAL\]")
 
+# A saved .scdocx below this size is not a model (agents/spaceclaim.md: .scdocx > 1KB). The check lives here so that
+# the run verdict carries it (cross review 2026-10-22: a 10-byte out passed as [ORCH] PASS).
+MIN_OUT_BYTES = 1024
+
 
 def ascii_safe(s: str) -> str:
     """Bash-tool console is cp949; printing Korean paths can raise UnicodeEncodeError."""
@@ -61,8 +65,13 @@ def parse_log(text: str) -> dict:
         res["kind"] = "no_verdict"
     else:
         m = ms[-1]
-        res.update(kind="verdict", verdict=m.group(1), steps=int(m.group(2)),
-                   warn=int(m.group(3)), fail=int(m.group(4)), verdict_line=m.group(0))
+        n_steps, n_fail = int(m.group(2)), int(m.group(4))
+        # The PASS word alone is not trusted: no steps, a fail count or a [STEP FAIL] line make it FAIL
+        # (cross review 2026-10-22: "PASS steps=0" and "[STEP FAIL] ... PASS steps=1 fail=1" both passed).
+        ok = (m.group(1) == "PASS" and n_steps > 0 and n_fail == 0
+              and not any(s.startswith("[STEP FAIL]") for s in steps))
+        res.update(kind="verdict", verdict="PASS" if ok else "FAIL", steps=n_steps,
+                   warn=int(m.group(3)), fail=n_fail, verdict_line=m.group(0))
     return res
 
 
@@ -70,40 +79,51 @@ def log_has_marker(text: str) -> bool:
     return bool(VERDICT_RE.search(text) or FATAL_RE.search(text))
 
 
-def _ps(cmd: str, timeout: int = 60) -> str:
-    r = subprocess.run(["powershell", "-NoProfile", "-Command", cmd], capture_output=True,
-                       timeout=timeout, encoding="utf-8", errors="replace")
+def _ps(cmd: str, timeout: int = 60, env: dict | None = None) -> str:
+    """PowerShell stdout. A non-zero exit raises with its stderr: empty output used to read as 0 / '' and hid
+    the failure (cross review 2026-10-22: a quoted path gave compile_check '' with no reason)."""
+    r = subprocess.run(["powershell", "-NoProfile", "-Command",
+                        "[Console]::OutputEncoding = [Text.Encoding]::UTF8;" + cmd],
+                       capture_output=True, timeout=timeout, encoding="utf-8", errors="replace", env=env)
+    if r.returncode != 0:
+        raise RuntimeError(f"powershell exit {r.returncode}: {(r.stderr or r.stdout or '').strip()}")
     return (r.stdout or "").strip()
 
 
 def sc_count() -> int:
     """All SpaceClaim processes (seat check). Never used for killing."""
-    out = _ps("(Get-Process SpaceClaim -ErrorAction SilentlyContinue | Measure-Object).Count")
-    return int(out or 0)
+    return int(_ps("(Get-Process SpaceClaim -ErrorAction SilentlyContinue | Measure-Object).Count"))
 
 
 def launcher_count() -> int:
     """AnsysSpeosLauncher processes (SPEOS mode residual measurement only, never killed)."""
-    out = _ps("(Get-Process AnsysSpeosLauncher -ErrorAction SilentlyContinue | Measure-Object).Count")
-    return int(out or 0)
+    return int(_ps("(Get-Process AnsysSpeosLauncher -ErrorAction SilentlyContinue | Measure-Object).Count"))
 
 
 def compile_check(script: Path) -> str:
-    """Hosted IronPython compile check, no SpaceClaim launch. Returns 'COMPILE OK' or the error."""
+    """Hosted IronPython compile check, no SpaceClaim launch. Returns 'COMPILE OK' or the error.
+
+    Paths reach PowerShell through the environment, never inside the command text: a quote in the path broke
+    the command and the reason was lost (cross review 2026-10-22)."""
     cmd = (
-        f'$dir = "{SC_DIR}";'
-        'Add-Type -Path "$dir\\Microsoft.Scripting.dll";'
-        'Add-Type -Path "$dir\\Microsoft.Dynamic.dll";'
-        'Add-Type -Path "$dir\\IronPython.dll";'
-        '$eng = [IronPython.Hosting.Python]::CreateEngine();'
-        f"$src = $eng.CreateScriptSourceFromFile('{script}');"
-        'try { $null = $src.Compile(); "COMPILE OK" } catch {'
-        ' $e = $_.Exception; while ($e.InnerException) { $e = $e.InnerException };'
-        ' $m = $e.Message;'
-        ' if ($e -is [Microsoft.Scripting.SyntaxErrorException]) { $m += " LINE " + $e.Line + " COL " + $e.Column };'
-        ' $m }'
+        "$ErrorActionPreference = 'Stop';"
+        "try {"
+        ' Add-Type -Path (Join-Path $env:SC_DIR "Microsoft.Scripting.dll");'
+        ' Add-Type -Path (Join-Path $env:SC_DIR "Microsoft.Dynamic.dll");'
+        ' Add-Type -Path (Join-Path $env:SC_DIR "IronPython.dll");'
+        " $eng = [IronPython.Hosting.Python]::CreateEngine();"
+        ' $null = $eng.CreateScriptSourceFromFile($env:SC_SCRIPT).Compile(); "COMPILE OK"'
+        "} catch {"
+        " $e = $_.Exception; while ($e.InnerException) { $e = $e.InnerException };"
+        " $m = $e.Message;"
+        # by name: the type itself is unknown when the DLLs failed to load
+        " if ($e.GetType().FullName -eq 'Microsoft.Scripting.SyntaxErrorException') { $m += ' LINE ' + $e.Line + ' COL ' + $e.Column };"
+        " $m }"
     )
-    return _ps(cmd)
+    try:
+        return _ps(cmd, env=dict(os.environ, SC_DIR=SC_DIR, SC_SCRIPT=str(script)))
+    except RuntimeError as e:
+        return str(e)
 
 
 def close_pid(pid: int, wait_s: int = 30) -> int:
@@ -117,18 +137,27 @@ def close_pid(pid: int, wait_s: int = 30) -> int:
         f" Stop-Process -Id {pid} -Force -ErrorAction SilentlyContinue; Start-Sleep -Seconds 1 }};"
         f"(Get-Process -Id {pid} -ErrorAction SilentlyContinue | Measure-Object).Count",
         timeout=wait_s + 30)
-    return int(out or 0)
+    return int(out)
+
+
+def _stat(p: Path):
+    """(mtime_ns, size) or None -- compared before/after launch to tell this run's files from older ones."""
+    if not p.exists():
+        return None
+    st = p.stat()
+    return st.st_mtime_ns, st.st_size
 
 
 def run(script, log, out, timeout_s: int = 300, speos: bool = False, poll_s: float = 2.0,
         seat_wait_s: int = 300) -> dict:
     """Launch SpaceClaim headless, poll until marker / exit / timeout, close own PID, read verdict.
 
-    PASS only when the log carries [GEOM VERDICT] PASS, `out` exists non-empty and no own process is left
-    (otherwise FAIL with problems=no_output|residual). kind:
-      verdict | fatal | no_verdict | compile_error (0-byte log, no other SpaceClaim at launch)
-      | seat_busy (seat still taken after seat_wait_s -> not launched)
-      | seat_contention (0-byte log, another SpaceClaim appeared at launch) | timeout | precompile_error
+    PASS only when the log carries [GEOM VERDICT] PASS, this run wrote `out` (>= MIN_OUT_BYTES) and no own
+    process is left (otherwise FAIL with problems=no_output|residual). kind:
+      verdict | fatal | no_verdict | compile_error (0-byte log: the script never logged)
+      | seat_busy (seat still taken after seat_wait_s -> not launched) | timeout | precompile_error
+    Nothing is deleted: `out` / `*_FAIL` from an earlier run stay, and only files changed after launch count
+    as this run's (out_new / fail_out_new). The log is emptied just before launch -- it is this run's log.
     """
     script, log, out = Path(script), Path(log), Path(out)
     t0 = time.time()
@@ -146,20 +175,20 @@ def run(script, log, out, timeout_s: int = 300, speos: bool = False, poll_s: flo
     seat = sc_count()
     waited = round(time.time() - t0, 1)
     if seat > 0:
-        # Launching onto a taken seat only ends in a 0-byte log after timeout_s (seat_contention) -- return now.
+        # Launching onto a taken seat only ends in a 0-byte log after timeout_s -- return now.
         res.update(verdict="FAIL", kind="seat_busy", seat_at_launch=seat, seat_wait=waited, elapsed=0.0, residual=0)
         res["summary"] = (f"[ORCH] FAIL kind=seat_busy seat={seat} waited={waited:.0f}s "
                           "(not launched; another SpaceClaim, possibly a GUI one, holds the seat)")
         return res
 
-    for p in (out, fail_path(out), log):
-        if p.exists():
-            p.unlink()
-    log.touch()   # pre-created: 0 bytes at the end means the script never logged
+    # Deleting out / *_FAIL here lost the previous result whenever the new run failed to start or failed
+    # (cross review 2026-10-22). Snapshot them instead and judge by change.
+    snap0 = {p: _stat(p) for p in (out, fail_path(out))}
 
     cmd = [SC_EXE] + (SPEOS_ARGS if speos else []) + [
         f"/RunScript={script}", "/ScriptApi=261", "/Headless=True", "/Splash=False", "/ExitAfterScript=True"]
     lau0 = launcher_count() if speos else None
+    log.write_text("", encoding="utf-8")   # this run's log: 0 bytes at the end means the script never logged
     t1 = time.time()
     # SC_TOOLS = this folder: IronPython scripts import sc_geomcheck from os.environ["SC_TOOLS"]
     env = dict(os.environ, SC_TOOLS=str(Path(__file__).resolve().parent))
@@ -181,24 +210,30 @@ def run(script, log, out, timeout_s: int = 300, speos: bool = False, poll_s: flo
     pr = parse_log(text)
     kind = pr["kind"]
     if kind == "empty_log":
-        kind = "compile_error" if seat == 0 else "seat_contention"
+        kind = "compile_error"
     if stop == "timeout" and kind != "verdict" and kind != "fatal":
         kind = "timeout"
     verdict = pr["verdict"] if kind == "verdict" else "FAIL"
-    # The log verdict covers the geometry only. PASS also needs the saved file and no own process left
+    # The log verdict covers the geometry only. PASS also needs a file this run saved and no own process left
     # (review 2026-10-22: the summary said PASS with out=no residual=1).
+    fail_out = fail_path(out)
+    out_new = out.exists() and _stat(out) != snap0[out]
+    fail_out_new = fail_out.exists() and _stat(fail_out) != snap0[fail_out]
     out_size = out.stat().st_size if out.exists() else 0
-    problems = (["no_output"] if verdict == "PASS" and out_size == 0 else []) + (["residual"] if residual else [])
+    problems = ((["no_output"] if verdict == "PASS" and not (out_new and out_size >= MIN_OUT_BYTES) else [])
+                + (["residual"] if residual else []))
     if problems:
         verdict = "FAIL"
     res.update(pr)
     res.update(verdict=verdict, kind=kind, problems=problems, stop=stop, seat_at_launch=seat, seat_wait=waited,
                pid=proc.pid, elapsed=round(t_stop, 1), residual=residual,
-               out_exists=out.exists(), out_size=out_size, fail_out_exists=fail_path(out).exists())
+               out_exists=out.exists(), out_new=out_new, out_size=out_size,
+               fail_out_exists=fail_out.exists(), fail_out_new=fail_out_new)
     res.update(launcher_before=lau0, launcher_after=lau1)
     lau = "" if not speos else f" launcher={lau0}->{lau1}"
+    age = lambda exists, new: "new" if new else "old" if exists else "no"   # old = left from an earlier run
     res["summary"] = (f"[ORCH] {verdict} kind={kind} stop={stop} t={t_stop:.1f}s "
                       f"{pr['verdict_line'] or '(no verdict line)'} residual={residual}{lau} "
-                      f"out={'yes' if res['out_exists'] else 'no'} fail_out={'yes' if res['fail_out_exists'] else 'no'}"
+                      f"out={age(res['out_exists'], out_new)} fail_out={age(res['fail_out_exists'], fail_out_new)}"
                       + (f" problems={','.join(problems)}" if problems else ""))
     return res
