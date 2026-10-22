@@ -103,11 +103,12 @@ def warp(img, pts):
 
 
 def flatten(channel):
-    """조명 보정: 글자를 지운 배경(팽창 + 중앙값 흐림)으로 나눠 그림자·얼룩을 없앤다."""
+    """조명 보정: 글자를 지운 배경(팽창 + 중앙값 흐림)으로 나눠 그림자·얼룩을 없앤다. 나누면 종이가 약 255 가 된다.
+    최솟값~최댓값 늘리기는 두지 않는다 — 가장 어두운 한 화소가 배율을 정해 빈 쪽이 검게 되고 잡음이 커졌다
+    (2026-10-22 외부 검토 재현, references/scan.md 「조명 보정 시험」)."""
     k = max(15, (min(channel.shape) // 40) | 1)
     bg = cv2.medianBlur(cv2.dilate(channel, np.ones((7, 7), np.uint8)), k)
-    out = cv2.divide(channel, bg, scale=255)
-    return cv2.normalize(out, None, 0, 255, cv2.NORM_MINMAX)
+    return cv2.divide(channel, bg, scale=255)
 
 
 def render(page, mode):
@@ -150,6 +151,17 @@ def main():
     missing = [str(f) for f in files if not f.is_file()]
     if bad or not files or missing:
         return emit(status="error", reason="mode 이름" if bad else "입력 없음", bad_modes=bad, missing=missing, allowed=MODES)
+    # 출력 이름 = <원본 이름>_<mode> — 이름이 같은 사진(다른 폴더·확장자, 대소문자만 다름)은 앞 결과를 덮어쓴다
+    # (2026-10-22 외부 검토: 2장 → 결과 1개, status ok). 아무것도 쓰기 전에 멈춘다
+    first, collisions = {}, []
+    for f in files:
+        k = f.stem.casefold()
+        if k in first:
+            collisions.append([str(first[k]), str(f)])
+        else:
+            first[k] = f
+    if collisions:
+        return emit(status="error", reason="출력 이름 충돌 — 이름이 같은 사진은 --out 을 나눠 따로 실행", collisions=collisions)
     out = Path(a.out) if a.out else files[0].parent / "scanned"
     out.mkdir(parents=True, exist_ok=True)
     results, pdf_pages = [], []

@@ -42,7 +42,9 @@ VERDICT_RANK = {"PASS": 0, "WARN": 1, "FAIL": 2}
 # Default tolerances. Each one is a CLI option; values are recorded in the output.
 TOL_RANGE = 1e-3       # R,T outside [-tol, 1+tol] -> FAIL; outside [0,1] but within tol -> WARN
 TOL_AIR = 1e-3         # air-only |R+T-1| above this -> FAIL
-TOL_LOSSLESS = 1e-6    # RCWA lossless |R+T-1| above this -> FAIL ("R+T == 1.000000")
+TOL_LOSSLESS = 1e-6    # RCWA lossless |R+T-1| above this -> FAIL ("R+T == 1.000000"); also RCWA R+T-1 > this -> FAIL
+TOL_SUM_WARN = 1e-3    # FDTD R+T-1 above this -> WARN (normal-incidence 2D slab |1-R-T| <= 8.1e-4)
+TOL_SUM_FAIL = 1e-2    # FDTD R+T-1 above this -> FAIL (sound high-angle results <= 0.7 %, errors 3.9 %+)
 POL_GAP_WARN = 0.3     # RCWA |eps_s - eps_p| above this -> WARN (fake-plateau check)
 SHUTOFF_REL_TOL = 1e-2  # recorded shutoff_time_fs vs log (t_probe last sample lags ~0.1%)
 
@@ -244,6 +246,18 @@ def check_range(rep, label, name, v):
         rep.add("rt_range", "PASS", label, "", "")
 
 
+def check_sum(rep, label, name, R, T, warn, fail, ev):
+    """Passive structure: absorptance 1-R-T >= 0, i.e. R+T <= 1. Each of R, T inside [0,1] is not
+    enough (review 2026-10-22: Rs=Ts=Rp=Tp=0.8 passed)."""
+    excess = R + T - 1.0
+    if excess > fail:
+        rep.add("rt_sum", "FAIL", label, "%s=%.6f > 1 (1-R-T=%.3g < 0)" % (name, R + T, -excess), ev)
+    elif excess > warn:
+        rep.add("rt_sum", "WARN", label, "%s=%.6f > 1 by %.3g (<= %.0e)" % (name, R + T, excess, fail), ev)
+    else:
+        rep.add("rt_sum", "PASS", label, "", "")
+
+
 def _get_num(rep, label, row, col):
     """Fetch a required numeric R/T cell. Non-finite or missing -> FAIL (never filled).
     Evidence: agents/lumerical.md execution step 4 + lumerical_rcwa.md s6
@@ -353,6 +367,9 @@ def assess_fdtd_table(rep, tpath, tlabel, rows, opts, log_cache):
             vals[col] = _get_num(rep, label, row, col)
             if vals[col] is not None:
                 check_range(rep, label, col, vals[col])
+        if has_r and has_t and None not in vals.values():
+            check_sum(rep, label, "%s+%s" % (r_col, t_col), vals[r_col], vals[t_col], TOL_SUM_WARN, TOL_SUM_FAIL,
+                      "fdtd_detail_rt_signs.md; fdtd_detail_bfast.md")
         if opts["air_only"] and has_r and has_t and None not in vals.values():
             # Evidence: fdtd_detail_bfast.md (air-only T=1.039..1.050)
             # and fdtd_detail_pml.md (air-only residual)
@@ -431,6 +448,8 @@ def assess_rcwa_table(rep, tlabel, rows, opts):
             if R is None or T is None:
                 continue
             eps[p] = 1.0 - R - T
+            # Evidence: lumerical_rcwa.md s6 (eps = 1-R-T in [0,1]); v242 matches TMM to 8 digits
+            check_sum(rep, label, "R%s+T%s" % (p, p), R, T, TOL_LOSSLESS, TOL_LOSSLESS, "lumerical_rcwa.md s6")
             if opts["lossless"]:
                 # Evidence: lumerical_rcwa.md s6 /
                 # lumerical_rcwa.md s3 (lossless -> R+T == 1.000000)
@@ -466,7 +485,10 @@ def assess(paths, solver="auto", air_only=False, lossless=False, r_col="R", t_co
     for p in paths:
         p = os.path.abspath(p)
         if os.path.isdir(p):
-            logs += sorted(os.path.join(p, f) for f in os.listdir(p) if f.endswith("_p0.log"))
+            found = sorted(os.path.join(p, f) for f in os.listdir(p) if f.endswith("_p0.log"))
+            if not found:  # a wrong folder must not read as "nothing wrong" (review 2026-10-22: empty folder -> PASS)
+                rep.add("inputs", "FAIL", p, "no *_p0.log in this folder", "")
+            logs += found
         elif p.endswith("_p0.log"):
             logs.append(p)
         elif p.lower().endswith(".fsp"):
@@ -503,6 +525,8 @@ def assess(paths, solver="auto", air_only=False, lossless=False, r_col="R", t_co
     elif logs:
         rep.add("solver", "WARN", "-", "RCWA writes no _p0.log; given logs ignored",
                 "lumerical_rcwa.md s6")
+    if not rep.items:
+        rep.add("inputs", "FAIL", "-", "nothing checked: no _p0.log and no table rows", "")
     return {
         "verdict": rep.verdict(),
         "solver": solver,
@@ -510,7 +534,8 @@ def assess(paths, solver="auto", air_only=False, lossless=False, r_col="R", t_co
         "options": {"air_only": air_only, "lossless": lossless, "r_col": r_col,
                     "t_col": t_col, "id_col": id_col, "sheet": sheet,
                     "tol_range": TOL_RANGE, "tol_air": TOL_AIR,
-                    "tol_lossless": TOL_LOSSLESS, "pol_gap_warn": POL_GAP_WARN},
+                    "tol_lossless": TOL_LOSSLESS, "tol_sum_warn": TOL_SUM_WARN, "tol_sum_fail": TOL_SUM_FAIL,
+                    "pol_gap_warn": POL_GAP_WARN},
         "logs": log_cache,
         "checks": rep.items,
         "notes": rep.notes,
@@ -546,7 +571,7 @@ def summarize(res, max_lines=8):
 
 
 def main(argv=None):
-    global TOL_RANGE, TOL_AIR, TOL_LOSSLESS, POL_GAP_WARN
+    global TOL_RANGE, TOL_AIR, TOL_LOSSLESS, TOL_SUM_WARN, TOL_SUM_FAIL, POL_GAP_WARN
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("paths", nargs="+")
     ap.add_argument("--solver", default="auto", choices=("auto", "fdtd", "rcwa"))
@@ -560,12 +585,14 @@ def main(argv=None):
     ap.add_argument("--tol-range", type=float, default=TOL_RANGE)
     ap.add_argument("--tol-air", type=float, default=TOL_AIR)
     ap.add_argument("--tol-lossless", type=float, default=TOL_LOSSLESS)
+    ap.add_argument("--tol-sum-warn", type=float, default=TOL_SUM_WARN)
+    ap.add_argument("--tol-sum-fail", type=float, default=TOL_SUM_FAIL)
     ap.add_argument("--pol-gap-warn", type=float, default=POL_GAP_WARN)
     ap.add_argument("--json")
     ap.add_argument("--max-lines", type=int, default=8)
     a = ap.parse_args(argv)
-    TOL_RANGE, TOL_AIR, TOL_LOSSLESS, POL_GAP_WARN = (
-        a.tol_range, a.tol_air, a.tol_lossless, a.pol_gap_warn)
+    TOL_RANGE, TOL_AIR, TOL_LOSSLESS, TOL_SUM_WARN, TOL_SUM_FAIL, POL_GAP_WARN = (
+        a.tol_range, a.tol_air, a.tol_lossless, a.tol_sum_warn, a.tol_sum_fail, a.pol_gap_warn)
     res = assess(a.paths, solver=a.solver, air_only=a.air_only, lossless=a.lossless,
                  r_col=a.r_col, t_col=a.t_col, id_col=a.id_col, log_dirs=a.log_dir,
                  sheet=a.sheet)

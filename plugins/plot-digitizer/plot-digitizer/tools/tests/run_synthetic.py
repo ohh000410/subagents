@@ -18,6 +18,7 @@ matplotlib 로 참값 매핑(ax.transData)을 아는 그림을 메모리에서 �
 5 polar 지름 끝 돌출 R 과대 「반원 polar 캘리브」
 6 long CSV (series,x,y) 읽기 — wide 와 같은 flag, 곡선별 x, 행 삭제 gap
 7 calib.json 저장·로드·값<->픽셀 왕복, check_calibration --overlay (cartesian·polar, flag 눈금 빨강)
+8 검사할 것 없음 — 곡선 0개 CSV·눈금 없는 calib.json 은 FAIL·종료코드 2
 """
 import os
 import subprocess
@@ -487,6 +488,24 @@ def case_calib_json():
     return out
 
 
+# ---------------------------------------------------------------- 8 검사할 것 없음
+def case_nothing_to_check():
+    """검사한 것이 없으면 FAIL·종료코드 2 — flag 0건 PASS 와 구별(2026-10-22 외부 검토: 곡선 0개·눈금 0개가 PASS)."""
+    out = []
+    with tempfile.TemporaryDirectory() as td:
+        px, pc = os.path.join(td, "x_only.csv"), os.path.join(td, "no_ticks.json")
+        write_csv(px, ["x"], [(v,) for v in (1, 2, 3)])
+        cm.save(pc, {"type": "cartesian", "box_px": {"left": 0, "right": 100, "top": 0, "bottom": 100}})
+        for label, script, path in (("결함: 곡선 0개 CSV (x 열만)", "check_extraction.py", px),
+                                    ("결함: 눈금 없는 calib.json", "check_calibration.py", pc)):
+            code, txt = cli(script, path)
+            last = txt.strip().splitlines()[-1]
+            hit = code == 2 and last.split(": ", 1)[1].startswith("FAIL")
+            out.append((label, [{"type": "nothing_checked", "msg": last}] if hit else [],
+                        f"CLI 종료코드 {code}, 끝줄 '{last}'"))
+    return out
+
+
 # ---------------------------------------------------------------- 판정·표
 CASES = [
     ("1 눈금 돌출 오염", case_tick_protrusion, {"near_tick"}),
@@ -496,6 +515,7 @@ CASES = [
     ("5 polar 지름 끝 돌출 R 과대", case_polar, {"reproj"}),
     ("6 long CSV", case_long_csv, {"gap", "nan_run"}),
     ("7 calib.json·overlay", case_calib_json, {"reproj", "dropped_candidate"}),
+    ("8 검사할 것 없음", case_nothing_to_check, {"nothing_checked"}),
 ]
 
 

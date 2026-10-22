@@ -97,7 +97,7 @@ Claude 에이전트 메모리 폴더를 쓴다(`MEMORY.md` 앞부분이 시작 �
 
 ## 출력 (메인 세션 반환)
 - csv 경로 · 추출 검증 overlay png · 캘리브 체크 overlay png (3개 필수) · calib.json 경로
-- 도구 결과 2줄 (필수, 도구 끝줄 그대로): `check_calibration: PASS|WARN N tick, RMS x px` · `check_extraction: PASS|WARN flag N건`
+- 도구 결과 2줄 (필수, 도구 끝줄 그대로): `check_calibration: PASS|WARN|FAIL N tick, RMS x px` · `check_extraction: PASS|WARN|FAIL flag N건`
 - 캘리브 파라미터(중심·scale·0°축)
 - 검증 결과(본문 수치/대칭 일치, 격자 정합, 눈금 대조 PASS/FAIL 수치)
 - 신뢰도 낮은 구간 · 사용자 확인 항목과 답

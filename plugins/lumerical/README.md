@@ -30,7 +30,7 @@ FDTD·RCWA 시뮬레이션을 돌립니다.
 
 - `agents/lumerical.md` — 에이전트 정의(공통 규칙 + 본문)
 - `lumerical/references/` — 24개 파일
-- `lumerical/tools/` — 3개 파일
+- `lumerical/tools/` — 4개 파일
 - `policies/` — 공통 정책(실패 처리, GUI 창 멈춤 대처)
 - `LICENSE` — MIT
 

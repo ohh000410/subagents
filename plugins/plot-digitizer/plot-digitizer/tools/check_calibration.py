@@ -19,8 +19,10 @@ calib.json 스키마 = calib_model.py docstring (cartesian 선형 축 / polar ra
 - flag 눈금(재투영 오차 > tol, dropped 후보, 테두리에 가린 끝 눈금 후보)은 빨강
 - 좌측 상단 = 마지막 요약 줄과 같은 문구
 
-종료코드 0 = flag 없음, 1 = flag 있음 (WARN). 마지막 줄 `check_calibration: PASS|WARN N tick, RMS x px`
+종료코드 0 = flag 없음, 1 = flag 있음 (WARN), 2 = 눈금 0개 (FAIL — 검사한 것이 없음).
+마지막 줄 `check_calibration: PASS|WARN|FAIL N tick, RMS x px`
 = 보고에 그대로 옮기는 한 줄 판정 (N = 눈금 수 전체, RMS = 전체 눈금 재투영 오차 RMS).
+cartesian 에서 한 축의 눈금이 없으면 그 축은 `no_ticks` flag (WARN).
 
 tol 1.0 px 근거: 격자 원 LSQ 잔차 <= 0.08 px, 지름선 끝 돌출로 인한 R 과대 2.5~3 px
 (references/calibration_extraction.md 「반원 polar 캘리브」). 1 px 는 둘 사이를 가른다.
@@ -117,7 +119,7 @@ def check_cartesian(c, tol):
     for axis in ("x", "y"):
         key = f"{axis}_ticks"
         if key not in c:
-            report["notes"].append(f"{axis}: 눈금 없음 - 검사 안 함")
+            flags.append({"type": "no_ticks", "axis": axis, "msg": f"{axis}: 눈금 없음 - 이 축은 검사하지 못함"})
             continue
         t = np.asarray(c[key], float)
         a, b, src = cm.axis_map(c, axis)
@@ -167,13 +169,20 @@ def check(c, tol=1.0):
     return check_cartesian(c, tol) if c["type"] == "cartesian" else check_polar(c, tol)
 
 
-def summary(report, flags):
-    """`check_calibration: PASS|WARN N tick, RMS x px` — 전 눈금 재투영 오차 기준."""
+def _errs(report):
     errs = []
     for tab in list(report.get("axes", {}).values()) + [report[k] for k in ("r", "theta") if k in report]:
         errs += [row["err_px"] for row in tab["ticks"]]
+    return errs
+
+
+def summary(report, flags):
+    """`check_calibration: PASS|WARN|FAIL N tick, RMS x px` — 전 눈금 재투영 오차 기준.
+    눈금 0개 = FAIL: 검사한 것이 없는데 PASS 로 나갔다(2026-10-22 외부 검토)."""
+    errs = _errs(report)
     rms = float(np.sqrt(np.mean(np.square(errs)))) if errs else float("nan")
-    return f"check_calibration: {'WARN' if flags else 'PASS'} {len(errs)} tick, RMS {rms:.3f} px"
+    verdict = "FAIL" if not errs else "WARN" if flags else "PASS"
+    return f"check_calibration: {verdict} {len(errs)} tick, RMS {rms:.3f} px"
 
 
 MAGENTA, GREEN, CYAN, RED = (255, 0, 255), (0, 200, 0), (0, 200, 255), (255, 0, 0)
@@ -259,7 +268,7 @@ def main():
         print(json.dumps({"report": report, "flags": flags}, ensure_ascii=False, indent=1))
     else:
         _print(report, flags, args.tol_px)
-    sys.exit(1 if flags else 0)
+    sys.exit(2 if not _errs(report) else 1 if flags else 0)
 
 
 if __name__ == "__main__":

@@ -80,7 +80,8 @@ def judge(before, after, exp_dV=None, exp_dF=None, exp_bodies=None, tol=VOL_TOL_
         warns.append("no expectation")
     if exp_dV is not None:
         err = dV - exp_dV
-        if abs(err) > tol:
+        # pass only inside tol: NaN compares False either way, so "> tol" let it through (review 2026-10-22)
+        if not abs(err) <= tol:
             fails.append("dV err=%+.3e > tol %.0e" % (err, tol))
     elif abs(dV) <= tol:
         warns.append("dV=0 without exp_dV (no-op?)")

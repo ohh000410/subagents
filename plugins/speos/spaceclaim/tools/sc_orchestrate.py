@@ -121,7 +121,8 @@ def run(script, log, out, timeout_s: int = 300, speos: bool = False, poll_s: flo
         seat_wait_s: int = 300) -> dict:
     """Launch SpaceClaim headless, poll until marker / exit / timeout, close own PID, read verdict.
 
-    PASS only when the log carries [GEOM VERDICT] PASS. kind:
+    PASS only when the log carries [GEOM VERDICT] PASS, `out` exists non-empty and no own process is left
+    (otherwise FAIL with problems=no_output|residual). kind:
       verdict | fatal | no_verdict | compile_error (0-byte log, no other SpaceClaim at launch)
       | seat_busy (seat still taken after seat_wait_s -> not launched)
       | seat_contention (0-byte log, another SpaceClaim appeared at launch) | timeout | precompile_error
@@ -181,14 +182,20 @@ def run(script, log, out, timeout_s: int = 300, speos: bool = False, poll_s: flo
     if stop == "timeout" and kind != "verdict" and kind != "fatal":
         kind = "timeout"
     verdict = pr["verdict"] if kind == "verdict" else "FAIL"
+    # The log verdict covers the geometry only. PASS also needs the saved file and no own process left
+    # (review 2026-10-22: the summary said PASS with out=no residual=1).
+    out_size = out.stat().st_size if out.exists() else 0
+    problems = (["no_output"] if verdict == "PASS" and out_size == 0 else []) + (["residual"] if residual else [])
+    if problems:
+        verdict = "FAIL"
     res.update(pr)
-    res.update(verdict=verdict, kind=kind, stop=stop, seat_at_launch=seat, seat_wait=waited, pid=proc.pid,
-               elapsed=round(t_stop, 1), residual=residual,
-               out_exists=out.exists(), out_size=out.stat().st_size if out.exists() else 0,
-               fail_out_exists=fail_path(out).exists())
+    res.update(verdict=verdict, kind=kind, problems=problems, stop=stop, seat_at_launch=seat, seat_wait=waited,
+               pid=proc.pid, elapsed=round(t_stop, 1), residual=residual,
+               out_exists=out.exists(), out_size=out_size, fail_out_exists=fail_path(out).exists())
     res.update(launcher_before=lau0, launcher_after=lau1)
     lau = "" if not speos else f" launcher={lau0}->{lau1}"
     res["summary"] = (f"[ORCH] {verdict} kind={kind} stop={stop} t={t_stop:.1f}s "
                       f"{pr['verdict_line'] or '(no verdict line)'} residual={residual}{lau} "
-                      f"out={'yes' if res['out_exists'] else 'no'} fail_out={'yes' if res['fail_out_exists'] else 'no'}")
+                      f"out={'yes' if res['out_exists'] else 'no'} fail_out={'yes' if res['fail_out_exists'] else 'no'}"
+                      + (f" problems={','.join(problems)}" if problems else ""))
     return res

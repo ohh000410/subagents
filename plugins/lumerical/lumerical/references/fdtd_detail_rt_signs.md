@@ -15,3 +15,6 @@
 
 ## grazing 소스 되통과 손실 (배치 함정)
 소스 뒤 R_mon 은 반사파가 소스면 되통과 → 소스 전류 sheet 가 grazing 반사파 불완전 투과 → ~1% 손실(고각 의존, 정입사 ~0), R 계통적으로 낮음. R+T<1 로 감지, air baseline 로 못 고침 → 고각은 (b).
+
+## R+T 합 (수동 구조)
+`R+T−1` > 1e-3 = WARN, > 1e-2 = FAIL(`tools/assess_run.py` rt_sum). 정상 결과: 정입사 2D 슬랩 |1−R−T| ≤ 8.1e-4(mesh accuracy 3), 고각 60° air-only |T−1| 0.25~0.7 %(`fdtd_detail_pml.md` 「고각 누설」). 오류는 더 크다 — BFAST p-pol 고각 `transmission()` 3.9~5 %(`fdtd_detail_bfast.md`), 부호 오류 ≥ 0.7(위 「transmission() 부호」). R+T<1 쪽 오류(`abs(transmission)` 오독)는 이 검사로 못 잡는다.

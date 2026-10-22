@@ -43,6 +43,12 @@ class StepCheck(unittest.TestCase):
         r = chk("base", (0, 0), (2.0, 6, BOX_FLIPPED), exp_dV_cm3=2.0, exp_bbox=BOX)
         self.assertEqual(r.status, "FAIL"); self.assertIn("bbox mismatch", r.line)
 
+    def test_nan_volume_fails(self):  # NaN 은 비교가 모두 거짓 — 통과로 새면 안 된다(2026-10-22 외부 검토)
+        self.assertEqual(chk("hole", (2.0, 6), (math.nan, 7), exp_dV_cm3=HOLE).status, "FAIL")
+
+    def test_nan_bbox_fails(self):
+        self.assertEqual(chk("base", (0, 0), (2.0, 6, (math.nan,) * 6), exp_dV_cm3=2.0, exp_bbox=BOX).status, "FAIL")
+
     def test_bbox_without_after_bbox_raises(self):
         with self.assertRaises(ValueError):
             chk("base", (0, 0), (2.0, 6), exp_dV_cm3=2.0, exp_bbox=BOX)

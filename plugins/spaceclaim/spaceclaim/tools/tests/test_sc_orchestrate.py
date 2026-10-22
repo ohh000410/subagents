@@ -1,6 +1,8 @@
 """CPython unit tests for sc_orchestrate log parsing (no SpaceClaim needed)."""
 import os
+import shutil
 import sys
+import tempfile
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -71,6 +73,54 @@ class SeatBusy(unittest.TestCase):
         res = so.run("x.py", "x.log", "x.scdocx", seat_wait_s=0)
         self.assertEqual((res["verdict"], res["kind"]), ("FAIL", "seat_busy"))
         self.assertIn("kind=seat_busy", res["summary"])
+
+
+class RunVerdict(unittest.TestCase):
+    """A PASS log alone is not a PASS run: the output file must exist and no own process may be left
+    (review 2026-10-22: '[ORCH] PASS ... residual=1 out=no')."""
+
+    def setUp(self):
+        self.saved = (so.compile_check, so.sc_count, so.launcher_count, so.close_pid, so.subprocess.Popen)
+        self.dir = tempfile.mkdtemp()
+        self.log, self.out = os.path.join(self.dir, "run.log"), os.path.join(self.dir, "model.scdocx")
+        so.compile_check = lambda script: "COMPILE OK"
+        so.sc_count = so.launcher_count = lambda: 0
+
+    def tearDown(self):
+        so.compile_check, so.sc_count, so.launcher_count, so.close_pid, so.subprocess.Popen = self.saved
+        shutil.rmtree(self.dir)
+
+    def run_with(self, write_out, residual):
+        log, out = self.log, self.out
+
+        class Proc:
+            pid = 99999
+
+            def __init__(self, *a, **k):
+                with open(log, "w", encoding="utf-8") as f:
+                    f.write("21:30:07 [GEOM VERDICT] PASS steps=1 warn=0 fail=0\n")
+                if write_out:
+                    with open(out, "wb") as f:
+                        f.write(b"scdocx")
+
+            def poll(self):
+                return 0
+        so.subprocess.Popen = Proc
+        so.close_pid = lambda pid, wait_s=30: residual
+        return so.run(os.path.join(self.dir, "s.py"), log, out, timeout_s=5, poll_s=0.01)
+
+    def test_pass(self):
+        res = self.run_with(write_out=True, residual=0)
+        self.assertEqual((res["verdict"], res["problems"]), ("PASS", []))
+
+    def test_no_output_fails(self):
+        res = self.run_with(write_out=False, residual=0)
+        self.assertEqual((res["verdict"], res["problems"]), ("FAIL", ["no_output"]))
+        self.assertIn("problems=no_output", res["summary"])
+
+    def test_residual_fails(self):
+        res = self.run_with(write_out=True, residual=1)
+        self.assertEqual((res["verdict"], res["problems"]), ("FAIL", ["residual"]))
 
 
 if __name__ == "__main__":

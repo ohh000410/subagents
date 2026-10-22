@@ -42,13 +42,14 @@ def step_check(name, before, after, exp_dV_cm3=None, tol=TOL_REL, abs_tol=TOL_AB
 
     if abs(dV) < NOOP_CM3 and dF == 0:
         fails.append("no-op (dV=0, dF=0)")
-    if exp_dV_cm3 is not None and abs(dV - exp_dV_cm3) > max(tol * abs(exp_dV_cm3), abs_tol):
+    # 허용치 안일 때만 통과로 쓴다 — NaN 은 어떤 비교도 거짓이라 "> 허용치" 로 쓰면 통과해 버린다(2026-10-22 외부 검토)
+    if exp_dV_cm3 is not None and not abs(dV - exp_dV_cm3) <= max(tol * abs(exp_dV_cm3), abs_tol):
         fails.append("dV mismatch (err=%.3e cm3)" % (dV - exp_dV_cm3))
     if exp_bbox is not None:
         if bb1 is None:
             raise ValueError("exp_bbox 를 주려면 after 에 RangeBox 가 있어야 한다")
         worst = max(abs(a - b) for a, b in zip(bb1, exp_bbox))
-        if worst > bbox_tol:
+        if not worst <= bbox_tol:
             fails.append("bbox mismatch (max err=%.4f cm)" % worst)
 
     if fails:

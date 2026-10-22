@@ -32,7 +32,7 @@
 
 - `agents/doc-scan.md` — 에이전트 정의(공통 규칙 + 본문)
 - `doc-scan/references/` — 1개 파일
-- `doc-scan/tools/` — 3개 파일
+- `doc-scan/tools/` — 5개 파일
 - `policies/` — 공통 정책(실패 처리, GUI 창 멈춤 대처)
 - `LICENSE` — MIT
 

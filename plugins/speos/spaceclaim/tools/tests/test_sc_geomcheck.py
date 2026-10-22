@@ -33,6 +33,10 @@ class Judge(unittest.TestCase):
         after = (HOLED[0] + 5e-7,) + HOLED[1:]
         self.assertEqual(gc.judge(BLOCK, after, exp_dV=HOLE_DV)[0], "FAIL")
 
+    def test_nan_volume_fails(self):  # NaN compares False either way (review 2026-10-22)
+        after = (float("nan"),) + HOLED[1:]
+        self.assertEqual(gc.judge(BLOCK, after, exp_dV=HOLE_DV)[0], "FAIL")
+
     def test_fail_faces_and_bodies(self):
         s, d = gc.judge(BLOCK, HOLED, exp_dV=HOLE_DV, exp_dF=2, exp_bodies=2)
         self.assertEqual(s, "FAIL")

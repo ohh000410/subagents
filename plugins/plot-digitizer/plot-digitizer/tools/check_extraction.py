@@ -27,8 +27,9 @@ flag 종류 (근거 = references/calibration_extraction.md 의 절)
 이웃과 값이 튀는 점(고립점)은 flag 하지 않는다 — 실제 데이터일 수 있다
 (「이상치 판정 전 원본 확인」).
 
-종료코드 0 = flag 없음, 1 = flag 있음 (WARN). flag 마다 원본 확인 후 설명하거나 고친다.
-마지막 줄 `check_extraction: PASS|WARN flag N건` = 보고에 그대로 옮기는 한 줄 판정.
+종료코드 0 = flag 없음, 1 = flag 있음 (WARN), 2 = 곡선 0개 (FAIL — 검사한 것이 없음).
+flag 마다 원본 확인 후 설명하거나 고친다.
+마지막 줄 `check_extraction: PASS|WARN|FAIL flag N건` = 보고에 그대로 옮기는 한 줄 판정.
 """
 import argparse
 import csv
@@ -212,16 +213,18 @@ def main():
     series = read_csv(args.csv, args.x)
     calib = cm.load(args.calib) if args.calib else None
     flags, notes = check_series(series, calib, args.gap_factor, args.near_px)
+    # 곡선 0개 = 검사한 것이 없다. flag 0건과 구별한다(2026-10-22 외부 검토: 곡선 0개가 PASS 로 나갔다)
+    verdict = "FAIL" if not series else "WARN" if flags else "PASS"
     if args.json:
-        print(json.dumps({"flags": flags, "notes": notes}, ensure_ascii=False, indent=1))
+        print(json.dumps({"verdict": verdict, "flags": flags, "notes": notes}, ensure_ascii=False, indent=1))
     else:
         print(f"[extract] {args.csv}  curves={len(series)} rows={sum(len(v[0]) for v in series.values())}")
         for n in notes:
             print(f"  note: {n}")
         for f in flags:
             print(f"WARN [{f['type']}] {f['msg']}")
-        print(f"check_extraction: {'WARN' if flags else 'PASS'} flag {len(flags)}건")
-    sys.exit(1 if flags else 0)
+        print(f"check_extraction: {verdict} flag {len(flags)}건" + (" (곡선 0개)" if not series else ""))
+    sys.exit({"PASS": 0, "WARN": 1, "FAIL": 2}[verdict])
 
 
 if __name__ == "__main__":
