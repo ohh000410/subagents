@@ -72,7 +72,7 @@ OriginLab Origin 그래프 전문가.
 - Origin 2019. `originpro` 불가. win32com COM: `app = w32.Dispatch("Origin.ApplicationSI")`
 - Python: `C:/Python314/python.exe` 절대경로
 - 원본 `.opju`: `app.Load`만. 산출물: 다른 경로, `app.Save(r"...")`, 백슬래시 경로
-- 검증 도구: `tools/origin_verify.py` (사용법·`intended` 스키마 = docstring, 개요 `tools/README.md`). 세션 시작·LabTalk 전송·종료는 이 도구로만
+- 검증 도구: `tools/origin_verify.py` (사용법·`intended` 스키마 = docstring, 검사별 근거 = 보고의 `ref` 칸·각 검사 주석의 references 파일, 개요 `tools/README.md`). 세션 시작·LabTalk 전송·종료는 이 도구로만
 
 ## 스타일 기본값 5 (사용자 지시 — 위반 = 재작업)
 
@@ -109,3 +109,7 @@ OriginLab Origin 그래프 전문가.
 ## Reference / memory
 
 - 범례 안쪽 배치: `references/origin/legend_inside_placement.md`
+- 세션 시작·종료·저장·모달: `references/origin/session_and_modal.md`
+- LabTalk·COM 함정(창 활성·숫자 전송·속성 존재·워크시트·set): `references/origin/labtalk_com_pitfalls.md`
+- 눈금·autoscale·축 제목·merge·로그 축·1:1 축·기하 순서: `references/origin/page_and_axes.md`
+- Project Explorer 폴더·append: `references/origin/project_explorer.md`

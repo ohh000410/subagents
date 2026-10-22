@@ -14,7 +14,7 @@ def chk(*a, **k):
 
 
 class StepCheck(unittest.TestCase):
-    def test_noop_fails(self):  # kNegative 무동작
+    def test_noop_fails(self):  # kNegative 무동작 (references/inventor_ipt_modeling.md 「HoleFeature」)
         r = chk("hole", (1.9, 14), (1.9, 14), exp_dV_cm3=HOLE)
         self.assertEqual(r.status, "FAIL"); self.assertIn("no-op", r.line)
 

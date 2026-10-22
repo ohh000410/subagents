@@ -98,7 +98,7 @@ vol_cm3, area_cm2 = mp.Volume, mp.Area   # IPT native 만 정확. STEP→IAM 경
 | 조건 | 판정 |
 |---|---|
 | dV≈0 이고 dF==0 | FAIL (무동작: 방향 틀린 Hole 등) |
-| 이론 dV 와 `max(1e-4×\|exp\|, 1e-7 cm³)` 초과 어긋남 | FAIL (곡면-곡면 단계 7e-5 mm³ 오차 사례 포함) |
+| 이론 dV 와 `max(1e-4×\|exp\|, 1e-7 cm³)` 초과 어긋남 | FAIL (곡면-곡면 단계에서 MassProperties 가 해석값보다 약 7e-5 상대 — 2598 mm³ 중 0.18 mm³ — 큰 사례도 통과하는 폭) |
 | 이론 dV 없음 | WARN |
 | `exp_bbox` 와 after RangeBox 가 0.01 mm 초과 어긋남 | FAIL (체적만으론 못 잡는 base extrude 방향 반전) |
 

@@ -8,6 +8,7 @@ broadband 고정 입사각. 단일 파장 → Bloch (KB: "single wavelength → 
 ## 고각 T>1 = sourcepower 정규화 오류 (gain 아님)
 air-only 에서 한쪽 편광만 T_builtin>1. raw Poynting 은 두 편광 동일 → `transmission()` 분모 sourcepower 가 그 편광에서 과소.
 - 오류 편광 = p-pol(TM). 크기 mesh 의존(거칠수록 큼). injection 방향 무관
+- 실측(2D, 10 µm, air-only): p-pol `transmission()` 60° 1.039, 70° 1.046, 80° 1.050, s-pol 1 ± 5e-6
 - fix: raw Poynting 재정규화, 분모 = 같은 mesh·같은 셋업 air baseline. 슬랩 vs TMM R·T ≤1% 검증
 
 ## late-time 수치 발산

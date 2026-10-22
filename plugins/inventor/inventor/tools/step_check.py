@@ -1,11 +1,11 @@
 """Inventor 피처 단계 검증: 피처 하나마다 되읽은 체적·면 수 변화를 판정해 STEP 줄을 낸다.
 
-근거(실측, 돌출은 references/inventor_ipt_modeling.md 「Extrude」):
+근거 (references/inventor_ipt_modeling.md 「HoleFeature」「MassProperties」「Extrude」「피처 단계 검증」):
 - 방향이 틀린 HoleFeature 는 예외 없이 무동작(Volume·Faces 불변).
   MassProperties 는 캐시되므로 CacheResultsOnCompute=False 로 되읽어야 한다.
-- 돌출: 체적만으로는 base extrude 방향 반전을 못 잡는다 -> RangeBox 대조.
+- 체적만으로는 base extrude 방향 반전을 못 잡는다 -> RangeBox 대조.
 - 평면·단일 원통 단계는 1e-4 mm3 로 일치, 곡면-곡면 단계는
-  MassProperties 가 7e-5 mm3 (2598 mm3 중, 약 3e-8 상대) 어긋남 -> 상대 1e-4 면 곡면도 통과.
+  MassProperties 가 해석값보다 약 7e-5 상대(2598 mm3 중 0.18 mm3) 크다 -> 상대 1e-4 면 곡면도 통과.
 
 단위: 전부 Inventor 데이터베이스 단위. Volume = cm3, RangeBox = cm.
 before/after = (volume_cm3, faces[, (minx, miny, minz, maxx, maxy, maxz)]).

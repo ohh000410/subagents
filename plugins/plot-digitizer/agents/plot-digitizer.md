@@ -93,7 +93,7 @@ Claude 에이전트 메모리 폴더를 쓴다(`MEMORY.md` 앞부분이 시작 �
 - crop 경계 잘림: picker 전 Read로 축선·0점·최외곽 눈금·(polar) 지름·±90° 포함 확인. 잘리면 사용자가 그 점 클릭 불가
 - 마커 전부 클릭 요구 금지 — 클릭 = 축 캘리브 소수 점만
 - 범례 아이콘 → 축 끝점 오인 금지. 외곽 호 단일 LSQ 금지. 디지타이즈 절대값 ~0.02 systematic 한계 → 정량 결론은 본문 수치 우선
-- near-white 곡선: RGB 거리 대신 채도로 배경 분리
+- near-white 곡선: 혼합 궤적 분류 전에 순백 근처(RGB 거리 ~15~20)를 배경으로 먼저 제거 (`references/calibration_extraction.md` 「흰색에 가까운 곡선의 배경 분리」)
 
 ## 출력 (메인 세션 반환)
 - csv 경로 · 추출 검증 overlay png · 캘리브 체크 overlay png (3개 필수) · calib.json 경로

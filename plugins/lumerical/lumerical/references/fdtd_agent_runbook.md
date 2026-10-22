@@ -15,7 +15,7 @@
 
 ## 1. 공식 KB 예제
 
-Ansys KB 다운로드. WebFetch 403 → `curl` + Chrome UA (`fdtd_kb_resources.md`).
+로컬에 보존한 공식 KB 예제(이 PC 환경 값)가 있으면 먼저 본다. 없으면 Ansys KB 다운로드. WebFetch 403 → `curl` + Chrome UA (`fdtd_kb_resources.md`).
 
 ## 2. KB 예제 inspect
 

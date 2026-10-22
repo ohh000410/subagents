@@ -27,7 +27,7 @@
 ## 들어 있는 것
 
 - `agents/plot-digitizer.md` — 에이전트 정의(공통 규칙 + 본문)
-- `plot-digitizer/references/` — 1개 파일
+- `plot-digitizer/references/` — 2개 파일
 - `plot-digitizer/tools/` — 6개 파일
 - `policies/` — 공통 정책(실패 처리, GUI 창 멈춤 대처)
 - `LICENSE` — MIT

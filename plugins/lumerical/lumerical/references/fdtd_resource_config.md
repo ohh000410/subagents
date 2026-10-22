@@ -9,6 +9,7 @@
 - capacity = job manager 큐(`runjobs`/sweep) 동시 job 수. `fdtd.run()` 순차 실행 무관
 - 기본값 = 물리 코어 자동감지(기존 행 5 로 바꿔도 신규 리소스 6 생성). i5-12400F 6코어 → 6. FDTD 권장(프로세스=물리 코어, threads=1, HT 비사용) 일치 → 변경 불필요
 - RCWA 리소스 1 proc × 6 thread — MPI 분할 미지원(`multiProcs=false`)
+- `job launching preset` 은 사용자 설정 파일에 남아 세션 간에 유지된다. `Local Computer` 로 바꾸면 `processes` 가 1 이 되고, 다시 `Remote: Microsoft MPI` 로 돌려도 `processes` 는 1 로 남는다 — 프리셋은 정상인데 1 프로세스로 돈다. 복구 = 프리셋과 `processes` 를 둘 다 되돌리고 새 세션에서 읽어 확인(`tools/check_setup.py` 가 둘 다 본다)
 
 ## FDTD 객체 Advanced options "Parallel engine options" (Resources 와 별개)
 `set process grid`(기본 off) + `nx`·`ny`·`nz`(기본 1·1·1, placeholder, 스레드 아님). 켜면 nx×ny×nz = processes. 기본 off 유지.

@@ -2,7 +2,8 @@
 """check_setup -- FDTD pre-run setup check on the LIVE lumapi session.
 
 Call between save() and run(). Never opens the .fsp separately (lum_fdtd_gui = 1 seat).
-Scope: only traps that actually failed in past runs.
+Scope: only traps that actually failed in past runs; the evidence field names the
+reference file (../references) that explains each trap.
 FAIL (deterministic) -> raises SetupCheckError (report attached). Others -> WARN only.
 
     import os, sys
@@ -113,8 +114,10 @@ def _check_saved(fdtd, rep):
 
 def _check_gpu_only(fdtd, rep, engine):
     """GPU-only FDTD settings on the CPU engine: run() returns normally (Local Computer)
-    or hangs >55 min (MS-MPI); only the _p0.log says why."""
-    ev = ""
+    or hangs >55 min (MS-MPI); only the _p0.log says why.
+    Evidence: fdtd_gpu_support.md,
+              fdtd_pitfalls_api.md."""
+    ev = "fdtd_gpu_support.md; fdtd_pitfalls_api.md"
     if engine != "cpu":
         return
     if _have(fdtd, "FDTD", "express mode"):
@@ -135,8 +138,9 @@ def _check_gpu_only(fdtd, rep, engine):
 def _check_source_band(fdtd, rep, band):
     """Per-source override vs global source band. addplane() defaults to
     'override global source settings'=1 with its own 400-700 nm range, so
-    setglobalsource() alone does not move the source; monitors sample the GLOBAL band."""
-    ev = ""
+    setglobalsource() alone does not move the source; monitors sample the GLOBAL band.
+    Evidence: fdtd_lumapi_patterns_basic.md."""
+    ev = "fdtd_lumapi_patterns_basic.md"
     g0 = float(_scalar(fdtd.getglobalsource("wavelength start")))
     g1 = float(_scalar(fdtd.getglobalsource("wavelength stop")))
     if band:
@@ -177,10 +181,12 @@ def _check_source_band(fdtd, rep, band):
 
 
 def _check_readback(fdtd, rep, readback):
-    """intended value == getnamed readback. Silent clamps seen: mesh accuracy >8 -> 8;
-    pml profile=2 raises layers 24 -> 32; layers >64 -> 64 and
-    layers-before-profile reset."""
-    ev = ""
+    """intended value == getnamed readback. Silent clamps seen: mesh accuracy >8 -> 8
+    (fdtd_detail_mesh_grazing.md); pml profile=2 raises layers
+    24 -> 32 (fdtd_detail_pml.md); layers >64 -> 64 and
+    layers-before-profile reset (fdtd_detail_pml.md)."""
+    ev = ("fdtd_detail_mesh_grazing.md; "
+          "fdtd_detail_pml.md")
     for obj, props in (readback or {}).items():
         for prop, want in props.items():
             tgt = "%s.%s" % (obj, prop)
@@ -200,13 +206,13 @@ def _check_readback(fdtd, rep, readback):
             rep.add("readback", "WARN", "FDTD.pml layers",
                     "pml profile=2 and no intended layers: actual layers=%s"
                     % _scalar(fdtd.getnamed("FDTD", "pml layers")),
-                    "")
+                    "fdtd_detail_pml.md")
 
 
 def _check_disk(rep, fsp, min_gb, warn_gb):
     """Free disk on C: and on the .fsp drive. A near-full C: turned a write hiccup into
-    a 6 h hung engine pileup."""
-    ev = ""
+    a 6 h hung engine pileup. Evidence: fdtd_pitfalls_api.md."""
+    ev = "fdtd_pitfalls_api.md"
     drives = ["C:\\"]
     if fsp:
         d = os.path.splitdrive(fsp)[0].upper() + "\\"
@@ -223,8 +229,9 @@ def _check_disk(rep, fsp, min_gb, warn_gb):
 
 
 def _check_case_ids(rep, case_ids, fsp):
-    """case_id names both <case_id>.fsp and <case_id>_p0.log; collisions share a log."""
-    ev = ""
+    """case_id names both <case_id>.fsp and <case_id>_p0.log; collisions share a log.
+    Evidence: fdtd_pitfalls_api.md."""
+    ev = "fdtd_pitfalls_api.md"
     if case_ids is None:
         return
     seen, dup = set(), set()
@@ -244,8 +251,8 @@ def _check_case_ids(rep, case_ids, fsp):
 def _check_preset(fdtd, rep, processes):
     """'job launching preset' persists in the user config across sessions; 'Local
     Computer' silently drops production to one process. Workstation default =
-    'Remote: Microsoft MPI'."""
-    ev = ""
+    'Remote: Microsoft MPI'. Evidence: fdtd_resource_config.md."""
+    ev = "fdtd_resource_config.md"
     p = str(_scalar(fdtd.getresource("FDTD", 1, "job launching preset")))
     if p.strip().lower() == "local computer":
         rep.add("launch_preset", "FAIL", "FDTD resource 1",
@@ -253,7 +260,7 @@ def _check_preset(fdtd, rep, processes):
     else:
         rep.add("launch_preset", "PASS", "FDTD resource 1", p, "")
     # Switching preset to Local Computer and back left processes=1 (measured 2026-10-17,
-    # v242) -> single-process production with the preset looking correct.
+    # fdtd_resource_config.md, v242) -> single-process production with the preset looking correct.
     n = int(float(_scalar(fdtd.getresource("FDTD", 1, "processes"))))
     if n != int(processes):
         rep.add("launch_preset", "WARN", "FDTD resource 1",
@@ -263,14 +270,16 @@ def _check_preset(fdtd, rep, processes):
 
 
 def _check_orphans(rep):
-    """Engines alive before run() = orphans from a killed controller."""
+    """Engines alive before run() = orphans from a killed controller.
+    Evidence: fdtd_pitfalls_api.md (orphaned engine processes),
+              fdtd_pitfalls_api.md."""
     out = subprocess.run(["tasklist", "/FI", "IMAGENAME eq fdtd-engine*"],
                          capture_output=True, text=True, errors="replace").stdout
     n = sum(1 for ln in out.splitlines() if ln.lower().startswith("fdtd-engine"))
     if n:
         rep.add("orphan_engines", "WARN", "tasklist",
                 "%d fdtd-engine process(es) already running before run()" % n,
-                "")
+                "fdtd_pitfalls_api.md")
     else:
         rep.add("orphan_engines", "PASS", "tasklist", "", "")
 

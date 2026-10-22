@@ -43,3 +43,20 @@
 - 같은 평면에 홈 여러 개 = 홈마다 스케치 → `ViewHelper.SetViewMode(Solid)` → `ExtrudeFaces`(Cut) 를 차례로(10/10). 같은 sketch plane 을 다시 써도 된다. CUT 전에 body 가 하나 늘었는지(`len(bodies) == before + 1`), 그 face 가 1개인지(`len(tri.Faces) == 1`, compound 아님) 확인
 - 직교 두 방향(20/20): Y홈 = `Frame(Point(0, −0.001 mm, 0), DirX, DirZ)` + extrude DirY, X홈 = `Frame(Point(−0.001 mm, 0, 0), DirY, DirZ)` + extrude DirX. plane 법선이 extrude 와 반대여도 Direction 을 명시하면 된다
 - 교차 배열 N×N(개구폭 < 피치): faces = 5 + (N+1)² + 4N(N+1), triangles = 2 + 4(3N+2) + 2(N+1)² + 8N(N+1). N=10 실측 566 면·1252 삼각형
+
+## 측정 API (v261 실측)
+
+- Volume·Area·bbox 는 wrapper(`DesignBody`)가 아니라 `body.Shape`(Modeler.Body)에 있다: `shp.Volume * 1e9`(m³ → mm³), `shp.SurfaceArea * 1e6`(m² → mm²), `shp.IsClosed`, `shp.PieceCount`, `shp.Faces.Count`. 정확한 bbox 는 `shp.GetBoundingBox(Matrix.Identity)`(tessellation bbox 보다 정확)
+- 정확도: 판 + V홈 10개에서 Volume 오차 3.6e-15 mm³, Area 9.9e-14 mm² — 체적 변화 판정은 tol 1e-7 mm³ 로 걸어도 된다(`tools/sc_geomcheck.py`)
+- 삼각형 수(SPEOS Student 32,000 한도 사전 점검): `TessellationOptions` 는 전역에 없어 `clr` 로 가져온다
+
+```python
+import clr
+clr.AddReference("SpaceClaim.Api.V261")
+from SpaceClaim.Api.V261.Modeler import TessellationOptions as TO
+tess = shp.GetTessellation(shp.Faces, TO.Default, False, False)   # 마지막 인자 = showProgress
+tot = sum(kv.Value.Facets.Count for kv in tess)
+```
+
+- `showProgress=False` 필수 — True 면 진행 창이 떠서 headless 가 멈춘다. `TO.Default` = 표면·곡선 편차 0.75 mm, 각도 20°. 6인자 생성자 `TO(surfDev, curveDev, angDev, maxAspect, maxEdgeLen, watertight)`(m, radian)도 된다
+- 평면만인 형상은 편차 설정과 무관하다(n각형 face → n−2 삼각형). 곡면이 섞이면 두 설정으로 각각 잰다

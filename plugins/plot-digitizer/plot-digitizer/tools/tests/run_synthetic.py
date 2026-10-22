@@ -9,12 +9,13 @@ matplotlib 로 참값 매핑(ax.transData)을 아는 그림을 메모리에서 �
 임시 폴더에 CSV·calib.json·png 를 써서 읽기/CLI 경로까지 검사한 뒤 지운다.
 기대: 결함 -> 해당 flag, 정상 -> flag 0건. 하나라도 어긋나면 종료코드 1.
 
-유형
-1 눈금 돌출 오염
-2 가파른 구간 삭제 (+ 고립 실제 특징 오탐 가드)
-3 로컬/전체 이중 차감
-4 끝 눈금-테두리 겹침 (+ 눈금 하나 오검출)
-5 polar 지름 끝 돌출 R 과대
+유형 (근거 = references/calibration_extraction.md 의 절)
+1 눈금 돌출 오염     「곡선 검색 영역 안쪽 여백」
+2 가파른 구간 삭제   「국소 중앙값 이상치 제거의 위험 구간」
+  (+ 고립 실제 특징 오탐 가드 「이상치 판정 전 원본 확인」)
+3 로컬/전체 이중 차감 「좌표계 혼용 점검」
+4 끝 눈금-테두리 겹침 「데카르트 눈금 검출」 (+ 눈금 하나 오검출)
+5 polar 지름 끝 돌출 R 과대 「반원 polar 캘리브」
 6 long CSV (series,x,y) 읽기 — wide 와 같은 flag, 곡선별 x, 행 삭제 gap
 7 calib.json 저장·로드·값<->픽셀 왕복, check_calibration --overlay (cartesian·polar, flag 눈금 빨강)
 """
@@ -113,7 +114,7 @@ def run_extract(x, curves, interp=None, calib=None):
 
 # ---------------------------------------------------------------- 1 눈금 돌출 오염
 def measure_tick_len(img, box, row):
-    """y 눈금 행 띠에서 테두리 안쪽으로 dark 픽셀이 사라지는 거리."""
+    """「곡선 검색 영역 안쪽 여백」 방식: y 눈금 행 띠에서 테두리 안쪽으로 dark 픽셀이 사라지는 거리."""
     d = dark(img)
     r = int(round(row))
     c = int(round(box["left"])) + 1
@@ -150,7 +151,7 @@ def resample(xv, yv, grid, half):
 
 
 def local_median_reject(x, y, win=0.15, thr=0.05):
-    """실제 쓰던 필터 그대로: 원시 열 산점에서 +-win 안 이웃(자기 제외) 중앙값과 thr 넘게 다르면 제거."""
+    """실제로 쓰던 필터 그대로:원시 열 산점에서 +-win 안 이웃(자기 제외) 중앙값과 thr 넘게 다르면 제거."""
     keep = np.ones(len(y), bool)
     for i in range(len(y)):
         m = np.abs(x - x[i]) <= win
@@ -230,7 +231,7 @@ def case_double_subtract():
 
 # ---------------------------------------------------------------- 4 끝 눈금-테두리 겹침
 def detect_bottom_ticks(img, box, band, exclude_border_px):
-    """결함 탐지기: 바닥 테두리 바로 위 띠에서 세로 dark 획 클러스터, 테두리 근처 클러스터 제외."""
+    """결함 탐지기:바닥 테두리 바로 위 띠에서 세로 dark 획 클러스터, 테두리 근처 클러스터 제외."""
     d = dark(img)
     r1 = int(round(box["bottom"])) - 3
     prof = d[r1 - band:r1, :].sum(axis=0) >= band // 2

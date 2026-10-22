@@ -38,7 +38,7 @@ R 모니터를 여러 y 높이에 두고 R 편차(공간)를 autoshutoff sweep �
 - distance: air-only 에서 span 키우며 R 무변 확인. 시작 gap ≥ λ. 상수 금지 — grazing 은 소멸파 δ > λ
 - 진단 = air-only (R=0, T=1) + 위치무관
 - profile = (kappa·sigma·alpha) 묶음. 같은 layers 로 3개 비교 → 선택 → 두께 sweep. profile 고정 금지
-- API: `set("pml profile", N)` (1 std · 2 stab · 3 steep · 4 custom). profile 후 layers/kappa/sigma/alpha override — profile 설정이 layers 를 기본값으로 되돌림, `getnamed` 확인
+- API: `set("pml profile", N)` (1 std · 2 stab · 3 steep · 4 custom). profile 후 layers/kappa/sigma/alpha override — profile 설정이 layers 를 기본값으로 되돌림, `getnamed` 확인(`fdtd_detail_pml.md` 「layers 읽기값이 요청과 다른 경우」)
 - kappa 과도 → late-time 발산 (높이Δ 오염). 절충 ~5 → `fdtd_detail_pml.md`
 
 ## (선택) 외부 GT 대조

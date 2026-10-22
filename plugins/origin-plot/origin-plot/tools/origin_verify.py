@@ -46,7 +46,7 @@ ticks: checked by default on EVERY layer of EVERY graph page (no key needed), be
     Origin's default is x/y 10 (OUT) and x2/y2 5 (IN), so the style line must be sent.
   {"min": ..., "style": False} per layer keeps the count and drops the direction check (overlay layer, polar);
   "ticks": False switches the whole check off (chrome-free line art, 3D, matrix).
-Returns the report dict {"verdict", "checks": [...]}.
+Returns the report dict {"verdict", "checks": [...]}; each check carries `ref`, the reference file (../references) that explains it.
 """
 import argparse
 import math
@@ -71,10 +71,10 @@ class VerifyError(RuntimeError):
             "%s(%s): %s" % (c["check"], c["target"], c["detail"]) for c in fails))
 
 
-def _check(report, check, target, ok, detail, leaf):
+def _check(report, check, target, ok, detail, ref):
     report["checks"].append({"check": check, "target": target,
                              "verdict": "PASS" if ok else "FAIL",
-                             "detail": detail, "leaf": leaf})
+                             "detail": detail, "ref": ref})
 
 
 def _finish(report, app=None):
@@ -90,7 +90,7 @@ def _finish(report, app=None):
 
 
 def _abort(app):
-    # A crashed script leaves Origin running,
+    # Ref: origin/session_and_modal.md -- a crashed script leaves Origin running,
     # and exiting a modified project without IsModified=False pops an unanswerable Save dialog.
     app.IsModified = False
     app.Exit()
@@ -103,7 +103,7 @@ def _same(want, got):
 # ------------------------------------------------------------------ process / session ---
 def origin_pids():
     """[(image, pid)] of every running Origin process.
-    The image shows as ORIGIN~1.EXE or
+    Ref: origin/session_and_modal.md -- the image shows as ORIGIN~1.EXE or
     Origin96_64.exe depending on launch; /IM matching is unreliable, scan tasklist."""
     out = subprocess.run(["tasklist"], capture_output=True).stdout.decode("cp949", "replace")
     return [(m.group(1), int(m.group(2)))
@@ -115,12 +115,13 @@ def open_session(visible=True, ready_timeout=30.0):
     import win32com.client as w32
     report = {"checks": []}
 
+    # Ref: origin/session_and_modal.md --
     # ApplicationSI joins any running instance with all its windows (name-collision modal, builds
     # landing on a leftover graph). One Origin at a time: refuse instead of attaching or killing.
     running = origin_pids()
     _check(report, "serialize", "Origin processes", not running,
            "none running" if not running else "already running %r -- wait for it / run --after" % running,
-           "")
+           "origin/session_and_modal.md")
     if running:
         return _finish(report)
 
@@ -129,8 +130,9 @@ def open_session(visible=True, ready_timeout=30.0):
     if visible:
         app.Visible = 1
 
-    # Readiness gate: the first command of a new session may be void, and Execute returns True
-    # before LabTalk is live, so gate on a value round trip.
+    # Ref: origin/labtalk_com_pitfalls.md (readiness gate, first command of a session)
+    # (first command of a new session may be void) -- Execute returns True before LabTalk is live,
+    # so gate on a value round trip.
     ready = False
     while time.time() - t0 < ready_timeout:
         app.Execute("__ready=1234;")
@@ -140,11 +142,11 @@ def open_session(visible=True, ready_timeout=30.0):
         time.sleep(0.25)
     _check(report, "ready", "__ready round trip", ready,
            "%.1f s after Dispatch" % (time.time() - t0) if ready else "no round trip in %.0f s" % ready_timeout,
-           "")
+           "origin/labtalk_com_pitfalls.md")
 
-    # A truly fresh launch has PageBases.Count == 0.
+    # Ref: origin/session_and_modal.md -- a truly fresh launch has PageBases.Count == 0.
     n = app.PageBases.Count
-    _check(report, "empty", "PageBases.Count", n == 0, "%d" % n, "")
+    _check(report, "empty", "PageBases.Count", n == 0, "%d" % n, "origin/session_and_modal.md")
     if n != 0:
         return _finish(report)      # not ours: do not Exit someone else's project
     _finish(report, app if not ready else None)
@@ -159,17 +161,17 @@ def ex(app, stmts, tag, scope=None):
     scope = scope or app
     report = {"checks": []}
 
-    # "%r" of a numpy scalar sends
+    # Ref: origin/labtalk_com_pitfalls.md -- "%r" of a numpy scalar sends
     # "np.float64(x)". 2026-10-18: LabTalk evaluates it to a missing value, the statement
     # returns True and the batch runs on (legend.left became 0), so the counter cannot see it.
     poisoned = [s for s in stmts if NUMPY_REPR.search(s)]
     _check(report, "numpy repr", tag, not poisoned,
            "clean" if not poisoned else "numpy repr in %r -- cast to float before formatting" % poisoned[0],
-           "")
+           "origin/labtalk_com_pitfalls.md")
     if poisoned:
         return _finish(report, app)
 
-    # Origin gives no error text; a counter
+    # Ref: origin/session_and_modal.md -- Origin gives no error text; a counter
     # interleaved with the statements shows how far the batch got.
     parts = ["__k=0;"]
     for i, s in enumerate(stmts):
@@ -181,12 +183,12 @@ def ex(app, stmts, tag, scope=None):
     if ok:
         return k
     _check(report, "batch", tag, False, "stopped at #%d: %s" % (k, stmts[k]),
-           "")
+           "origin/session_and_modal.md")
     return _finish(report, app)
 
 
 def _num(app, scope, expr, pre=""):
-    # Reading a property that does not exist
+    # Ref: origin/labtalk_com_pitfalls.md -- reading a property that does not exist
     # leaves the variable untouched without error; a surviving sentinel means "not there".
     # `pre` (e.g. a range declaration) runs in the same batch, before the sentinel.
     scope.Execute("%s __v=%r; __v=%s;" % (pre, SENTINEL, expr))
@@ -196,7 +198,7 @@ def _num(app, scope, expr, pre=""):
 
 def major_ticks(lo, hi, inc):
     """Major ticks Origin draws on a linear axis: multiples of inc (from 0, not from `from`) in [lo, hi].
-    Anchored at multiples of inc;
+    Ref: origin/page_and_axes.md (anchor at multiples of inc);
     measured 2026-10-18: matches png tick pixels for 29/29 ranges, incl. manual from/to with auto inc."""
     lo, hi = min(lo, hi), max(lo, hi)
     return max(0, math.floor(hi / inc + 1e-9) - math.ceil(lo / inc - 1e-9) + 1)
@@ -223,22 +225,23 @@ def _folders(folder, root_len, acc):
 def verify(app, intended):
     report = {"checks": []}
 
-    # A non-empty start or a name collision gives auto-renamed pages (Book1A ...), silently.
+    # Ref: origin/session_and_modal.md, origin/project_explorer.md --
+    # a non-empty start or a name collision gives auto-renamed pages (Book1A ...), silently.
     if "pages" in intended:
         got = sorted(app.PageBases(i).Name for i in range(app.PageBases.Count))
         want = sorted(intended["pages"])
         _check(report, "pages", "project", got == want, "want %s got %s" % (want, got),
-               "")
+               "origin/session_and_modal.md")
 
-    # Bare plotxy on an active graph adds a layer
+    # Ref: origin/labtalk_com_pitfalls.md -- bare plotxy on an active graph adds a layer
     # to it instead of a new window, %H still looks right.
     for g, n in intended.get("layers", {}).items():
         gp = app.GraphPages(g)
         got = None if gp is None else gp.Layers.Count
         _check(report, "layers", g, got == n, "want %d got %s" % (n, got),
-               "")
+               "origin/labtalk_com_pitfalls.md")
 
-    # Every plotxy re-autoscales;
+    # Ref: origin/page_and_axes.md -- every plotxy re-autoscales;
     # ranges set before the last plot are lost.
     for lay, ax in intended.get("axes", {}).items():
         gl = app.FindGraphLayer(lay)
@@ -247,24 +250,25 @@ def verify(app, intended):
                                                    _num(app, gl, "layer.%s.to" % a))
             ok = _same(float(lo), got[0]) and _same(float(hi), got[1])
             _check(report, "axis %s" % a, lay, ok, "want %.12g..%.12g got %s..%s" % (lo, hi, got[0], got[1]),
-                   "")
+                   "origin/page_and_axes.md")
 
-    # Seen: position silently shifted after background=0; position never applied (numpy repr);
-    # auto legend comes back.
+    # Ref: origin/legend_inside_placement.md -- position silently shifted after background=0;
+    # origin/labtalk_com_pitfalls.md -- position never applied (numpy repr);
+    # origin/page_and_axes.md -- auto legend comes back.
     for lay, pos in intended.get("legend", {}).items():
         gl = app.FindGraphLayer(lay)
         left = None if gl is None else _num(app, gl, "legend.left")
         top = None if gl is None else _num(app, gl, "legend.top")
         if pos is None:
             _check(report, "legend absent", lay, gl is not None and left is None,
-                   "legend.left=%s" % left, "")
+                   "legend.left=%s" % left, "origin/page_and_axes.md")
         else:
             ok = (left is not None and top is not None and
                   abs(left - pos[0]) <= LEGEND_TOL and abs(top - pos[1]) <= LEGEND_TOL)
             _check(report, "legend pos", lay, ok, "want (%.1f, %.1f) got (%s, %s)" % (pos[0], pos[1], left, top),
-                   "")
+                   "origin/legend_inside_placement.md")
 
-    # A list of columns lands as rows,
+    # Ref: origin/labtalk_com_pitfalls.md -- a list of columns lands as rows,
     # PutWorksheet still returns True. Read through a range: no window activation needed.
     for bk, spec in intended.get("books", {}).items():
         sh = spec.get("sheet", 1)
@@ -277,13 +281,13 @@ def verify(app, intended):
                 nr = max(s for s in sizes if s is not None) if any(s is not None for s in sizes) else None
             got = (None if nr is None else int(nr), None if nc is None else int(nc))
             _check(report, "shape", bk, got == tuple(spec["shape"]), "want %s got %s (rows, cols)" % (tuple(spec["shape"]), got),
-                   "")
+                   "origin/labtalk_com_pitfalls.md")
         for (r, c), want in sorted(spec.get("cells", {}).items()):
             got = _num(app, app, "__c[%d]" % r, "range __c=[%s]%s!col(%d);" % (bk, sh, c))
             _check(report, "cell", "%s col(%d)[%d]" % (bk, c, r), _same(float(want), got),
-                   "want %.12g got %s" % (want, got), "")
+                   "want %.12g got %s" % (want, got), "origin/labtalk_com_pitfalls.md")
 
-    # Folder.Destroy() is a silent no-op,
+    # Ref: origin/project_explorer.md -- Folder.Destroy() is a silent no-op,
     # pe_move onto the wrong parent and wrapped appends leave folders behind.
     if "folders" in intended or "page_folders" in intended:
         root = app.RootFolder
@@ -292,14 +296,14 @@ def verify(app, intended):
             got = sorted(_folders(root, rl, []))
             want = sorted(intended["folders"])
             _check(report, "folders", "project", got == want, "want %s got %s" % (want, got),
-                   "")
+                   "origin/project_explorer.md")
         names = {app.PageBases(i).Name: app.PageBases(i) for i in range(app.PageBases.Count)}
         for pg, want in intended.get("page_folders", {}).items():
             got = names[pg].PEPath[rl:] if pg in names else None
             _check(report, "page folder", pg, got == want, "want %s got %s" % (want, got),
-                   "")
+                   "origin/project_explorer.md")
 
-    # 2026-10-18: a graph with 2 major x ticks
+    # Ref: origin/page_and_axes.md -- 2026-10-18 a graph with 2 major x ticks
     # (manual from/to 0.3..2.5, inc left at the autoscale value 1) passed a png glance. Counts come
     # from from/to/inc, direction from layer.*.ticks & 3 (1 in, 2 out); default is OUT.
     tk = intended.get("ticks", {})
@@ -308,7 +312,7 @@ def verify(app, intended):
         for lay in tk:
             if lay not in [n for n, _ in found]:
                 _check(report, "ticks", lay, False, "layer not found among %s" % [n for n, _ in found],
-                       "")
+                       "origin/page_and_axes.md")
         for lay, _pg in found:
             spec = tk.get(lay, {})
             mn = spec.get("min", MIN_TICKS)
@@ -318,23 +322,23 @@ def verify(app, intended):
                 v = {k: _num(app, gl, "layer.%s.%s" % (a, k)) for k in ("from", "to", "inc", "type")}
                 if None in v.values() or v["inc"] <= 0:
                     _check(report, "ticks %s count" % a, lay, False, "unreadable %s" % v,
-                           "")
+                           "origin/page_and_axes.md")
                 elif v["type"] != 1:
                     _check(report, "ticks %s count" % a, lay, True,
                            "not counted: axis type %g is not linear" % v["type"],
-                           "")
+                           "origin/page_and_axes.md")
                 else:
                     n = major_ticks(v["from"], v["to"], v["inc"])
                     _check(report, "ticks %s count" % a, lay, n >= mn[a],
                            "%d major ticks in %.6g..%.6g step %.6g, need >= %d" % (n, v["from"], v["to"], v["inc"], mn[a]),
-                           "")
+                           "origin/page_and_axes.md")
             if spec.get("style", True):
                 for a, want in (("x", 1), ("y", 1), ("x2", 0), ("y2", 0)):
                     t = _num(app, gl, "layer.%s.ticks" % a)
                     got = None if t is None else int(t) & 3
                     _check(report, "ticks %s dir" % a, lay, got == want,
                            "layer.%s.ticks=%s -> direction %s, want %d (0 none, 1 in, 2 out, 3 both)" % (a, t, got, want),
-                           "")
+                           "origin/page_and_axes.md")
 
     return _finish(report, app)
 
@@ -345,7 +349,7 @@ def close(app, saved=None):
     if saved is not None:
         ok = os.path.isfile(saved) and os.path.getsize(saved) > 0
         _check(report, "saved", saved, ok, "%d bytes" % os.path.getsize(saved) if ok else "missing/empty",
-               "")
+               "origin/session_and_modal.md")
     _abort(app)
     return _finish(report)
 
@@ -366,7 +370,7 @@ def _windows_of(pid):
 
 def after(wait=30.0):
     """Run after the build script ended: no Origin process (hence no modal) may remain.
-    Exit() can leave the process >12 s; wait first."""
+    Ref: origin/session_and_modal.md -- Exit() can leave the process >12 s; wait first."""
     t0 = time.time()
     left = origin_pids()
     while left and time.time() - t0 < wait:
@@ -377,7 +381,7 @@ def after(wait=30.0):
         "pid %d windows %s" % (pid, [(c, t.encode("ascii", "replace").decode()) for c, t in _windows_of(pid)])
         for _img, pid in left)
     # No kill option: any Origin found here may be the user's own window (2026-10-18 audit) -- report only.
-    _check(report, "no Origin left", "tasklist", not left, detail, "")
+    _check(report, "no Origin left", "tasklist", not left, detail, "origin/session_and_modal.md")
     try:
         _finish(report)
     except VerifyError:

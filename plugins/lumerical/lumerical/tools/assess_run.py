@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """assess_run -- Lumerical run result checker (pure file parsing, no lumapi).
 
-Scope: only traps that actually failed in past runs.
+Scope: only traps that actually failed in past runs; the evidence field names the
+reference file (../references) that explains each trap.
 Verdicts: PASS / WARN / FAIL (overall = worst).
 
 Usage (CLI):
@@ -93,7 +94,7 @@ class Report:
 # --------------------------------------------------------------------------- FDTD log
 
 # The ONE shutoff/completion parser for this agent.
-# The old regex
+# Evidence: fdtd_pitfalls_api.md -- the old regex
 # "Auto shutoff.*?(\d+)\s*fs" never matched and defaulted every case to 'cap'.
 # Completion time is only on "Completed N iterations, or X s of Simulation Time";
 # early shutoff is only proven by "autoshutoff criteria are satisfied".
@@ -101,7 +102,7 @@ RE_COMPLETED = re.compile(
     r"Completed\s+(\d+)\s+iterations,\s*or\s+([\d.eE+\-]+)\s*s\s+of\s+Simulation\s+Time")
 RE_EARLY = "autoshutoff criteria are satisfied"
 RE_STARTING = re.compile(r"Starting\s+(\d+)\s+total\s+iterations")
-# Engine errors: run() returns
+# Evidence: fdtd_pitfalls_api.md -- run() returns
 # normally; the only message is e.g. "The program terminated due to an error:Error CPU
 # simulation cannot run with FDTD property express mode active."
 RE_ENGINE_ERR = re.compile(r"terminated due to an error|^\s*Error\b|\bError:", re.I | re.M)
@@ -147,27 +148,30 @@ def parse_p0_log(path):
 def judge_log(rep, info, label):
     """FDTD log verdicts."""
     if not info["exists"]:
+        # Evidence: fdtd_pitfalls_api.md
         # (the _p0.log is the only engine-error channel; no log = unverifiable run)
         rep.add("log_exists", "FAIL", label, "no _p0.log",
-                "")
+                "fdtd_pitfalls_api.md")
         return
     if info["engine_errors"]:
+        # Evidence: fdtd_pitfalls_api.md
         rep.add("engine_error", "FAIL", label, " | ".join(info["engine_errors"])[:300],
-                "")
+                "fdtd_pitfalls_api.md")
     else:
         rep.add("engine_error", "PASS", label, "", "")
     if not info["completed"]:
-        # (completion only on the
+        # Evidence: fdtd_pitfalls_api.md (completion only on the
         # "Completed N iterations" line); missing = engine refused, killed or still running
         rep.add("run_completed", "FAIL", label,
                 "no 'Completed N iterations' line (killed / refused / unfinished)",
-                "")
+                "fdtd_pitfalls_api.md")
         return
     rep.add("run_completed", "PASS", label, "", "")
     if info["hit_cap"]:
+        # Evidence: fdtd_pitfalls_api.md
         rep.add("autoshutoff", "WARN", label,
                 "autoshutoff criteria NOT satisfied; ran to sim time cap (%.1f fs)"
-                % info["sim_time_fs"], "")
+                % info["sim_time_fs"], "fdtd_pitfalls_api.md")
     else:
         rep.add("autoshutoff", "PASS", label,
                 "early shutoff at %.1f fs" % info["sim_time_fs"], "")
@@ -227,8 +231,9 @@ def _row_label(tlabel, i, row, id_col):
 
 
 def check_range(rep, label, name, v):
-    """0 <= R,T <= 1. Seen: sign flips give negative R/T, and T > 1."""
-    ev = ""
+    """0 <= R,T <= 1. Evidence: fdtd_detail_rt_signs.md (sign
+    flips give negative R/T) and fdtd_detail_bfast.md (T > 1)."""
+    ev = "fdtd_detail_rt_signs.md; fdtd_detail_bfast.md"
     dev = max(-v, v - 1.0, 0.0)
     if dev > TOL_RANGE:
         rep.add("rt_range", "FAIL", label, "%s=%.6g outside [0,1] by %.3g" % (name, v, dev), ev)
@@ -241,17 +246,18 @@ def check_range(rep, label, name, v):
 
 def _get_num(rep, label, row, col):
     """Fetch a required numeric R/T cell. Non-finite or missing -> FAIL (never filled).
-    Evidence: agents/lumerical.md execution step 4 (silent NaN R/T)."""
+    Evidence: agents/lumerical.md execution step 4 + lumerical_rcwa.md s6
+    (silent NaN R/T)."""
     v, kind = _to_float(row.get(col))
     if kind == "num":
         return v
     rep.add("nan", "FAIL", label, "%s is %s (%r)" % (col, kind, row.get(col)),
-            "")
+            "lumerical_rcwa.md s6")
     return None
 
 
 def check_ids(rep, tlabel, rows, id_col):
-    """case_id uniqueness
+    """case_id uniqueness. Evidence: fdtd_pitfalls_api.md
     (f"a{a:.1f}" mapped 0.15/0.10/0.05 onto one id -> shared .fsp/_p0.log)."""
     ids = [r.get(id_col) for r in rows if r.get(id_col) not in (None, "")]
     if not ids:
@@ -262,7 +268,7 @@ def check_ids(rep, tlabel, rows, id_col):
     if dup:
         rep.add("case_id_unique", "FAIL", tlabel,
                 "duplicate %s: %s" % (id_col, ", ".join(sorted(map(str, dup)))[:300]),
-                "")
+                "fdtd_pitfalls_api.md")
     else:
         rep.add("case_id_unique", "PASS", tlabel, "%d unique" % len(ids), "")
 
@@ -290,9 +296,9 @@ def _log_for_row(row, id_col, table_path, log_dirs):
 
 def check_recorded_shutoff(rep, label, row, info):
     """Recorded hit_cap / shutoff_time_fs must equal the log.
-    (all 16 cases recorded 'cap'
+    Evidence: fdtd_pitfalls_api.md (all 16 cases recorded 'cap'
     while logs showed early shutoff)."""
-    ev = ""
+    ev = "fdtd_pitfalls_api.md"
     if not info.get("completed"):
         return
     if "hit_cap" in row and row["hit_cap"] not in (None, ""):
@@ -335,7 +341,7 @@ def assess_fdtd_table(rep, tpath, tlabel, rows, opts, log_cache):
     if opts["air_only"] and not (has_r and has_t):
         rep.add("air_only_rt", "FAIL", tlabel,
                 "--air-only needs both '%s' and '%s'" % (r_col, t_col),
-                "")
+                "fdtd_detail_bfast.md")
     log_dirs = opts["log_dirs"] or [os.path.dirname(tpath),
                                     os.path.join(os.path.dirname(tpath), "fsp")]
     log_owner = {}
@@ -348,18 +354,21 @@ def assess_fdtd_table(rep, tpath, tlabel, rows, opts, log_cache):
             if vals[col] is not None:
                 check_range(rep, label, col, vals[col])
         if opts["air_only"] and has_r and has_t and None not in vals.values():
-            # Seen in air-only runs: T=1.039..1.050, and a residual.
+            # Evidence: fdtd_detail_bfast.md (air-only T=1.039..1.050)
+            # and fdtd_detail_pml.md (air-only residual)
             s = vals[r_col] + vals[t_col]
             if abs(s - 1.0) > TOL_AIR:
                 rep.add("air_only_rt", "FAIL", label,
-                        "R+T=%.6f (|R+T-1|=%.3g > %.0e)" % (s, abs(s - 1.0), TOL_AIR), "")
+                        "R+T=%.6f (|R+T-1|=%.3g > %.0e)" % (s, abs(s - 1.0), TOL_AIR),
+                        "fdtd_detail_bfast.md; "
+                        "fdtd_detail_pml.md")
             else:
                 rep.add("air_only_rt", "PASS", label, "R+T=%.6f" % s, "")
         lg = _log_for_row(row, id_col, tpath, log_dirs)
         if lg is None:
             continue
         n_linked += 1
-        # (shared log path)
+        # Evidence: fdtd_pitfalls_api.md (shared log path)
         log_owner.setdefault(lg, []).append(label)
         if lg not in log_cache:
             log_cache[lg] = parse_p0_log(lg)
@@ -368,18 +377,18 @@ def assess_fdtd_table(rep, tpath, tlabel, rows, opts, log_cache):
         if len(owners) > 1:
             rep.add("log_shared", "FAIL", os.path.basename(lg),
                     "%d rows share this log: %s" % (len(owners), ", ".join(owners)[:300]),
-                    "")
+                    "fdtd_pitfalls_api.md")
     if not (has_r or has_t):
         pass
     elif rows and n_linked == 0:
         rep.add("log_link", "WARN", tlabel,
                 "no row could be linked to a _p0.log (need 'fsp' or '%s' + --log-dir); "
                 "engine status of rows unverified" % id_col,
-                "")
+                "fdtd_pitfalls_api.md")
     elif rows and n_linked < len(rows):
         rep.add("log_link", "WARN", tlabel,
                 "%d/%d rows have no _p0.log" % (len(rows) - n_linked, len(rows)),
-                "")
+                "fdtd_pitfalls_api.md")
     return list(log_owner.keys())
 
 
@@ -387,7 +396,7 @@ RCWA_COLS = ("Rs", "Ts", "Rp", "Tp")
 
 
 def assess_rcwa_table(rep, tlabel, rows, opts):
-    """RCWA has no _p0.log: verify the
+    """RCWA has no _p0.log (lumerical_rcwa.md s6): verify the
     numbers themselves."""
     id_col = opts["id_col"]
     cols = set()
@@ -400,18 +409,18 @@ def assess_rcwa_table(rep, tlabel, rows, opts):
         return
     pols = [p for p in ("s", "p") if "R" + p in cols and "T" + p in cols]
     if len(pols) < 2:
-        # See lumerical_rcwa.md sec.4
+        # Evidence: lumerical_rcwa.md s4
         rep.add("pol_consistency", "WARN", tlabel,
                 "only pol %s present; cross-pol check impossible" % (pols or "none"),
-                "")
+                "lumerical_rcwa.md s4")
     if opts["lossless"] and not pols:
         rep.add("lossless_rt", "FAIL", tlabel, "--lossless needs R/T pairs",
-                "")
+                "lumerical_rcwa.md s3")
     for i, row in enumerate(rows):
         label = _row_label(tlabel, i, row, id_col)
         v = {}
         for c in have:
-            # (Al 15% fill ku=67:
+            # Evidence: lumerical_rcwa.md s6 (Al 15% fill ku=67:
             # Rs/Ts/Rp/Tp all NaN, no exception, no log)
             v[c] = _get_num(rep, label, row, c)
             if v[c] is not None:
@@ -423,22 +432,24 @@ def assess_rcwa_table(rep, tlabel, rows, opts):
                 continue
             eps[p] = 1.0 - R - T
             if opts["lossless"]:
-                # (lossless -> R+T == 1.000000)
+                # Evidence: lumerical_rcwa.md s6 /
+                # lumerical_rcwa.md s3 (lossless -> R+T == 1.000000)
                 d = abs(R + T - 1.0)
                 if d > TOL_LOSSLESS:
                     rep.add("lossless_rt", "FAIL", label,
                             "R%s+T%s=%.9f (|dev| %.3g > %.0e)" % (p, p, R + T, d, TOL_LOSSLESS),
-                            "")
+                            "lumerical_rcwa.md s3")
                 else:
                     rep.add("lossless_rt", "PASS", label, "", "")
         if len(eps) == 2:
+            # Evidence: lumerical_rcwa.md s4
             # (fake plateau: s/TE 0.03 flat vs p/TM 0.84 on the same structure)
             g = abs(eps["s"] - eps["p"])
             if g > POL_GAP_WARN:
                 rep.add("pol_consistency", "WARN", label,
                         "eps_s=%.4f eps_p=%.4f gap %.3f > %.2f; judge against analytic"
                         % (eps["s"], eps["p"], g, POL_GAP_WARN),
-                        "")
+                        "lumerical_rcwa.md s4")
             else:
                 rep.add("pol_consistency", "PASS", label, "", "")
 
@@ -491,7 +502,7 @@ def assess(paths, solver="auto", air_only=False, lossless=False, r_col="R", t_co
             judge_log(rep, log_cache[lg], os.path.basename(lg))
     elif logs:
         rep.add("solver", "WARN", "-", "RCWA writes no _p0.log; given logs ignored",
-                "")
+                "lumerical_rcwa.md s6")
     return {
         "verdict": rep.verdict(),
         "solver": solver,

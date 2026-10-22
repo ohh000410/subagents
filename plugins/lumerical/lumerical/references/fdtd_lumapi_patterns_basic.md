@@ -92,6 +92,11 @@ fdtd.setglobalmonitor("frequency points", 300)
 # 불가: setnamed("source", "frequency points") / setglobalsource("number of frequency points") → property not found
 ```
 
+### source 파장 대역은 소스 본체에
+- `addplane()` 은 `override global source settings`=1 로 만들어지고, 그 순간의 전역 소스 대역(새 프로젝트 기본 400–700 nm)을 자기 `wavelength start/stop` 에 복사한다. override=1 인 동안 `setglobalsource()` 는 전역 값만 바꾸고 소스는 자기 값을 쓴다 — 오류·경고 없이 대역이 잘리고 R+T 도 맞아 정상처럼 보인다
+- `deleteall()` 은 전역 대역을 되돌리지 않아, 재사용 세션에선 우연히 값이 같아 가려지고 새 세션에서 드러난다. 주파수 모니터는 소스 본체가 아니라 전역 소스 대역을 샘플한다
+- 소스 객체에 `set("wavelength start/stop")` 를 쓰고 `setglobalsource()` 도 같은 값으로 쓴 뒤, `getnamed`·`getglobalsource` 로 둘 다 되읽는다. `setglobalmonitor` 에는 파장 대역 속성이 없다
+
 ## 저장 & 실행
 
 ```python
