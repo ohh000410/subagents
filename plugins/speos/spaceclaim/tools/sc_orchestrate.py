@@ -17,12 +17,15 @@ import subprocess
 import time
 from pathlib import Path
 
-SC_EXE = r"C:\Program Files\ANSYS Inc\ANSYS Student\v261\scdm\SpaceClaim.exe"
-SC_DIR = r"C:\Program Files\ANSYS Inc\ANSYS Student\v261\scdm"
+# Install root: the Ansys installer sets AWP_ROOT261 (Student and full editions alike); default = Student path
+ANSYS_ROOT = os.environ.get("AWP_ROOT261", r"C:\Program Files\ANSYS Inc\ANSYS Student\v261")
+SC_DIR = ANSYS_ROOT + r"\scdm"
+SC_EXE = SC_DIR + r"\SpaceClaim.exe"
+SPEOS_BIN = ANSYS_ROOT + r"\Optical Products\Speos\bin"
 SPEOS_ARGS = [
     "/LicenseFeature=speos_level1",
-    r"/AddInManifestFile=C:\Program Files\ANSYS Inc\ANSYS Student\v261\Optical Products\Speos\bin\SpeosSC.Manifest.xml",
-    r"/DefaultUserSettingsFile=C:\Program Files\ANSYS Inc\ANSYS Student\v261\Optical Products\Speos\bin\Resources\SPEOS_SCDefaultOptions.config",
+    "/AddInManifestFile=" + SPEOS_BIN + r"\SpeosSC.Manifest.xml",
+    "/DefaultUserSettingsFile=" + SPEOS_BIN + r"\Resources\SPEOS_SCDefaultOptions.config",
 ]
 
 VERDICT_RE = re.compile(r"\[GEOM VERDICT\] (PASS|FAIL) steps=(\d+) warn=(\d+) fail=(\d+)")

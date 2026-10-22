@@ -1,4 +1,5 @@
 """CPython unit tests for sc_orchestrate log parsing (no SpaceClaim needed)."""
+import importlib
 import os
 import shutil
 import sys
@@ -73,6 +74,24 @@ class SeatBusy(unittest.TestCase):
         res = so.run("x.py", "x.log", "x.scdocx", seat_wait_s=0)
         self.assertEqual((res["verdict"], res["kind"]), ("FAIL", "seat_busy"))
         self.assertIn("kind=seat_busy", res["summary"])
+
+
+class InstallRoot(unittest.TestCase):
+    """Paths come from AWP_ROOT261 (set by the Ansys installer), not a fixed Student path."""
+
+    def test_paths_follow_awp_root(self):
+        old = os.environ.get("AWP_ROOT261")
+        try:
+            os.environ["AWP_ROOT261"] = r"D:\Ansys\v261"
+            m = importlib.reload(so)
+            self.assertEqual(m.SC_EXE, r"D:\Ansys\v261\scdm\SpaceClaim.exe")
+            self.assertIn(r"/AddInManifestFile=D:\Ansys\v261\Optical Products\Speos\bin\SpeosSC.Manifest.xml", m.SPEOS_ARGS)
+        finally:
+            if old is None:
+                os.environ.pop("AWP_ROOT261", None)
+            else:
+                os.environ["AWP_ROOT261"] = old
+            importlib.reload(so)
 
 
 class RunVerdict(unittest.TestCase):

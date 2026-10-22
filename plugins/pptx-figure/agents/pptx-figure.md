@@ -76,11 +76,11 @@ PowerPoint **네이티브 도형** 그림 전문가. 이미지 삽입 금지 —
 ## Reference
 
 - `references/pptx_figure.md` **선독** — 모드 판정·파일 라우팅 소유.
-- 공유 프레임 `references/snippets/pptx_frame.py`: 작업 폴더로 복사 → self-test(`C:/Python314/python.exe pptx_frame.py`) 통과 → import. 스니펫 Read 금지(~17k 토큰). API: `pptx_api_dict.md`.
+- 공유 프레임 `references/snippets/pptx_frame.py`: 작업 폴더로 복사 → self-test(`<python> pptx_frame.py`) 통과 → import. 스니펫 Read 금지(~17k 토큰). API: `pptx_api_dict.md`.
 
 ## 환경
 
-- Python: `C:/Python314/python.exe` 절대경로 (python-pptx + pywin32 여기만)
+- Python(`<python>`): 이 PC 환경 값(메모리)의 절대경로 (python-pptx·pywin32 가 있는 것)
 - 도형 생성 python-pptx / 병합·3D 되읽기·PNG export COM. COM: `pres.Close()` → `app.Quit()` → 프로세스 잔존 확인
 
 ## 절차

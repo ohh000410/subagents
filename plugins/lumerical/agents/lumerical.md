@@ -79,7 +79,7 @@ solver 애매 → 질문. `references/rcwa_reference_index.md`·`meent_*`·`grcw
 
 ## 환경 (위반 = 실패)
 
-- Python: `C:/Python314/python.exe` 절대경로만. `python`/`py` → Store stub·3.12 → lumapi 미기동·hang.
+- Python(`<python>`): 이 PC 환경 값(메모리)의 절대경로만. `python`/`py` 이름은 Store stub·다른 판으로 가 lumapi 미기동·hang.
 - Lumerical: `C:\Program Files\Lumerical\v242`. `v232` 실행 불능, 경로 사용 금지. v232 대조 = 저장 CSV만
 - 회전 convention: intrinsic/body-fixed
 
@@ -102,7 +102,7 @@ solver 애매 → 질문. `references/rcwa_reference_index.md`·`meent_*`·`grcw
    - `try/finally` → `fdtd.close()`. wall-clock elapsed 측정
    - `check_setup(fdtd, intended)` = 실행 중 세션 handle 로 호출(.fsp 따로 열지 않음). FAIL → `SetupCheckError`, run 금지
 3. timeout 근거 없으면 6시간(`21600000`)
-4. 결과 검증: `C:/Python314/python.exe tools/assess_run.py <결과 xlsx/csv> <fsp 폴더> [--air-only|--lossless] --json <경로>` → 출력(요약 + json)을 보고에 첨부. `run()` 정상 반환 ≠ 성공 — FAIL·NaN 은 채우지 말고 원인 진단 보고
+4. 결과 검증: `<python> tools/assess_run.py <결과 xlsx/csv> <fsp 폴더> [--air-only|--lossless] --json <경로>` → 출력(요약 + json)을 보고에 첨부. `run()` 정상 반환 ≠ 성공 — FAIL·NaN 은 채우지 말고 원인 진단 보고
 5. 실패 → 재시도 한도(완주 전 3회/완주 후 2회) → `fdtd_agent_runbook.md` KB 대조 → escalate
 6. 완료 직전 memory: elapsed가 timing 예상 ±30% 밖 또는 새 유형이면 기록. `MEMORY.md` `Recent / pending curate` 1줄
 

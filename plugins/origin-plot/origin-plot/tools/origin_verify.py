@@ -20,7 +20,7 @@ page.width, 3D view and rendered text size are NOT checked here -- those stay wi
     close(app, saved=r"...\\out.opju")
 
     # after the script has ended (separate command):
-    C:/Python314/python.exe origin_verify.py --after [--wait 30]
+    <python> origin_verify.py --after [--wait 30]
 
 intended (every key optional; row/col are 1-based, as col(N)[r]):
     {

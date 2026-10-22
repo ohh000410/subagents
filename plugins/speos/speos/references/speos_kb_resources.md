@@ -4,9 +4,9 @@
 
 | 로컬 | 용도 |
 |---|---|
-| `C:\Program Files\ANSYS Inc\ANSYS Student\v261\Optical Products\Speos\` | 설치·manifest·default options |
-| `C:\Program Files\ANSYS Inc\ANSYS Student\v261\scdm\SpaceClaim.exe` | plug-in host |
-| `C:\Program Files\ANSYS Inc\ANSYS Student\v261\scdm\SpaceClaim.Api.V261\SpaceClaim.Api.V261.xml` | host API reflection 보조 |
+| `%AWP_ROOT261%\Optical Products\Speos\` | 설치·manifest·default options |
+| `%AWP_ROOT261%\scdm\SpaceClaim.exe` | plug-in host |
+| `%AWP_ROOT261%\scdm\SpaceClaim.Api.V261\SpaceClaim.Api.V261.xml` | host API reflection 보조 |
 
 | URL | 용도 |
 |---|---|

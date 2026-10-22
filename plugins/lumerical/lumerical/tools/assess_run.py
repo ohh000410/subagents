@@ -6,7 +6,7 @@ reference file (../references) that explains each trap.
 Verdicts: PASS / WARN / FAIL (overall = worst).
 
 Usage (CLI):
-    C:/Python314/python.exe assess_run.py PATH [PATH ...] [options]
+    <python> assess_run.py PATH [PATH ...] [options]
 
     PATH may be
       *_p0.log            FDTD engine log

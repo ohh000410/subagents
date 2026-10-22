@@ -16,7 +16,7 @@
 ## 필요한 것
 
 - Origin 2019. `originpro` 불가. win32com COM: `app = w32.Dispatch("Origin.ApplicationSI")`
-- Python: `C:/Python314/python.exe` 절대경로
+- Python(`<python>`): 이 PC 환경 값(메모리)의 절대경로
 - 원본 `.opju`: `app.Load`만. 산출물: 다른 경로, `app.Save(r"...")`, 백슬래시 경로
 - 검증 도구: `tools/origin_verify.py` (사용법·`intended` 스키마 = docstring, 검사별 근거 = 보고의 `ref` 칸·각 검사 주석의 references 파일, 개요 `tools/README.md`). 세션 시작·LabTalk 전송·종료는 이 도구로만
 

@@ -112,9 +112,10 @@ sim 실행 + 결과 xlsx + 검증 로그 + 보고. 종료 = orchestrator polling
 
 | 항목 | 값 |
 |---|---|
-| SpaceClaim.exe | `C:\Program Files\ANSYS Inc\ANSYS Student\v261\scdm\SpaceClaim.exe` |
-| Speos AddIn manifest | `C:\Program Files\ANSYS Inc\ANSYS Student\v261\Optical Products\Speos\bin\SpeosSC.Manifest.xml` |
-| Speos 기본 설정 | `C:\Program Files\ANSYS Inc\ANSYS Student\v261\Optical Products\Speos\bin\Resources\SPEOS_SCDefaultOptions.config` |
+| 설치 위치 | `%AWP_ROOT261%` — Ansys 설치 프로그램이 만드는 환경 변수 |
+| SpaceClaim.exe | `%AWP_ROOT261%\scdm\SpaceClaim.exe` |
+| Speos AddIn manifest | `%AWP_ROOT261%\Optical Products\Speos\bin\SpeosSC.Manifest.xml` |
+| Speos 기본 설정 | `%AWP_ROOT261%\Optical Products\Speos\bin\Resources\SPEOS_SCDefaultOptions.config` |
 | License feature | `speos_level1` (plug-in 모드 필수) |
 | 인터프리터 | SpaceClaim 내장 IronPython 2.7 (Python 3 문법 금지) |
 | Orchestrator | CPython 3.12 — `py -V:Astral/CPython3.12.13` 또는 절대경로. `py -3`·`python` → 3.14 → 깨짐 |

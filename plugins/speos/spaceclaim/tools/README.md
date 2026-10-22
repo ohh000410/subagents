@@ -8,7 +8,7 @@
 | `sc_orchestrate.py` | CPython 3.12 | 컴파일 체크 → 좌석 대기 → launch → 판정 줄 polling → 자기 PID 종료 → 판정 반환 |
 | `tests/` | CPython 3.12 | 판정 로직·로그 파싱 단독 시험 + `sc_geomcheck.py` IronPython 컴파일 체크 |
 
-설치 경로(Ansys Student v261)는 `sc_orchestrate.py` 의 `SC_EXE`·`SC_DIR`·`SPEOS_ARGS`. 다른 판·버전이면 이 세 값을 고친다.
+설치 경로는 환경 변수 `AWP_ROOT261`(Ansys 설치 프로그램이 만든다 — Student·정식 판 모두)에서 읽는다(`sc_orchestrate.py` 의 `ANSYS_ROOT`). 없으면 Student 판 기본 `C:\Program Files\ANSYS Inc\ANSYS Student\v261`.
 
 ## IronPython script 쪽
 

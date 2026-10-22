@@ -2,7 +2,7 @@
 
 우선순위: references → .NET reflection → 로컬 XML doc grep → 로컬 .chm → 외부 KB/Forum → 사용자 GUI record.
 
-## 로컬 (`C:\Program Files\ANSYS Inc\ANSYS Student\v261\scdm\SpaceClaim.Api.V261\`)
+## 로컬 (`%AWP_ROOT261%\scdm\SpaceClaim.Api.V261\`)
 
 | 파일 | 용도 |
 |---|---|

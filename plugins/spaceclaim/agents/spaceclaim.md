@@ -112,8 +112,9 @@ geometry 생성 + `.scdocx` 저장 + 기하 수치 xlsx + 검증 로그 + 보고
 
 | 항목 | 값 |
 |---|---|
-| SpaceClaim.exe | `C:\Program Files\ANSYS Inc\ANSYS Student\v261\scdm\SpaceClaim.exe` |
-| Speos AddIn manifest | `C:\Program Files\ANSYS Inc\ANSYS Student\v261\Optical Products\Speos\bin\SpeosSC.Manifest.xml` |
+| 설치 위치 | `%AWP_ROOT261%` — Ansys 설치 프로그램이 만드는 환경 변수 |
+| SpaceClaim.exe | `%AWP_ROOT261%\scdm\SpaceClaim.exe` |
+| Speos AddIn manifest | `%AWP_ROOT261%\Optical Products\Speos\bin\SpeosSC.Manifest.xml` |
 | ScriptApi | V261 (`/ScriptApi=261`) |
 | 인터프리터 | IronPython 2.7 (Python 3 문법 금지) |
 | Orchestrator | CPython 3.12 — `py -V:Astral/CPython3.12.13` 또는 절대경로. `py -3`·`python` → 3.14 → 깨짐 |

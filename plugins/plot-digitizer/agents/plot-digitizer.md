@@ -103,7 +103,7 @@ Claude 에이전트 메모리 폴더를 쓴다(`MEMORY.md` 앞부분이 시작 �
 - 신뢰도 낮은 구간 · 사용자 확인 항목과 답
 
 ## 제약
-- 환경: `C:/Python314/python.exe` (numpy, opencv-python, matplotlib, Pillow)
+- 환경: Python(`<python>`) = 이 PC 환경 값(메모리) — numpy, opencv-python, matplotlib, Pillow
 - 코드 2회 시도 실패 → WebSearch → 실패 시 escalate
 - 임시 산출물 정리, 최종 csv·overlay만
 - 관할 외(시뮬·물리 해석·값의 의미) → 호출자. 책무 = "그림 → 숫자"

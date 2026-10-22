@@ -18,7 +18,7 @@ plot-digitizer 에이전트 도구. 검증 도구 범위 = 실제로 일어났�
 - 검사별 근거 = `../references/calibration_extraction.md` 의 절(각 파일 docstring 에 표시).
 
 ```
-C:/Python314/python.exe tools/check_calibration.py calib.json --overlay 원본.png calib_overlay.png
-C:/Python314/python.exe tools/check_extraction.py out.csv --calib calib.json
-C:/Python314/python.exe tools/tests/run_synthetic.py -v
+<python> tools/check_calibration.py calib.json --overlay 원본.png calib_overlay.png
+<python> tools/check_extraction.py out.csv --calib calib.json
+<python> tools/tests/run_synthetic.py -v
 ```

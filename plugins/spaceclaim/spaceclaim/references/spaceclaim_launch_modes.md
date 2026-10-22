@@ -3,7 +3,8 @@
 ## 모드 1 — 일반 SpaceClaim
 
 ```python
-cmd = [r"C:\Program Files\ANSYS Inc\ANSYS Student\v261\scdm\SpaceClaim.exe",
+ROOT = os.environ["AWP_ROOT261"]   # Ansys 설치 프로그램이 만든다
+cmd = [ROOT + r"\scdm\SpaceClaim.exe",
        f"/RunScript={SCRIPT}", "/ScriptApi=261", "/Headless=True", "/Splash=False", "/ExitAfterScript=True"]
 ```
 표준 API 만 (SketchCircle, SketchLine, RevolveEdges, NurbsCurve, DesignCurve). `SpeosDes.*` → NameError. cold start ~20초.
@@ -13,10 +14,11 @@ v261: `/Headless=True` 를 빼거나 `/Headless=False` 를 줘도 `/RunScript` �
 ## 모드 2 — SPEOS plug-in (launcher 우회)
 
 ```python
-cmd = [r"C:\Program Files\ANSYS Inc\ANSYS Student\v261\scdm\SpaceClaim.exe",
+ROOT = os.environ["AWP_ROOT261"]
+cmd = [ROOT + r"\scdm\SpaceClaim.exe",
        "/LicenseFeature=speos_level1",
-       r"/AddInManifestFile=C:\Program Files\ANSYS Inc\ANSYS Student\v261\Optical Products\Speos\bin\SpeosSC.Manifest.xml",
-       r"/DefaultUserSettingsFile=C:\Program Files\ANSYS Inc\ANSYS Student\v261\Optical Products\Speos\bin\Resources\SPEOS_SCDefaultOptions.config",
+       "/AddInManifestFile=" + ROOT + r"\Optical Products\Speos\bin\SpeosSC.Manifest.xml",
+       "/DefaultUserSettingsFile=" + ROOT + r"\Optical Products\Speos\bin\Resources\SPEOS_SCDefaultOptions.config",
        f"/RunScript={SCRIPT}", "/ScriptApi=261", "/Headless=True", "/Splash=False", "/ExitAfterScript=True"]
 ```
 `SpeosDes.*` 사용 가능. cold start ~30초. `AnsysSpeosLauncher.exe` 는 인자를 받지 않는다 — 위 인자는 launcher 가 SpaceClaim 을 띄울 때 쓰는 명령줄 그대로.

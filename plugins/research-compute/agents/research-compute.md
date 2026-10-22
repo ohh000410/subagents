@@ -108,7 +108,7 @@ Claude 에이전트 메모리 폴더를 쓴다(`MEMORY.md` 앞부분이 시작 �
 - 계산: polling·sleep·tail loop, 자체 모니터, detached process 사용 금지
 - timeout: timing memory 없으면 시작 전 계산 규모 확인
 - sweep: 모든 case의 실행·추출·저장·검증 끝나야 완료
-- 먼저 호출자가 지정한 Python 환경 사용. 없으면 `C:/Python314/python.exe`
+- 먼저 호출자가 지정한 Python 환경 사용. 없으면 이 PC 환경 값(메모리)
 
 ## Reference routing
 
