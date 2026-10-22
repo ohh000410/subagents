@@ -39,7 +39,7 @@
 
 - `agents/speos.md` — 에이전트 정의(공통 규칙 + 본문)
 - `speos/references/` — 17개 파일
-- `speos/tools/` — 4개 파일
+- `speos/tools/` — 5개 파일
 - `spaceclaim/tools/` — 의존 도구(spaceclaim 에이전트의 tools)
 - `policies/` — 공통 정책(실패 처리, GUI 창 멈춤 대처)
 - `LICENSE` — MIT

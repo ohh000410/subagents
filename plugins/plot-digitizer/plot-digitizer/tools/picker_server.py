@@ -157,6 +157,12 @@ class H(http.server.BaseHTTPRequestHandler):
         else:
             self.send_response(404); self.end_headers()
 
+# 앞 실행이 정리 전에 끊긴 폴더면 옛 _submit.flag·_clicks.json 이 남아 바로 '제출됨'으로 읽혔다(2026-10-22 교차 검토).
+# 시작할 때 지운다 — _task.json 은 이번 작업 안내라 둔다.
+for _old in (FLAG, CLK):
+    if os.path.exists(_old):
+        os.remove(_old)
+
 socketserver.TCPServer.allow_reuse_address = True
 with socketserver.TCPServer(('127.0.0.1', PORT), H) as httpd:
     print(f'serving http://127.0.0.1:{PORT}  (image: {IMG})')

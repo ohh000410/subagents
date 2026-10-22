@@ -78,7 +78,7 @@ def step_check(name, before, after, exp_dV_cm3=None, tol=TOL_REL, abs_tol=TOL_AB
 def step_summary(results):
     """보고용 요약 한 줄. FAIL 0 이어야 모델링 완료로 보고한다."""
     n = {s: sum(r.status == s for r in results) for s in ("PASS", "WARN", "FAIL")}
-    return "STEP 요약: FAIL %d / WARN %d / PASS %d" % (n["FAIL"], n["WARN"], n["PASS"])
+    return "STEP SUMMARY: FAIL %d / WARN %d / PASS %d" % (n["FAIL"], n["WARN"], n["PASS"])
 
 
 # ---- Inventor 되읽기 헬퍼 (COM 필요) ----

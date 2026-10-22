@@ -26,21 +26,24 @@ ISO scale ≈ SIDE/END × 0.65. 1 미만 스케일(1:0.9 등) 금지
 ## 뷰 레이블 & 투상법 기호
 
 ```python
-def add_view_label(gn, tg, cx, bottom_y, label, scale_str, half_w=3.5):
-    note = gn.AddByRectangle(tg.CreatePoint2d(cx - half_w, bottom_y - 0.3),
-                             tg.CreatePoint2d(cx + half_w, bottom_y - 1.0),
-                             f"{label}  {scale_str}")          # 한 줄, \n 금지
-    note.TextStyle.FontSize = 0.28
-    # HorizontalJustification = 8963 → Inventor 2027 E_INVALIDARG. 설정하지 않는다
+def add_view_label(gn, tg, cx, bottom_y, label, scale_str, size=0.28):
+    note = gn.AddByRectangle(tg.CreatePoint2d(cx - 3.5, bottom_y - 0.3),   # 사각형 폭은 안 쓰인다 — 상자 폭 = 글자 길이
+                             tg.CreatePoint2d(cx + 3.5, bottom_y - 1.0),
+                             "<StyleOverride FontSize='%s'>%s  %s</StyleOverride>" % (size, label, scale_str))   # 한 줄
+    note.HorizontalJustification = 19969                    # 가운데, 이 노트만 (19970 왼쪽 / 19971 오른쪽)
+    note.Position = tg.CreatePoint2d(cx, bottom_y - 0.3)    # 기준점 = 글자 중심. 정렬만 바꾸면 상자는 그대로
 
-add_view_label(gn, tg, SIDE_CX, SIDE_CY - vH_side/2, "SIDE VIEW",      "SCALE 2 : 1",   half_w=3.5)
-add_view_label(gn, tg, END_CX,  END_CY  - vH_end/2,  "END VIEW",       "SCALE 2 : 1",   half_w=3.0)
-add_view_label(gn, tg, ISO_CX,  ISO_CY  - vH_iso/2,  "ISOMETRIC VIEW", "SCALE 1.3 : 1", half_w=4.0)
+add_view_label(gn, tg, SIDE_CX, SIDE_CY - vH_side/2, "SIDE VIEW",      "SCALE 2 : 1")
+add_view_label(gn, tg, END_CX,  END_CY  - vH_end/2,  "END VIEW",       "SCALE 2 : 1")
+add_view_label(gn, tg, ISO_CX,  ISO_CY  - vH_iso/2,  "ISOMETRIC VIEW", "SCALE 1.3 : 1")
 
 # THIRD ANGLE PROJECTION — 독립 노트, 표제란 근처. 스펙 노트 안에 섞지 않는다
-note = gn.AddByRectangle(tg.CreatePoint2d(19.0, 9.5), tg.CreatePoint2d(26.0, 7.5), "THIRD ANGLE PROJECTION")
-note.TextStyle.FontSize = 0.22
+note = gn.AddByRectangle(tg.CreatePoint2d(19.0, 9.5), tg.CreatePoint2d(26.0, 7.5),
+                         "<StyleOverride FontSize='0.22'>THIRD ANGLE PROJECTION</StyleOverride>")
 ```
+
+- 이 노트만 정렬하려면 `note.HorizontalJustification` = `HorizontalTextAlignmentEnum`(19969 가운데 · 19970 왼쪽 · 19971 오른쪽). 정렬을 바꿔도 상자는 움직이지 않고 `note.Position.X` 가 기준점(가운데 = 글자 중심, 오른쪽 = 오른쪽 끝)이 된다 — 정렬 뒤 `Position` 을 준다. 8963 은 `kEnglishSystemOfMeasure` 값이라 노트·스타일 어디에 써도 E_INVALIDARG.
+- `note.TextStyle.*`(FontSize·HorizontalJustification) 는 도면 공용 스타일('Note Text (ANSI)')이다 — 값은 받지만 한 노트에 쓰면 모든 노트가 바뀌고 마지막 값이 이긴다. 노트마다 다른 크기는 텍스트의 `<StyleOverride FontSize=..>`(한 도면에 0.28·0.20 공존 확인).
 
 ## 치수 배치 — 뷰별 역할, 중복 금지
 

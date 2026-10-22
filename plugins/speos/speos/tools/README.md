@@ -4,9 +4,9 @@
 
 | 파일 | 실행 환경 | 역할 |
 |---|---|---|
-| `speos_run.py` | CPython 3.12 | `run_speos(script, log, out, timeout_s, env)` = `sc_orchestrate.run(speos=True)` + env 전달. `sensor_flux_w(report_html)` |
+| `speos_run.py` | CPython | `run_speos(script, log, out, timeout_s, env)` = `sc_orchestrate.run(speos=True)` + env 전달. `sensor_flux_w(report_html)` |
 | `smoke/sc_lambert_smoke.py` | SpaceClaim IronPython 2.7 | 10x10 mm Lambertian 1 W 소스(z=50) → 200x200 mm 조도 센서(z=0), 되읽기 13단계, 마지막 줄 `[GEOM VERDICT]` |
-| `smoke/run_lambert_smoke.py` | CPython 3.12 | 위 script 실행 + Report.html flux vs 해석값(약 0.831 W) 비교 |
+| `smoke/run_lambert_smoke.py` | CPython | 위 script 실행 + Report.html flux vs 해석값(약 0.831 W) 비교 |
 
 ## 규칙(sc_orchestrate 와 동일)
 

@@ -70,7 +70,7 @@ class StepCheck(unittest.TestCase):
 
     def test_summary(self):
         rs = [chk("a", (1, 1), (1, 1)), chk("b", (1, 1), (2, 2)), chk("c", (1, 1), (2, 2), exp_dV_cm3=1.0)]
-        self.assertEqual(step_summary(rs), "STEP 요약: FAIL 1 / WARN 1 / PASS 1")
+        self.assertEqual(step_summary(rs), "STEP SUMMARY: FAIL 1 / WARN 1 / PASS 1")
 
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-"""CPython 3.12 orchestrator helpers for headless SpaceClaim /RunScript.
+"""CPython orchestrator helpers for headless SpaceClaim /RunScript.
 
 Polling stops on a log marker ([GEOM VERDICT] or [FATAL]) or on process exit;
 the verdict is then read back from the log. No marker -> FAIL.

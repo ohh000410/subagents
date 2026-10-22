@@ -51,8 +51,12 @@ kFrontViewOrientation              = 10764
 kRightViewOrientation              = 10755
 kTopViewOrientation                = 10754
 kLeftViewOrientation               = 10758
-kBottomViewOrientation             = 10757  # IPT. 10767 은 E_INVALIDARG
+kBottomViewOrientation             = 10757  # IPT·IAM 같음. 10767 = kFlatPivotRight(이름상 판금 펼침용) — 일반 부품 E_INVALIDARG
+kBackViewOrientation               = 10756
 kIsoTopRightViewOrientation        = 10759
+kIsoTopLeftViewOrientation         = 10760
+kIsoBottomRightViewOrientation     = 10761
+kIsoBottomLeftViewOrientation      = 10762
 kHiddenLineDrawingViewStyle        = 32257  # 숨은선 점선
 kHiddenLineRemovedDrawingViewStyle = 32258
 kShadedDrawingViewStyle            = 32259
@@ -63,6 +67,19 @@ kA3DrawingSheetSize                = 9996   # 42×29.7cm
 ```
 
 상수는 위 「상수 (실측)」 블록을 스크립트 맨 위에 그대로 붙여 이름으로 쓴다. `win32.constants.k*` 는 쓰지 않는다 — gen_py 캐시가 있어야 존재해서, 캐시 없는 새 PC 에서는 첫 `CastTo` 전에 쓰면 `AttributeError` 다(`launch()` 의 `Dispatch` 는 캐시를 만들지 않는다). 블록에 없는 값은 추측한 정수로 쓰지 말고 CHM 열거형 페이지에서 읽는다. `kRearViewOrientation` 이라는 상수는 없다.
+
+뷰 방향 — 부품 자신의 축 기준. `view.Camera` 되읽기 실측: Front·Back·Top·Bottom 은 IPT·IAM 모두이고 PDF 의 구멍 위치와도 일치, Right·Left·ISO 는 IPT 카메라 되읽기만:
+
+| 상수 | 보는 쪽 | 화면 오른쪽 | 화면 위 |
+|---|---|---|---|
+| `kFrontViewOrientation` 10764 | +Z | +X | +Y |
+| `kBackViewOrientation` 10756 | −Z | −X | +Y |
+| `kTopViewOrientation` 10754 | +Y | +X | −Z |
+| `kBottomViewOrientation` 10757 | −Y | +X | +Z |
+| `kRightViewOrientation` 10755 | +X | −Z | +Y |
+| `kLeftViewOrientation` 10758 | −X | +Z | +Y |
+
+ISO 보는 쪽: TopRight 10759 (+X,+Y,+Z) · TopLeft 10760 (−X,+Y,+Z) · BottomRight 10761 (+X,−Y,+Z) · BottomLeft 10762 (−X,−Y,+Z). Top/Bottom 은 Y 축 기준이라 Z-up 부품(XY 스케치 + Z 돌출)의 정면도는 kBottom 이다(kTop 은 위아래가 뒤집힘). 뷰 방향 확인 = `view.Camera` 의 `Eye`·`Target`·`UpVector` 되읽기: 보는 방향 = Target − Eye, 화면 오른쪽 = 보는 방향 × UpVector.
 
 ## Drawing 시작 패턴
 
@@ -128,8 +145,9 @@ time.sleep(6)
 ## 스펙 노트 & 저장
 
 ```python
-note = gn.AddByRectangle(tg.CreatePoint2d(2.0, 14.0), tg.CreatePoint2d(12.0, 9.5), "NOTE LINE1\nLINE2")  # Point1 = 노트 좌상단
-note.TextStyle.FontSize = 0.25  # cm
+note = gn.AddByRectangle(tg.CreatePoint2d(2.0, 14.0), tg.CreatePoint2d(12.0, 9.5),   # Point1 = 노트 좌상단(기본 왼쪽 정렬)
+                         "<StyleOverride FontSize='0.25'>NOTE LINE1\nLINE2</StyleOverride>")  # 크기 cm, 이 노트만
+# note.TextStyle.* 는 도면의 모든 노트가 쓰는 공용 스타일 — 바꾸면 모든 노트가 바뀌고 마지막 값이 이긴다
 
 draw_doc.SaveAs2(IDW_PATH, False)  # 주 문서. 다시 저장은 draw_doc.Save() — 같은 경로 SaveAs2 두 번째는 E_INVALIDARG
 draw_doc.SaveAs2(PDF_PATH, True)   # copy
@@ -140,7 +158,7 @@ app.Quit()
 ```
 
 - **PDF 로 저장할 도면의 노트는 ASCII 로 쓴다.** 노트에 한글이 있으면 PDF 저장 때 'Published with a warning(s)' 창(Font Tahoma for symbol … was replaced by font 맑은 고딕)이 떠서 `SaveAs2(pdf, True)`·TranslatorAddIn 모두 비대화형 세션이 멈춘다(PDF 파일은 창이 뜨기 전에 써진다). 제목란 iProperty 의 한글은 미확인
-- `AddByRectangle` 의 사각형 폭으로는 줄이 바뀌지 않는다 — 줄바꿈은 `\n`. `AddFitted` 도 Point1 이 노트 좌상단
+- `AddByRectangle` 의 사각형 폭으로는 줄이 바뀌지 않는다 — 줄바꿈은 `\n`. `AddFitted` 의 Point1 은 정렬에 따라 다르다 — 왼쪽 정렬이면 좌상단, 가운데 정렬이면 중심(CHM)
 - `SaveAs2(pdf, True)` 와 TranslatorAddIn `SaveCopyAs` 는 같은 PDF 를 만든다(ASCII 노트, 바이트 동일)
 
 PDF 검증:

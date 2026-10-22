@@ -113,12 +113,15 @@ def polar_to_px(c, theta, r):
 
 
 def polar_from_px(c, col, row):
-    """polar_to_px 의 역변환 -> (theta, r). theta 는 theta_range 시작값부터 360° 안으로 접는다."""
+    """polar_to_px 의 역변환 -> (theta, r). theta 는 theta_range 가운데 ±180° 안으로 접는다 —
+    시작값에서 접으면 반원 -90° 끝 바로 아래 점이 +270° 로 튀어 엉뚱한 빈 구간이 생겼다(2026-10-22 교차 검토).
+    전원(0~360)은 예전과 같다."""
     cx, cy = c["center_px"]
     dx, dy = np.asarray(col, float) - cx, cy - np.asarray(row, float)
     r = c["r_min"] + np.hypot(dx, dy) / c["R_px"] * (c["r_max"] - c["r_min"])
-    lo = min(c["theta_range"])
-    theta = lo + (c["theta_dir"] * (np.degrees(np.arctan2(dy, dx)) - c["theta0_deg"]) - lo) % 360.0
+    mid = 0.5 * sum(c["theta_range"])
+    raw = c["theta_dir"] * (np.degrees(np.arctan2(dy, dx)) - c["theta0_deg"])
+    theta = mid + (raw - mid + 180.0) % 360.0 - 180.0
     return theta, r
 
 

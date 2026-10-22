@@ -1,6 +1,6 @@
-"""CPython 3.12 runner for headless SPEOS /RunScript jobs.
+"""CPython runner for headless SPEOS /RunScript jobs.
 
-Dependency: spaceclaim/tools/sc_orchestrate.py (same SpaceClaim seat, same rule). Nothing is copied:
+Dependency: spaceclaim/tools/sc_orchestrate.py (same SpaceClaim seat, same rule). Imported, not reimplemented:
 compile check -> seat wait (any SpaceClaim, never killed) -> launch with SPEOS_ARGS -> poll for the
 script's verdict line -> close only the PID this run launched (wait for self-exit, then -Force).
 AnsysSpeosLauncher is only counted before/after (launcher_before/launcher_after), never killed.

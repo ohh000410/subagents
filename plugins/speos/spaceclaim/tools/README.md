@@ -5,8 +5,8 @@
 | 파일 | 실행 환경 | 역할 |
 |---|---|---|
 | `sc_geomcheck.py` | SpaceClaim IronPython 2.7 (+ CPython 시험) | `make_logger` · `snap` · `step_check` · `finish` → `[STEP]`·`[GEOM VERDICT]` 줄 |
-| `sc_orchestrate.py` | CPython 3.12 | 컴파일 체크 → 좌석 대기 → launch → 판정 줄 polling → 자기 PID 종료 → 판정 반환 |
-| `tests/` | CPython 3.12 | 판정 로직·로그 파싱 단독 시험 + `sc_geomcheck.py` IronPython 컴파일 체크 |
+| `sc_orchestrate.py` | CPython | 컴파일 체크 → 좌석 대기 → launch → 판정 줄 polling → 자기 PID 종료 → 판정 반환 |
+| `tests/` | CPython | 판정 로직·로그 파싱 단독 시험 + `sc_geomcheck.py` IronPython 컴파일 체크 |
 
 설치 경로는 환경 변수 `AWP_ROOT261`(Ansys 설치 프로그램이 만든다 — Student·정식 판 모두)에서 읽는다(`sc_orchestrate.py` 의 `ANSYS_ROOT`). 없으면 Student 판 기본 `C:\Program Files\ANSYS Inc\ANSYS Student\v261`.
 

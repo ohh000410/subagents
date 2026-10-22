@@ -17,7 +17,7 @@ AI 에이전트용 설치·사용 안내. 사람용 소개는 `README.md`.
 | Lumerical FDTD·RCWA·STACK | `lumerical` | Lumerical v242 |
 | Python RCWA·산란·원거리장 복사 열전달 계산 | `research-compute` | 없음 |
 
-모두 Python 을 쓴다(SpaceClaim·SPEOS 의 실행 스크립트는 CPython 3.12). 앱의 검증한 판·설치 경로와 Python 패키지는 `plugins/<플러그인>/README.md` 의 "필요한 것".
+모두 Python 을 쓴다(SpaceClaim·SPEOS 의 실행 스크립트는 CPython — 3.12·3.14 에서 시험). 앱의 검증한 판·설치 경로와 Python 패키지는 `plugins/<플러그인>/README.md` 의 "필요한 것".
 
 ## 설치
 

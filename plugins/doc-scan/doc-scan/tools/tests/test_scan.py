@@ -39,6 +39,20 @@ class Flatten(unittest.TestCase):
         self.assertEqual(int(scan.flatten(g).min()), 250)
 
 
+class Corners(unittest.TestCase):
+    """45° 가까이 돈 사각형에서 order() 가 같은 꼭짓점을 두 번 골라 종이를 놓쳤다(2026-10-22 교차 검토)."""
+
+    def test_diamond_keeps_four_corners(self):
+        q = np.array([[500., 100.], [800., 500.], [500., 900.], [200., 500.]], dtype="float32")
+        o = scan.order(q)
+        self.assertEqual(len({tuple(p) for p in o.tolist()}), 4)
+        self.assertAlmostEqual(float(scan.angle_range(q)), 32.52, places=1)
+
+    def test_order_is_clockwise_from_top_left(self):
+        q = np.array([[90., 10.], [10., 12.], [12., 95.], [95., 90.]], dtype="float32")   # 섞인 순서
+        self.assertEqual(scan.order(q).tolist(), [[10., 12.], [90., 10.], [95., 90.], [12., 95.]])
+
+
 class SyntheticPages(unittest.TestCase):
     def test_text_page_shadow_removed(self):
         g, found = scanned("text", "gray")

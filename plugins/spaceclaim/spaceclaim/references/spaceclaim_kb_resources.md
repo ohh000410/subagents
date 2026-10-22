@@ -32,11 +32,12 @@
 WebFetch 는 Ansys KB 에서 403. Chrome UA + `-L`:
 
 ```bash
-curl -s -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
-  -o "~/AppData/Local/Temp/kb_page.html" "<KB_URL>"
+# 작업 폴더에 받는다 — 따옴표 안 `~` 는 curl·Python 이 펼치지 않아 파일이 안 생긴다. 끝나면 지운다
+curl -sS -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
+  -o kb_page.html "<KB_URL>"
 python -c "
 import re
-html = open(r'~\AppData\Local\Temp\kb_page.html', 'r', encoding='utf-8').read()
+html = open('kb_page.html', 'r', encoding='utf-8').read()
 text = re.sub(r'<script[^>]*>.*?</script>', '', html, flags=re.DOTALL)
 text = re.sub(r'<style[^>]*>.*?</style>', '', text, flags=re.DOTALL)
 text = re.sub(r'<[^>]+>', ' ', text); text = re.sub(r'\s+', ' ', text)

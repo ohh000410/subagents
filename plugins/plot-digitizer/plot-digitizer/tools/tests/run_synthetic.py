@@ -467,6 +467,13 @@ def case_calib_json():
         out.append(("정상: 값<->픽셀 왕복 (cartesian tick LSQ·given map, polar dir ±1)",
                     [{"type": "roundtrip", "msg": f"{e1:g} {e2:g}"}] if max(e1, e2) > 1e-9 else [],
                     f"max 왕복 오차 cartesian {e1:.1e}, polar {e2:.1e}"))
+        # 반원 -90° 끝 바로 아래 점은 -90.01 이어야 한다 — 시작값에서 접어 +269.99 로 튀었다(2026-10-22 교차 검토)
+        half = {"type": "polar", "center_px": [600.0, 640.0], "R_px": 580.0, "r_min": 0.0, "r_max": 1.0,
+                "theta0_deg": 90, "theta_dir": -1, "theta_range": [-90, 90]}
+        th_edge = float(cm.from_px(half, 20.0, 640.1)[0])
+        out.append(("정상: 반원 -90° 끝 바로 아래 = -90.01 (+270 아님)",
+                    [{"type": "fold", "msg": f"{th_edge:g}"}] if abs(th_edge + 90.01) > 0.01 else [],
+                    f"theta {th_edge:.3f}"))
         # polar overlay (빈 이미지 위): 정상 / R 1% 과대
         cx, cy, R = 600.0, 640.0, 580.0
         pol = {"type": "polar", "center_px": [cx, cy], "R_px": R, "r_min": 0.0, "r_max": 1.0, "theta0_deg": 90,
@@ -583,6 +590,19 @@ CASES = [
     ("9 NaN 값", case_nonfinite, {"nonfinite", "nan_run"}),
     ("10 눈금 2개", case_two_ticks, {"no_dof"}),
 ]
+# 결함 버전마다 반드시 나와야 하는 flag. 유형의 기대 집합과 겹치기만 보면 gap 을 기대한 버전이 nan_run 만 내도
+# OK 였다(2026-10-22 교차 검토). 여기 없는 결함 버전은 유형 집합과 겹치면 OK.
+REQUIRE = {
+    "결함 A: local-median 제거(38열) -> NaN 행": {"nan_run"},
+    "결함 A': 같은 제거, 행 자체 삭제(곡선 1개 CSV)": {"gap"},
+    "결함 B: 제거 후 보간 메움(_interp)": {"interp_run"},
+    "결함: 탐지 6/7 (16 이 테두리에 가림)": {"border_tick_missing"},
+    "결함: 눈금 8 오검출 +4 px": {"dropped_candidate"},
+    "결함: long CSV 값 없음 구간 (wide 와 같은 A flag)": {"nan_run"},
+    "결함: long CSV 행 삭제 (A 4~6)": {"gap"},
+    "결함: calib.json -> --overlay (cartesian), 눈금 6 +4 px 는 빨강": {"dropped_candidate", "reproj"},
+    "결함: calib.json -> --overlay (polar), R +1% 격자 원 빨강": {"reproj"},
+}
 
 
 VERBOSE = "-v" in sys.argv
@@ -598,6 +618,8 @@ def main():
             types = sorted({f["type"] for f in flags})
             if version.startswith("정상"):
                 ok = not flags
+            elif version in REQUIRE:
+                ok = REQUIRE[version] <= set(types)
             else:
                 ok = bool(set(types) & expect)
             bad += not ok

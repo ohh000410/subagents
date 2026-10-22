@@ -156,7 +156,7 @@ Claude 에이전트 메모리 폴더를 쓴다(`MEMORY.md` 앞부분이 시작 �
 STEP 줄 (전부, 피처 순서대로):
 [STEP PASS] <name> dV=… dF=… exp=…
 …
-STEP 요약: FAIL 0 / WARN n / PASS m      ← 필수. FAIL 0 아니면 완료 보고 금지
+STEP SUMMARY: FAIL 0 / WARN n / PASS m      ← 필수. FAIL 0 아니면 완료 보고 금지
 
 검증: 체적 XX.XXX cm³ (이론값 대비 오차 X.XXX%) ✓, bbox XX×XX×XX mm, 잔여 프로세스 0 ✓
 ```

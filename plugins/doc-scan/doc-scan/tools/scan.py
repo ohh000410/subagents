@@ -76,9 +76,12 @@ def find_page(img):
 
 
 def order(pts):
-    """왼위·오위·오아래·왼아래."""
-    s, d = pts.sum(1), np.diff(pts, axis=1).ravel()
-    return np.array([pts[s.argmin()], pts[d.argmin()], pts[s.argmax()], pts[d.argmax()]], dtype="float32")
+    """왼위·오위·오아래·왼아래. 무게중심을 도는 순서로 늘어놓고 x+y 가 가장 작은 점에서 시작한다.
+    x+y·y−x 의 최솟값·최댓값으로 고르면 45° 가까이 돈 사각형에서 같은 꼭짓점을 두 번 골라
+    내각 차가 NaN 이 되고 종이를 놓쳤다(2026-10-22 교차 검토)."""
+    c = pts.mean(0)
+    q = pts[np.argsort(np.arctan2(pts[:, 1] - c[1], pts[:, 0] - c[0]))]   # y 가 아래로 커지니 각도 순 = 시계 방향
+    return np.roll(q, -int(np.argmin(q.sum(1))), axis=0).astype("float32")
 
 
 def aspect(tl, tr, br, bl, center):

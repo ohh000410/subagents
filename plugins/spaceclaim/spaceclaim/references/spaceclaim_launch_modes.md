@@ -23,7 +23,7 @@ cmd = [ROOT + r"\scdm\SpaceClaim.exe",
 ```
 `SpeosDes.*` 사용 가능. cold start ~30초. `AnsysSpeosLauncher.exe` 는 인자를 받지 않는다 — 위 인자는 launcher 가 SpaceClaim 을 띄울 때 쓰는 명령줄 그대로.
 
-## Orchestrator 템플릿 (CPython 3.12)
+## Orchestrator 템플릿 (CPython)
 
 공용 함수는 `../tools/sc_orchestrate.py`(사용법·판정 규칙 `../tools/README.md`). orchestrator 는 경로만 정하고 `run` 을 부른다.
 

@@ -76,6 +76,9 @@
 | `inventor` | 피처별 체적·면 수·bbox / 뷰·치수 개수, `ModelValue` | `tools/step_check.py` `[STEP]` 줄 / COM 실측(단위는 CHM 확인) | 로컬 CHM |
 | `spaceclaim` | 피처별 체적·면·정점·바디 수, bbox | `tools/sc_geomcheck.py` `[STEP]`·`[GEOM VERDICT]` 줄 | introspection → KB |
 | `research-compute` | 결과 경계·요청 대 실사용 설정·수렴 / cross-check | `tools/checks.py` 판정 줄 / 해석해 극한, 독립 라이브러리 | 레퍼런스 수렴 절차, 논문 벤치마크 |
+| `doc-scan` | 쪽마다 `page_found`·`corner_at_photo_edge`, 결과 이미지 | `tools/scan.py` 마지막 줄 JSON `status` / 결과 이미지 직접 확인 | `references/scan.md` 의 근거 |
+| `plot-digitizer` | 캘리브 눈금 재투영·추출 곡선 | `tools/check_calibration.py`·`check_extraction.py` 끝줄 / overlay png | 논문 본문·SI 수치 |
+| `pptx-figure` | 도형 개수·이름, 3D 렌더 꼭짓점 | `references/snippets/pptx_frame.py` self-test·`solve_3d` / 렌더(png) 원본 대조 | 원본 그림 |
 
 Ansys KB가 403이면 인증이 아니라 User-Agent 차단이다 — 우회 방법은 각 도메인의 `*_kb_resources.md`.
 
