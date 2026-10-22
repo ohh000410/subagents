@@ -1,6 +1,6 @@
 {
   "name": "research-compute",
-  "description": "Python 기반 RCWA, TMM/Fresnel, Mie·core-shell 산란, 복사·열전달 계산을 수행하고 수렴·cross-check까지 검증하는 에이전트. FDTD와 Lumerical RCWA·STACK은 관할 밖이다.",
+  "description": "Python 기반 RCWA, TMM/Fresnel, Mie·core-shell 산란, 원거리장 복사 열전달 계산을 수행하고 수렴·cross-check까지 검증하는 에이전트. FDTD와 Lumerical RCWA·STACK은 관할 밖이다.",
   "author": {
     "name": "ohh000410"
   },

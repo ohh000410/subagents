@@ -1,8 +1,8 @@
 # research-compute
 
-RCWA·산란·열전달을 계산합니다.
+RCWA·산란·원거리장 복사 열전달.
 
-에이전트 설명(Claude 가 맡길지 고를 때 읽는 글): Python 기반 RCWA, TMM/Fresnel, Mie·core-shell 산란, 복사·열전달 계산을 수행하고 수렴·cross-check까지 검증하는 에이전트. FDTD와 Lumerical RCWA·STACK은 관할 밖이다.
+에이전트 설명(Claude 가 맡길지 고를 때 읽는 글): Python 기반 RCWA, TMM/Fresnel, Mie·core-shell 산란, 원거리장 복사 열전달 계산을 수행하고 수렴·cross-check까지 검증하는 에이전트. FDTD와 Lumerical RCWA·STACK은 관할 밖이다.
 
 ## 설치
 

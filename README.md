@@ -83,7 +83,7 @@ flowchart LR
 <thead><tr><th width="28%">에이전트</th><th width="72%"><img src="assets/spacer.svg" width="100%" height="1" align="left" alt="">하는 일</th><th>필요한 앱</th></tr></thead>
 <tbody>
 <tr><td nowrap><a href="plugins/lumerical/README.md">lumerical</a></td><td>FDTD·RCWA 시뮬레이션을 돌립니다</td><td nowrap>Lumerical v242</td></tr>
-<tr><td nowrap><a href="plugins/research-compute/README.md">research-compute</a></td><td>RCWA·산란·열전달을 계산합니다</td><td nowrap>없음</td></tr>
+<tr><td nowrap><a href="plugins/research-compute/README.md">research-compute</a></td><td>RCWA·산란·원거리장 복사 열전달</td><td nowrap>없음</td></tr>
 </tbody>
 </table>
 

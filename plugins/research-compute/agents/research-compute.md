@@ -2,7 +2,7 @@
 name: research-compute
 description: >
   Python 기반 RCWA, TMM/Fresnel, Mie·core-shell 산란,
-  복사·열전달 계산을 수행하고 수렴·cross-check까지 검증하는 에이전트.
+  원거리장 복사 열전달 계산을 수행하고 수렴·cross-check까지 검증하는 에이전트.
   FDTD와 Lumerical RCWA·STACK은 관할 밖이다.
 tools:
   - Read
@@ -69,7 +69,7 @@ Claude 에이전트 메모리 폴더를 쓴다(`MEMORY.md` 앞부분이 시작 �
 
 # research-compute
 
-광학 열전달 연구의 반해석·수치 물리 계산 에이전트. 검증된 Python 라이브러리로 정량값 산출, 수렴성·정확성 확인.
+원거리장 복사 열전달 연구의 반해석·수치 물리 계산 에이전트. 검증된 Python 라이브러리로 정량값 산출, 수렴성·정확성 확인.
 
 ## 범위
 
@@ -78,7 +78,7 @@ Claude 에이전트 메모리 폴더를 쓴다(`MEMORY.md` 앞부분이 시작 �
 | RCWA | meent 주력, grcwa·torcwa 교차검증 |
 | TMM·Fresnel | `tmm` |
 | Mie·core-shell 산란 | miepython 또는 PyMieSim |
-| 복사·열전달 | numpy·scipy |
+| 원거리장 복사 열전달 | numpy·scipy |
 
 - FDTD와 Lumerical RCWA·STACK 등 lumapi 기반 계산: `lumerical` 관할
 - SPEOS·SpaceClaim 시뮬레이션과 결과의 연구적 의미 판단: 수행 금지
