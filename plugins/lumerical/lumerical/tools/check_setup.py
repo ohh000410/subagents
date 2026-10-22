@@ -23,10 +23,12 @@ intended (every key optional):
       },
       "band": {"wavelength start": 8e-6, "wavelength stop": 13e-6},
       "case_ids": [...],                  # full sweep grid, for uniqueness
-      "engine": "cpu",                    # this workstation has no GPU engine
-      "processes": 6,                     # FDTD resource 1 (workstation default)
+      "engine": "cpu",                    # cpu|gpu = the engine this PC's install runs (this PC value)
+      "processes": 6,                     # expected FDTD resource 1 processes (this PC value)
       "disk_min_gb": 20, "disk_warn_gb": 40,
     }
+"engine" and "processes" are this PC's values: the caller passes them (the agent keeps them in its
+memory). Without "processes" the launch check only reports what it read (WARN).
 Returns the report dict: {"verdict", "fsp", "checks": [...]}.
 """
 import os
@@ -249,24 +251,24 @@ def _check_case_ids(rep, case_ids, fsp):
 
 
 def _check_preset(fdtd, rep, processes):
-    """'job launching preset' persists in the user config across sessions; 'Local
-    Computer' silently drops production to one process. Workstation default =
-    'Remote: Microsoft MPI'. Evidence: fdtd_resource_config.md."""
+    """Production parallelism = 'processes' of FDTD resource 1, judged against the caller's expected
+    value (this PC's value). 'job launching preset' persists in the user config across sessions;
+    switching it to 'Local Computer' sets processes to 1, and switching back leaves processes at 1 --
+    the preset looks right while production runs on one process (fdtd_resource_config.md, v242).
+    So the preset name is reported and the process count is what fails. Without an expected value
+    (other PC, not recorded yet) only the reading is reported as WARN."""
     ev = "fdtd_resource_config.md"
     p = str(_scalar(fdtd.getresource("FDTD", 1, "job launching preset")))
-    if p.strip().lower() == "local computer":
-        rep.add("launch_preset", "FAIL", "FDTD resource 1",
-                "job launching preset = 'Local Computer' (restore 'Remote: Microsoft MPI')", ev)
-    else:
-        rep.add("launch_preset", "PASS", "FDTD resource 1", p, "")
-    # Switching preset to Local Computer and back left processes=1 (measured 2026-10-17,
-    # fdtd_resource_config.md, v242) -> single-process production with the preset looking correct.
     n = int(float(_scalar(fdtd.getresource("FDTD", 1, "processes"))))
-    if n != int(processes):
+    if processes is None:
         rep.add("launch_preset", "WARN", "FDTD resource 1",
-                "processes=%d (expected %d)" % (n, int(processes)), ev)
+                "preset=%r processes=%d, no expected processes given (intended['processes'])" % (p, n), ev)
+    elif n < int(processes):
+        rep.add("launch_preset", "FAIL", "FDTD resource 1",
+                "processes=%d < expected %d (preset %r) -- restore preset and processes, re-read in a new session"
+                % (n, int(processes), p), ev)
     else:
-        rep.add("launch_preset", "PASS", "FDTD resource 1", "processes=%d" % n, "")
+        rep.add("launch_preset", "PASS", "FDTD resource 1", "preset=%r processes=%d" % (p, n), "")
 
 
 def _check_orphans(rep):
@@ -295,7 +297,7 @@ def check_setup(fdtd, intended=None, raise_on_fail=True, verbose=True):
     _check_readback(fdtd, rep, intended.get("readback"))
     _check_disk(rep, fsp, intended.get("disk_min_gb", 20.0), intended.get("disk_warn_gb", 40.0))
     _check_case_ids(rep, intended.get("case_ids"), fsp)
-    _check_preset(fdtd, rep, intended.get("processes", 6))
+    _check_preset(fdtd, rep, intended.get("processes"))
     _check_orphans(rep)
     verdict = "PASS"
     for it in rep.items:

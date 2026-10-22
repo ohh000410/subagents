@@ -15,9 +15,9 @@ RCWA·산란·원거리장 복사 열전달.
 
 ## 필요한 것
 
-앱·라이브러리는 에이전트 본문(`agents/research-compute.md`)을 보세요.
+- Python: 처음 쓸 때 에이전트가 이 PC 의 Python 을 확인하고, 없으면 묻습니다.
 
-도구가 쓰는 Python 패키지: `grcwa`, `meent`, `numpy`
+도구·예제 코드가 쓰는 Python 패키지: `grcwa`, `matplotlib`, `meent`, `numpy`, `pywin32`, `torch`
 
 ## 처음 쓸 때
 

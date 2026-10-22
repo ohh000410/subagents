@@ -18,6 +18,8 @@ PowerPoint 도형으로 그림을 그립니다.
 - Python(`<python>`): 이 PC 환경 값(메모리)의 절대경로 (python-pptx·pywin32 가 있는 것)
 - 도형 생성 python-pptx / 병합·3D 되읽기·PNG export COM. COM: `pres.Close()` → 직접 띄운 PowerPoint 만 `app.Quit()`(이미 떠 있던 것은 둠) → 프로세스 잔존 확인
 
+도구·예제 코드가 쓰는 Python 패키지: `numpy`, `pillow`, `python-pptx`, `pywin32`, `scipy`
+
 ## 처음 쓸 때
 
 - 에이전트가 환경 값(앱 경로·venv)을 찾지 못하면 묻습니다. 확인한 값은 에이전트 메모리 `~/.claude/agent-memory/pptx-figure-pptx-figure/` 에 남습니다.

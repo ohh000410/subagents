@@ -22,7 +22,7 @@ SPEOS·ANSYS 용 형상을 만듭니다.
 | Speos AddIn manifest | `%AWP_ROOT261%\Optical Products\Speos\bin\SpeosSC.Manifest.xml` |
 | ScriptApi | V261 (`/ScriptApi=261`) |
 | 인터프리터 | IronPython 2.7 (Python 3 문법 금지) |
-| Orchestrator | CPython 3.12 — `py -V:Astral/CPython3.12.13` 또는 절대경로. `py -3`·`python` → 3.14 → 깨짐 |
+| Orchestrator | CPython — Python(`<python>`) = 이 PC 환경 값(메모리) |
 
 실행 전 설치 경로 존재 확인. 버전 폴더명 상이(v252 등) → 즉시 반환 + 실제 폴더명 보고.
 

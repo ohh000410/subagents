@@ -1,6 +1,6 @@
-"""CPython 3.12: run sc_lambert_smoke.py and compare Report.html flux with the closed form.
+"""CPython: run sc_lambert_smoke.py and compare Report.html flux with the closed form.
 
-    py -V:Astral/CPython3.12.13 run_lambert_smoke.py <work_dir> [nbrays]
+    <python> run_lambert_smoke.py <work_dir> [nbrays]      (<python> = this PC's Python)
 Closed form: Lambertian point source (flux 1 W) at h=50 mm, square sensor half width 100 mm:
   F = (1/pi) * integral h^2/(h^2+x^2+y^2)^2 dA   (10 mm source size neglected)
 """

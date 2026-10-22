@@ -54,7 +54,7 @@ def rotate_coords_intrinsic_zy(coords, alpha_deg, beta_deg):
 ## 시뮬 전 검증
 
 ```python
-fdtd.groupscope("::model::cluster_group")
+fdtd.groupscope("::model::cluster")       # 위에서 만든 group 이름
 n_children = int(fdtd.getnumber())   # 0 또는 부족 → 함정 0
 for i in range(1, n_children + 1):
     print(fdtd.get("name", i), fdtd.get("x", i)*1e9, fdtd.get("y", i)*1e9, fdtd.get("z", i)*1e9)

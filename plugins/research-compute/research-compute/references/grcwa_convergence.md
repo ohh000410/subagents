@@ -1,7 +1,7 @@
 # grcwa_convergence — grcwa 수렴 프로토콜 (research-compute)
 
 grcwa(순수 python RCWA + autograd, CPU) 수렴·재현성 방법론. **grcwa 수렴/calibration = 이 파일 + [[grcwa_api]](함수).** 단순 스윕만이면 [[grcwa_api]]만 읽으면 됨. meent는 [[meent_convergence]]. 공통 결론은 [[rcwa_reference_index]].
-검증: wedge s1. 일반 원칙과 "이 구조 관측값" 구분 — 다른 형상/각도는 관측값(발산 nG·노이즈바닥) 재측정.
+검증: 경사 유전체 격자 1종. 일반 원칙과 "이 구조 관측값" 구분 — 다른 형상/각도는 관측값(발산 nG·노이즈바닥) 재측정.
 
 ## 0. 측정 전제 (안 하면 나머지 무의미)
 - **BLAS=1**: `OMP/OPENBLAS/MKL_NUM_THREADS="1"`를 numpy/grcwa import 前 os.environ. (스레드만 1↔4↔8 바꿔도 15% 흔들림; thread=1만 bit-identical.)

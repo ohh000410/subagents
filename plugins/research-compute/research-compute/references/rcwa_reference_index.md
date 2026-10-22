@@ -4,7 +4,7 @@
 >
 > **Lumerical RCWA는 여기 없다** — `lumerical` 에이전트 관할이다. 라이선스로 도는 solver 전부(FDTD·RCWA·STACK)가 그쪽이다.
 >
-> 두 계열은 **다른 구현**이다. 아래의 수렴 예산(fto/nG)·부호규약·GPU 결론·near-singular 격리 절차를 **Lumerical RCWA에 그대로 옮기지 마라.** 실측 대비: 같은 wedge s1 +60° 지점에서 grcwa는 BLAS 스레드 의존 near-singular로 spread 0.013~0.017인데 Lumerical RCWA는 bit-identical(spread 0.0)이다. 교차검증 수치 대조 목적으로만 서로 참조한다.
+> 두 계열은 **다른 구현**이다. 아래의 수렴 예산(fto/nG)·부호규약·GPU 결론·near-singular 격리 절차를 **Lumerical RCWA에 그대로 옮기지 마라.** 실측 대비: 같은 경사 격자의 +60° near-singular 지점에서 grcwa는 BLAS 스레드 의존 near-singular로 spread 0.013~0.017인데 Lumerical RCWA는 bit-identical(spread 0.0)이다. 교차검증 수치 대조 목적으로만 서로 참조한다.
 
 RCWA 작업의 최상위 라우팅. 라이브러리별 **자체완결**: 수렴/calibration = `<lib>_convergence`(+`<lib>_api`), **단순 스윕만이면 `<lib>_api`만**. 항상 필요한 공통(부호·격리)은 이 파일, 상황별 상세는 아래 전용 파일로 분리(안 열면 로드 안 됨).
 
@@ -31,19 +31,19 @@ RCWA 작업의 최상위 라우팅. 라이브러리별 **자체완결**: 수렴/
 
 ## 공통 1 — 부호규약·입력 대조 (교차검증 시 최다 실수)
 
-| | 입력 | 시간규약 | 흡수 매질 예 (PDMS n=1.8, k=0.154) |
+| | 입력 | 시간규약 | 흡수 매질 예 (n=1.5, k=0.1) |
 |---|---|---|---|
-| grcwa | **eps 직접** | e^{-iωt} | eps = (1.8+0.154j)² = 3.216**+**0.554j |
-| meent | **n(굴절률)** | e^{+iωt} (코드 추론, README 미명시) | n = 1.8**−**0.154j |
-| torcwa | **eps 직접** | e^{-iωt} | eps = 3.216**+**0.554j |
+| grcwa | **eps 직접** | e^{-iωt} | eps = (1.5+0.1j)² = 2.24**+**0.3j |
+| meent | **n(굴절률)** | e^{+iωt} (코드 추론, README 미명시) | n = 1.5**−**0.1j |
+| torcwa | **eps 직접** | e^{-iωt} | eps = 2.24**+**0.3j |
 
 부호 틀리면 gain 매질 → **R>1 폭발로 즉시 감지**(torcwa R=417 실측).
 FDTD(Lumerical 2D) 교차검증 시 **편광 라벨 스왑** 주의: Lumerical `pol_angle=0`=p-pol/TM, `90`=s-pol/TE — GUI 표기와 반대다.
 
 ## 공통 2 — GPU/병렬 (결론)
 
-**RCWA GPU batch는 이 환경(Windows+RTX3050) 전 경로 불가 → CPU 병렬이 표준.**
-- **CPU 표준**: `Pool(물리코어, maxtasksperchild=1)` — 워커=물리코어(`psutil.cpu_count(logical=False)`; `os.cpu_count()`는 논리라 과다), 워커별 **BLAS=1**, `maxtasksperchild=1`(프로세스 누적 차단 = near-singular 폭주 방지, 공통 3). 큰 fto/nG·N_z 배치는 워커 축소(메모리 가드). 실측 speedup **~4배**(07-08 production 132 task, 재spawn 오버헤드 포함 — "6배" 아님).
+**RCWA GPU batch는 Windows + RTX3050(측정 조건)에서 전 경로 불가 → CPU 병렬이 표준.**
+- **CPU 표준**: `Pool(물리코어, maxtasksperchild=1)` — 워커=물리코어(`psutil.cpu_count(logical=False)`; `os.cpu_count()`는 논리라 과다), 워커별 **BLAS=1**, `maxtasksperchild=1`(프로세스 누적 차단 = near-singular 폭주 방지, 공통 3). 큰 fto/nG·N_z 배치는 워커 축소(메모리 가드). 실측 speedup **~4배**(132 task, 재spawn 오버헤드 포함 — "6배" 아님).
 - 경로별 왜 불가한지·WSL2/클라우드 대안은 **[rcwa_gpu_investigation.md](rcwa_gpu_investigation.md)** (재시도 고민 시만).
 
 ## 공통 3 — near-singular(Rayleigh) 실행 안전 (거의 항상 적용)

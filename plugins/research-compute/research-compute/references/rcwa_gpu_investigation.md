@@ -2,7 +2,7 @@
 
 **결론만 필요하면 안 읽어도 됨** — [[rcwa_reference_index]] 공통 2 한 줄("GPU batch 불가 → CPU Pool")로 충분. 이 파일은 **GPU batch/최적화를 다시 시도할까 고민할 때만** (또는 환경이 WSL2/클라우드로 바뀌었을 때) 참고. 전수 실측 2026-07-11~13.
 
-## 이 환경(Windows + RTX 3050)에서 GPU batch 전 경로 불가
+## Windows + RTX 3050(측정 조건)에서 GPU batch 전 경로 불가
 
 | 경로 | 결과 |
 |---|---|

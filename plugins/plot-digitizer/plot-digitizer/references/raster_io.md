@@ -9,6 +9,9 @@
 - 가는 곡선이나 흰색에 가까운 곡선의 색을 가를 때: 원본 해상도보다 크게 렌더링하지 않는다(보간은 정보를 늘리지 않고 색 경계를 흐린다). base 와 SMask 를 따로 읽어 원본 픽셀 격자에서 합성한다:
 
 ```python
+import fitz                        # pymupdf
+import numpy as np
+
 b = fitz.Pixmap(doc, base_xref)    # page.get_images() 의 xref
 a = fitz.Pixmap(doc, smask_xref)   # doc.xref_object(base_xref) 의 /SMask 값
 b_arr = np.frombuffer(b.samples, dtype=np.uint8).reshape(b.height, b.width, b.n)

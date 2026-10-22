@@ -26,7 +26,7 @@
 
 `app.Visible = True` 필수. `False` → `Profiles.AddForSolid` 실패, 모달 정지 감지 불가.
 
-도구가 쓰는 Python 패키지: `pywin32`
+도구·예제 코드가 쓰는 Python 패키지: `pymupdf`, `pywin32`
 
 ## 처음 쓸 때
 

@@ -16,10 +16,10 @@ FDTD·RCWA 시뮬레이션을 돌립니다.
 ## 필요한 것
 
 - Python(`<python>`): 이 PC 환경 값(메모리)의 절대경로만. `python`/`py` 이름은 Store stub·다른 판으로 가 lumapi 미기동·hang.
-- Lumerical: `C:\Program Files\Lumerical\v242`. `v232` 실행 불능, 경로 사용 금지. v232 대조 = 저장 CSV만
+- Lumerical 설치 경로·사용 판 = 이 PC 환경 값(메모리)
 - 회전 convention: intrinsic/body-fixed
 
-도구가 쓰는 Python 패키지: `numpy`, `openpyxl`
+도구·예제 코드가 쓰는 Python 패키지: `numpy`, `openpyxl`
 
 ## 처음 쓸 때
 
@@ -30,7 +30,7 @@ FDTD·RCWA 시뮬레이션을 돌립니다.
 
 - `agents/lumerical.md` — 에이전트 정의(공통 규칙 + 본문)
 - `lumerical/references/` — 24개 파일
-- `lumerical/tools/` — 4개 파일
+- `lumerical/tools/` — 5개 파일
 - `policies/` — 공통 정책(실패 처리, GUI 창 멈춤 대처)
 - `LICENSE` — MIT
 

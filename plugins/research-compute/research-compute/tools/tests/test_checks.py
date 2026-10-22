@@ -104,7 +104,7 @@ rec("real meent theta=0 -> 1e-20 rad within atol", C.requested_vs_used(dict(thet
 rec("real meent theta=0 strict atol=0", C.requested_vs_used(dict(theta_deg=0.0), C.read_meent(m0), atol=0, rtol=0), "FAIL")
 
 print("--- real C: meent lossy binary grating path (fto, N_z x1.5 steps with probes)")
-ng = 1.8 - 0.154j
+ng = 1.5 - 0.1j      # 흡수 매질 예시 값
 
 
 def solve(fto, nz, thd=30.0, pol=0):

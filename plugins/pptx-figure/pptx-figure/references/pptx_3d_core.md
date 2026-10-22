@@ -42,7 +42,7 @@ Merge Shapes ▸ Subtract 결과 XML 도 path 는 하나이고 그 안에 `moveT
 | 꼭짓점 하나를 추정 | 83.5 | 3.56 | 10.80 |
 | 실측점만 정확히 맞춤 | 100.8 | **0.00** | **32.01** (앞 꼭짓점 55 px) |
 
-오차는 뷰어에 가장 가까운 앞 꼭짓점에 몰린다. fov 하한(1.0)으로 붙는 건 안전하다(정사영 극한).
+오차는 뷰어에 가장 가까운 앞 꼭짓점에 몰린다. fov 하한(1.0)에 붙는다고 안전한 게 아니다 — 얕은 윗면에서는 RotY ≈ −87° + 거대한 plan 인 축퇴 가지로 넘어가고 rms 는 양쪽 다 0 이다. `solve_3d` 의 `PLAN_MAX_RATIO` 가드가 잡는다(`snippets/pptx_frame.py` ★★★).
 ★ `solve_3d` 는 fov > 70(`FOV_MAX`) 이면 **예외를 던진다**. 잔차를 낮추려 하지 말고
 **조건을 하나 더 넣는다.**
 
@@ -53,14 +53,14 @@ Merge Shapes ▸ Subtract 결과 XML 도 path 는 하나이고 그 안에 `moveT
   폭발도의 층들은 대체로 같은 카메라를 공유한다.
 - 크기는 다발 위에서 거의 안 변한다(세 해의 W 4.0330 / 4.0332 / 4.0334). **치수는 믿고, 카메라는 못 믿는다.**
 
-구현: **`snippets/pptx_frame.py`** (`solve_3d` · `unproject3d`). 캘리브레이션 36점 +
-가설 48개(회전순서 6 × 축부호 8) 탐색으로 확정, **잔차 RMS 1.56 px.**
+구현: **`snippets/pptx_frame.py`** (`solve_3d` · `unproject3d`). 캘리브레이션 216점 +
+가설 48개(회전순서 6 × 축부호 8) 탐색으로 확정, **학습 RMS 3.14 px · 홀드아웃(20%) 3.50 px.**
 
 ```
 p  = (±W/2, ±H/2, z)          원본 사각형 꼭짓점 (인치).  돌출면은 z = -Depth_pt/72 (뒤로)
 p' = R · p                     R = Rz · Rx · Ry  (순서 ZXY), 부호 (RotX +, RotY -, RotZ +)
-D  = 2.0212 · max(W,H) / tan(fov/2) + 3.1716
-화면px = (cx, cy) + (161.73·x', 162.00·y') / (1 - z'/D)
+D  = 1.1337 · max(W,H) / tan(fov/2) + 2.8498
+화면px = (cx, cy) + k·(x', y') / (1 - z'/D)      k = 0.99166 · (렌더폭px / 슬라이드폭in), x·y 동일
 ```
 
 ★ **축이 통상 규약과 반대다.** 단일축 실측:
@@ -70,12 +70,9 @@ RotationY -45  ->  세로비 0.710 (= cos45)     RotationY = 화면 가로축 �
 RotationX  45  ->  가로비 0.709               RotationX = 화면 세로축 회전(yaw)
 ```
 
-`p0 ≈ 2.02` 는 회전 전 도형이 화면을 꽉 채우는 거리에 카메라를 둔다는 뜻이다.
-도형을 키우면 원근이 같이 세진다.
-
 **역산** (`frame.solve_3d`): 목표 윗면 꼭짓점 4개 + 두께 → `RotX/Y/Z, fov, W, H, Depth, 위치`.
 `least_squares` 한 번, 렌더 불필요. 구멍 위치는 `frame.unproject3d` 로 화면 좌표를 원본
-평면(z=0)으로 되돌려 얻는다. 교정 범위(rx≤70·rz≥-60·fov 30/80) 밖 외삽이면 잔차 ~10px 이 남는다.
+평면(z=0)으로 되돌려 얻는다. 교정 범위(rx≤70·rz≥-60·fov 30/55/80, 사용 상한 70) 밖 외삽이면 잔차 ~10px 이 남는다.
 
 **세 손잡이 — 목표 투영에 맞추는 법**
 
@@ -155,12 +152,19 @@ orthographicFront          flat    151: 0       0.000
 
 ```python
 # 상자는 2H 로 그리고, 같은 슬라이드에 배경색 사각형을 «나중에» 얹어 아래 절반을 덮는다
-A.rect(sh, cx - W/2, cy - H2/2, W, H2, fill=FRONT, name="bldg")   # H2 = 2 x 보이는높이
+# frame(snippets/pptx_frame.py) 의 emu·rgb·PT 를 import 한다
+from pptx.enum.shapes import MSO_SHAPE
+def rect(sh, x, y, w, h, fill, name):          # 인치. prstGeom 필수(2H 트릭) — poly()(custGeom) 로 바꾸지 않는다
+    s = sh.add_shape(MSO_SHAPE.RECTANGLE, emu(x), emu(y), emu(w), emu(h))
+    s.fill.solid(); s.fill.fore_color.rgb = rgb(fill)
+    s.line.fill.background(); s.shadow.inherit = False; s.name = name
+    return s
+rect(sh, cx - W/2, cy - H2/2, W, H2, FRONT, "bldg")   # H2 = 2 x 보이는높이
 cfg = dict(PresetCamera=50,            # perspectiveRight
            FieldOfView=105.0,
            RotationX=47.5, RotationY=0.0, RotationZ=0.0,   # 피치 0 이 핵심
-           Depth=A.PT(90), ExtrusionColor=A.bgr("6E6E6E"))
-A.rect(sh, cx - CW/2, cy, CW, GROUND_H, fill=BG, name="ground")   # 아래 절반 덮기
+           Depth=PT(90), ExtrusionColor=0x6E6E6E)   # COM 색은 BGR: (b<<16)|(g<<8)|r (회색은 같음)
+rect(sh, cx - CW/2, cy, CW, GROUND_H, BG, "ground")   # 아래 절반 덮기
 ```
 
 **검량선** (W120 D90, `perspectiveRight`, 피치 0, 밑변 V 는 전 조합 0):
@@ -243,7 +247,7 @@ COM `ShapeRange.Group()`, XML 은 `<p:grpSp>`. `com_post` 연산으로:
 - **`sy`/`kx`/`algn` 으로 지면 투영(원근) 그림자가 된다.** `sy=-40000, kx=-1200000, algn="bl"` →
   물체 아래로 납작한 평행사변형, 높이가 물체의 34 %, 우하로 기움. **`kx` 부호를 뒤집으면 좌우가 바뀐다.**
 - `dir` 은 동쪽 0, **화면 y 아래 기준 시계방향** (`dir=135` = 좌하).
-- `sx`/`sy` = 1/1000 %, `kx`/`ky` = 1/60000 도. `art_lib.shadow()` 는 `dist/dir/blur` 만 받는다.
+- `sx`/`sy` = 1/1000 %, `kx`/`ky` = 1/60000 도. `sx/sy/kx/ky/algn` 은 `<a:outerShdw>` 에 직접 쓴다(스니펫에 헬퍼 없음).
 
 **못 쓰는 세 가지**
 1. **투명한 도형은 그림자를 못 드리운다.** `solidFill alpha="0"` → 그림자 화소 0, `<a:noFill/>` → 0,
@@ -260,9 +264,18 @@ COM `ShapeRange.Group()`, XML 은 `<p:grpSp>`. `com_post` 연산으로:
 
 ```python
 # 앞 동에 걸면 뒤 동 벽에 앉는다 (dist/dir 은 두 동의 깊이 차이라 쌍마다 다르다)
-shdw(caster_shape, dist=97.2, dir_deg=148.1, blur=4.0, hexc="0D0E0C", alpha=51)
+# frame 도형은 shadow.inherit=False 로 빈 <a:effectLst/> 가 이미 있다 → 그 안에 넣는다(둘이면 스키마 위반)
+# S 는 모듈 전역 — set_frame() 뒤에 읽는다
+from pptx.oxml import parse_xml
+from pptx.oxml.ns import qn, nsdecls
+ef = caster._element.spPr.find(qn('a:effectLst'))
+ef.append(parse_xml(
+    '<a:outerShdw %s blurRad="%d" dist="%d" dir="%d" algn="ctr" rotWithShape="0">'
+    '<a:srgbClr val="0D0E0C"><a:alpha val="51000"/></a:srgbClr></a:outerShdw>'
+    % (nsdecls('a'), emu(4.0 * S), emu(97.2 * S), int(148.1 * 60000))))   # blur·dist = 원본 px × S(인치) → EMU
 ```
 
+- **그림자를 붙이면 그 도형의 3D 렌더가 바뀐다** — 같은 상자(PresetCamera 50, fov 105, RotX 47.5, Depth PT(90))에 위 그림자를 붙이자 앞면 129×347 → 119×332 px, 윗변 y 205 → 210(원인 미상). 카메라·크기는 그림자를 붙인 상태에서 맞추거나 붙인 뒤 다시 잰다.
 - `dist`/`dir` 계산값이 그대로 안 나온다 — 요청 (87.5 px, 144.1°) 에 실제 (-60.8, +51.3):
   dy 는 정확한데 dx 만 10 px 짧다. 렌더에서 모서리를 재서 한 번 되먹이면 1~3 px 로 붙는다.
 - 알파: 받는 벽 색 `R`, 그림자 색 `C`, 목표 밝기비 `k` 면 `A = (1-k)·R̄ / (R̄ - C̄)`.

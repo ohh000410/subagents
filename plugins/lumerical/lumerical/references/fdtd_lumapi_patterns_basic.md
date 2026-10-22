@@ -13,7 +13,7 @@ import → 결과 추출. 고급(커스텀 n,k / TFSF / Override mesh / BFAST) �
 
 ```python
 import sys
-sys.path.append(r"C:\Program Files\Lumerical\v242\api\python")
+sys.path.append(r"<Lumerical 설치 경로>\api\python")   # 설치 경로 = 이 PC 환경 값
 import lumapi
 import numpy as np
 import os
@@ -66,7 +66,7 @@ fdtd.addplane(injection_axis="z", direction="forward", x_span=L_m, y_span=L_m, z
 
 - source 면축 span < 도메인 → 도메인 일부 미조사. Bloch 면 unit cell 균일 평면파까지 깨짐. `addplane()` 후 면축 span 미설정 금지(기본 span 의존 → L 커지면 under-cover)
 - monitor 면축 < 도메인 → flux 누락, R/T 과소
-- local mesh 를 구조 bbox(`al_strip(0)`) 로 잡으면 span=SHEAR → SHEAR<L 일 때 구조 일부 coarse 잔류
+- local mesh 를 경사 구조의 한 객체 bbox 로 잡으면 span = 그 객체의 가로 이동량(shear) → shear < L 이면 구조 일부가 coarse 로 남는다
 
 ```python
 for obj in ("src", "T_mon", "R_mon"):
@@ -109,15 +109,16 @@ fdtd.run()
 세션이 "Untitled" 이면 `save(절대경로)` 여도 Save As 창 → 무인 sweep 정지.
 
 ```python
-os.makedirs(os.path.dirname(SAVE_PATH), exist_ok=True)
+os.makedirs(OUT_DIR, exist_ok=True)
 fdtd = lumapi.FDTD(hide=False)
-fdtd.save(SAVE_PATH)          # 루프 전 파일명 각인
-for params in sweep:
+fdtd.save(os.path.join(OUT_DIR, "untitled_guard.fsp"))   # 루프 전 파일명 각인(Untitled 해소)
+for case_id, params in sweep:
     fdtd.switchtolayout(); fdtd.deleteall()
     # ... 설정 ...
-    fdtd.save(SAVE_PATH)      # (선택) 경로 유지
+    fdtd.save(os.path.join(OUT_DIR, f"{case_id}.fsp"))   # case 마다 다른 .fsp — 같은 경로면 _p0.log 를 덮어 행-로그 대조가 깨진다
     fdtd.run()
 ```
+case 마다 `.fsp`·`_p0.log` 가 따로 남아야 한다(`fdtd_pitfalls_api.md` case_id 규칙, `tools/assess_run.py` 의 `log_shared` FAIL).
 같은 .fsp 가 이전 GUI 에 열려 있으면 충돌 → 새 `lumapi.FDTD()` 인스턴스.
 
 ## Cleanup

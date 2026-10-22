@@ -84,7 +84,7 @@ Claude 에이전트 메모리 폴더를 쓴다(`MEMORY.md` 앞부분이 시작 �
 
 ## 한 task의 정의
 
-geometry 생성 + `.scdocx` 저장 + 기하 수치 xlsx + 검증 로그 + 보고. 종료 = orchestrator polling 성공 → graceful close + 잔여 프로세스 0 → log read → xlsx → 보고. 미완료: Popen 직후 응답 / polling timeout 후 fallback 없는 응답 / close 안 한 좀비 / log 미검증 / xlsx 미기록.
+geometry 생성 + `.scdocx` 저장 + 기하 수치 xlsx(경로 명시 시) + 검증 로그 + 보고. 종료 = orchestrator polling 성공 → graceful close + 잔여 프로세스 0 → log read → xlsx → 보고. 미완료: Popen 직후 응답 / polling timeout 후 fallback 없는 응답 / close 안 한 좀비 / log 미검증 / xlsx 미기록.
 
 ## 절차
 
@@ -117,7 +117,7 @@ geometry 생성 + `.scdocx` 저장 + 기하 수치 xlsx + 검증 로그 + 보고
 | Speos AddIn manifest | `%AWP_ROOT261%\Optical Products\Speos\bin\SpeosSC.Manifest.xml` |
 | ScriptApi | V261 (`/ScriptApi=261`) |
 | 인터프리터 | IronPython 2.7 (Python 3 문법 금지) |
-| Orchestrator | CPython 3.12 — `py -V:Astral/CPython3.12.13` 또는 절대경로. `py -3`·`python` → 3.14 → 깨짐 |
+| Orchestrator | CPython — Python(`<python>`) = 이 PC 환경 값(메모리) |
 
 실행 전 설치 경로 존재 확인. 버전 폴더명 상이(v252 등) → 즉시 반환 + 실제 폴더명 보고.
 

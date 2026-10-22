@@ -23,10 +23,12 @@
 | Speos 기본 설정 | `%AWP_ROOT261%\Optical Products\Speos\bin\Resources\SPEOS_SCDefaultOptions.config` |
 | License feature | `speos_level1` (plug-in 모드 필수) |
 | 인터프리터 | SpaceClaim 내장 IronPython 2.7 (Python 3 문법 금지) |
-| Orchestrator | CPython 3.12 — `py -V:Astral/CPython3.12.13` 또는 절대경로. `py -3`·`python` → 3.14 → 깨짐 |
-| Student 한도 | triangle < 32,000 + face < 300 (scene 합산). 거부 = 예외 아님, `sim.StatusInfo`만. face 한도 LocalMeshing으로 불가 → `references/speos_pitfalls_sim_workflow.md` |
+| Orchestrator | CPython — Python(`<python>`) = 이 PC 환경 값(메모리) |
+| Student 한도 | triangle < 32,000 + face < 300 (scene 합산). 거부 = 예외 아님, `sim.StatusInfo`만. face 한도 LocalMeshing으로 불가 → `speos/references/speos_pitfalls_sim_workflow.md` |
 
 실행 전 설치 경로 존재 확인. 버전 폴더명 상이(v252 등) → 즉시 반환 + 실제 폴더명 보고.
+
+도구·예제 코드가 쓰는 Python 패키지: `openpyxl`
 
 ## 처음 쓸 때
 

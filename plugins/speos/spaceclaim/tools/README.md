@@ -71,7 +71,7 @@ print(ascii_safe(res["summary"]))   # 콘솔 cp949
 ## 시험
 
 ```bash
-py -V:Astral/CPython3.12.13 -m unittest discover -s <PLUGIN_ROOT>/spaceclaim/tools/tests -v
+<python> -m unittest discover -s <PLUGIN_ROOT>/spaceclaim/tools/tests -v
 ```
 
 실제 SpaceClaim 1회(2026-10-18): 40×30×10 블록 + Ø8 관통 구멍 → `PASS steps=2`, 26 s. 구멍 이론 dV 를 ×1.01 로 틀리게 → `FAIL steps=2 fail=1`, 최종 경로 미저장·`_FAIL` 저장, marker 로 26 s 종료.

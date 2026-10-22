@@ -62,7 +62,7 @@ kMillimeterLengthUnits             = 11269
 kA3DrawingSheetSize                = 9996   # 42×29.7cm
 ```
 
-orientation 상수는 `win32.constants.k*` 로 가져온다 — 정수 리터럴 하드코딩 금지. `kRearViewOrientation` 은 constants 에 없다.
+상수는 위 「상수 (실측)」 블록을 스크립트 맨 위에 그대로 붙여 이름으로 쓴다. `win32.constants.k*` 는 쓰지 않는다 — gen_py 캐시가 있어야 존재해서, 캐시 없는 새 PC 에서는 첫 `CastTo` 전에 쓰면 `AttributeError` 다(`launch()` 의 `Dispatch` 는 캐시를 만들지 않는다). 블록에 없는 값은 추측한 정수로 쓰지 말고 CHM 열거형 페이지에서 읽는다. `kRearViewOrientation` 이라는 상수는 없다.
 
 ## Drawing 시작 패턴
 
@@ -108,6 +108,14 @@ time.sleep(6)                  # 모든 뷰 추가 후 렌더 대기 — 없으�
 ```
 
 뷰 스타일: SIDE(profile) = `kHiddenLineDrawingViewStyle` (bore 점선) / END(circles), ISO = `kHiddenLineRemovedDrawingViewStyle`.
+
+`GetDrawingCurves` 의 좌표(`StartPoint`·`EndPoint`·`CenterPoint`·`Evaluator2D`)는 시트 좌표 cm 다 — 뷰 위치와 SCALE 이 들어 있고 `CreateGeometryIntent` 힌트 점과 같은 공간이다. 전원·edge-on 원은 `StartPoint`/`EndPoint` 가 None 이라 박스는 `RangeBox` 로 읽는다:
+
+```python
+def get_bounds(c):   # (x_min, y_min, x_max, y_max), 시트 cm
+    rb = c.Evaluator2D.RangeBox
+    return (rb.MinPoint.X, rb.MinPoint.Y, rb.MaxPoint.X, rb.MaxPoint.Y)
+```
 
 ## IAM/STEP 열기
 

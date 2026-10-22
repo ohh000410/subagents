@@ -234,9 +234,13 @@ def solve_3d(top4, thickness_px, x0=None, square=False):
        ★ 그래서 fov > 70 이면 이 함수는 **예외를 던진다**. 잔차를 낮추는 게 아니라
          조건을 하나 더 넣어라 (예: 이웃 요소와 카메라를 맞춘다).
 
-    ★★★ fov 가 **낮은** 쪽에도 함정이 있다 (2026-08-28, Nighttime 소자에서 실측).
+    ★ fov 는 [1, ∞) 로 묶어 푼다. fov ≤ 0 은 project3d 가 정사영으로 잘라 기울기가 0 인 평탄 구간이라,
+      옵티마이저가 그 안을 떠돌다 fov −71 같은 값으로 끝났고 abs(fov) 가드가 맞는 해를 거부했다
+      (교차 검토: 평행사변형 목표). 상한은 두지 않는다 — 경계에 붙은 해가 FOV_MAX 가드를 피하지 않게.
+
+    ★★★ fov 가 **낮은** 쪽에도 함정이 있다 (소자 A 에서 실측).
        "정사영 극한이라 안전하다"고 여기 적혀 있었는데 **틀렸다.**
-       윗면 앞/뒤 모서리 중심의 shear 를 0.8 -> 1.6 px 로 1 px 도 안 움직였더니:
+       윗면 앞/뒤 모서리 중심의 shear 를 0.8 -> 1.6 px 로 1 px 도 안 움직였더니(옛 lm 설정에서):
            shear  0.8   ratio  1.00   fov 8.05   rms 0.0004   H  1.35 in
            shear  1.6   ratio 17.08   fov 7.16   rms 0.0000   H 23.11 in   <- 절벽
            shear  6.35  ratio 33.93   fov 7.14   rms 0.0000   H 45.89 in
@@ -250,12 +254,11 @@ def solve_3d(top4, thickness_px, x0=None, square=False):
        아래 PLAN_MAX_RATIO 가드가 그걸 잡는다. 걸리면 shear 를 재측정하거나
        square=True 로 묶어라.
 
-       ★ **허용 shear 구간은 quad 마다 다르다. 남의 구간을 옮겨 쓰지 마라.**
-       같은 그림의 두 패널, 같은 물체인데:
-           Nighttime (뒤 528.7 / 앞 558.6 / 깊이 27.3)   0.4~1.6 통과, 1.0 만 폭주
-           Daytime   (뒤 529.0 / 앞 555.1 / 깊이 27.4)   0.4~0.8 통과, 1.0 부터 차단
-       앞면 폭 3.5 px 차이로 갈린다. **요소마다 훑어서 통과 구간을 직접 찾아라.**
-       (이 가드는 실제로 값을 했다 — Daytime 소자의 앞모서리를 3.4 px 고치자
+       ★ **어느 shear 가 가드를 통과하는지는 quad 와 최적화 설정에 따라 바뀐다.** 같은 quad 도
+         lm ↔ trf, x_scale 만 바꿔도 통과·차단이 뒤바뀌고 shear 에 단조롭지도 않다(재확인: 소자 2개 ×
+         shear 13개 × 설정 6가지). 정사각 해(ratio 1.00)는 어느 shear 에도 있다. 남의 구간을
+         옮겨 쓰지 말고 **요소마다 훑어 통과하는 해를 찾고, 렌더로 확인하라.**
+       (이 가드는 실제로 값을 했다 — 소자 B 의 앞모서리를 3.4 px 고치자
         rms 0.0000 · fov 정상인 채로 ratio 13 짜리 해가 나왔고, 가드가 없었으면
         그대로 저장돼 27% 큰 렌더가 됐을 것이다.)
     """
@@ -290,16 +293,19 @@ def solve_3d(top4, thickness_px, x0=None, square=False):
         th = float(np.abs(bot[:, 1] - top[:, 1]).mean())
         return np.concatenate([best[1], [(th - thickness_px) * 3.0]])
 
-    s = least_squares(res, x0, method="lm", max_nfev=20000)
+    x0 = list(x0)
+    x0[3] = max(x0[3], 1.0)
+    lo = [-np.inf] * len(x0); hi = [np.inf] * len(x0); lo[3] = 1.0   # fov 하한 (위 ★)
+    s = least_squares(res, x0, method="trf", x_scale="jac", bounds=(lo, hi), max_nfev=20000)
     rx, ry, rz, fov, W, H, dep, cx, cy = unpack(s.x)
     wrap = lambda a: float(a % 360 - 360 if a % 360 > 180 else a % 360)
-    if abs(unpack(s.x)[3]) > FOV_MAX:
+    if fov > FOV_MAX:
         raise ValueError(
             "solve_3d: fov %.1f 도가 캘리브 범위(<= %.0f)를 벗어났다. rms %.2f 는 "
             "믿을 수 없다 — 이 영역에서는 잔차가 낮을수록 렌더가 더 틀린다. "
             "꼭짓점 하나가 추정값이면 그게 원인이다. 조건을 하나 더 넣어라: "
             "이웃 요소의 RotX/Y/Z 에 맞추거나, 추정 꼭짓점을 자유변수로 두고 "
-            "실측 꼭짓점만 맞춰라." % (abs(unpack(s.x)[3]), FOV_MAX,
+            "실측 꼭짓점만 맞춰라." % (fov, FOV_MAX,
                 float(np.sqrt((s.fun[:8] ** 2).mean()))))
     if max(abs(W), abs(H)) > PLAN_MAX_RATIO * span / ppi:
         raise ValueError(

@@ -4,7 +4,7 @@ Lumerical 라이선스 RCWA·STACK. 순수 python RCWA(meent/grcwa/torcwa) = `re
 
 ## 0. 버전 — v242 만
 
-v232 RCWA 는 `Im(eps)` 를 버린다 (`n = sqrt(Re(eps))`) → 모든 구조 `R+T = 1.000000`, 금속 S-행렬 비유니터리(`R_TM = 3.724`). v242 에서 해소 — 손실 유전체 TMM 8자리, 금속 Fresnel 3.6e-15 일치. v232 실행 불능.
+v232 RCWA 는 `Im(eps)` 를 버린다 (`n = sqrt(Re(eps))`) → 모든 구조 `R+T = 1.000000`, 금속 S-행렬 비유니터리(`R_TM = 3.724`). v242 에서 해소 — 손실 유전체 TMM 8자리, 금속 Fresnel 3.6e-15 일치.
 
 ## 1. 라이선스
 
@@ -42,14 +42,14 @@ te = fdtd.getresult("RCWA","total_energy")   # keys: lambda f theta phi Rs Ts Rp
 - `mesh cells z` 는 `interface position = absolute` 에서 무시 (43층→64, 163층→163, 483층→483). z knob = interface 개수
 - `mesh type` 기본 `auto` → `mesh cells x` 무시. `custom` 필요. `actual mesh cells x/y/z` 되읽어 기록
 
-병목 (wedge s1, L=60 µm, λ=10 µm, θ=+60°):
+병목 (경사 격자 한 형상, θ=+60° 실측):
 
 | 케이스 | 병목 | 거동 |
 |---|---|---|
 | 무금속 유전체 | n_z | 단조, 차수 p≈2. ku 수렴 (spread 3e-6/1.2e-4) |
-| 100 nm Al 코팅 | ku | n_z 비단조·plateau 없음. ku 67→200 에서 eps 0.58 이동, 268 에서도 상승 |
+| 얇은 금속 코팅 | ku | n_z 비단조·plateau 없음. ku 67→200 에서 eps 0.58 이동, 268 에서도 상승 |
 
-Al: 코팅 100 nm, tilt 46° → 수평 band 143.96 nm, 주기 60 µm. ku=67 분해능 444 nm (임계 ku≈208). feature/주기 비로 ku 예산 선계산.
+임계 ku ≈ L/(2·w) (w = 가장 좁은 수평 폭, 경사 코팅이면 두께/cos(경사)). 분해능 L/(2·ku+1) 이 w 보다 커지면 수렴하지 않는다 — 위 금속 코팅은 ku 67 이 임계의 약 1/3 이었다. feature/주기 비로 ku 예산 선계산.
 가짜 plateau: Al s/TE li-off 0.03 평탄 vs 같은 구조 TM 0.84 → 모순 (평면 Al 60° R_s 0.9938 / R_p 0.9754). 편광 간·해석해 정합성 같이 판정.
 
 ## 5. `use li factorization`
@@ -59,7 +59,7 @@ Al: 코팅 100 nm, tilt 46° → 수평 band 143.96 nm, 주기 60 µm. ku=67 분
 ## 6. 검증 채널 — `_p0.log` 없음
 
 RCWA = in-process. 결과 자체 검사만:
-1. R, T finite — Al 6.4 µm(주기의 15%) ku=67 에서 Rs/Ts/Rp/Tp 전부 NaN, 예외·로그 없음
+1. R, T finite — 주기의 15% 폭 금속(Al) ku=67 에서 Rs/Ts/Rp/Tp 전부 NaN, 예외·로그 없음
 2. `R+T == 1.000000` 정확 → 3절 위반
 3. `eps = 1−R−T` ∈ [0,1] — `R+T−1 > 1e-6` 이면 비물리(v242 손실 유전체 TMM 8자리 일치 기준)
 4. 편광 간 정합성
@@ -68,17 +68,9 @@ RCWA = in-process. 결과 자체 검사만:
 
 동일 설정 bit-identical. 동일 세션 ×3 spread 0.0 / 별도 프로세스 OMP·MKL 1/8/12 스레드 spread 0.0 (속도만 115 s ↔ 44 s). grcwa 는 스레드 수에 따라 eps 0.890↔0.905 (spread 0.013~0.017). 재현성 시험 = 스레드 수 바꿔 별도 프로세스.
 
-## 8. 비용 (wedge s1, 양 편광 동시)
+## 8. 비용 (양 편광 동시)
 
-| ku | n_z | 시간 |
-|---|---|---|
-| 67 | 160 | 41 s |
-| 67 | 320 | 127 s |
-| 67 | 480 | 262 s |
-| 200 | 160 | 353 s |
-| 268 | 160 | 797 s |
-
-스케일링 n_z^1.3~1.5, ku^1.75~2. setup 0.2 s.
+스케일링 n_z^1.3~1.5, ku^1.5~2. setup 0.2 s. 형상마다 절대 시간은 다르니 첫 calibration 의 실측으로 timeout 을 정한다.
 
 ## 9. API 함정
 
@@ -90,6 +82,6 @@ RCWA = in-process. 결과 자체 검사만:
 ## 10. 부호 규약
 
 Lumerical e^{−iωt}. meent(e^{+iωt}) 값 이식 시 허수부 부호 반전.
-- PDMS @ 10 µm: meent `1.8 − 0.154i` → Lumerical `1.8 + 0.154i`
+- 흡수 매질 예 n = 1.5, k = 0.1: meent `1.5 − 0.1i` → Lumerical `1.5 + 0.1i`
 - Al @ 10 µm: meent `25 − 85.96i` → Lumerical `25 + 85.96i`
 부호 오류 → gain 매질 → R>1.

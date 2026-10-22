@@ -23,10 +23,10 @@ cmd = [ROOT + r"\scdm\SpaceClaim.exe",
 ```
 `SpeosDes.*` 사용 가능. cold start ~30초. `AnsysSpeosLauncher.exe` 는 인자를 받지 않는다 — 위 인자는 launcher 가 SpaceClaim 을 띄울 때 쓰는 명령줄 그대로.
 
-## Orchestrator (CPython 3.12) — spaceclaim 과 같은 좌석·같은 규칙
+## Orchestrator (CPython) — spaceclaim 과 같은 좌석·같은 규칙
 
 SpaceClaim 좌석은 spaceclaim 에이전트와 공유한다. 이름 일괄 종료(`Get-Process SpaceClaim, AnsysSpeosLauncher | Stop-Process`)는 다른 세션의 작업을 끊으므로 금지.
-`tools/speos_run.py` 의 `run_speos()` 가 `spaceclaim/tools/sc_orchestrate.run(speos=True)` 를 import 해 그대로 쓴다(복제 없음):
+`tools/speos_run.py` 의 `run_speos()` 가 `spaceclaim/tools/sc_orchestrate.run(speos=True)` 를 import 해 그대로 쓴다(따로 구현하지 않는다):
 컴파일 체크 → 좌석 대기(다른 SpaceClaim 이 떠 있으면 최대 300 s 대기, 죽이지 않음) → 모드 2 launch → script 의 판정 줄 polling → **자기가 띄운 PID 만** 종료(자연 종료 30 s 대기 후 `-Force`) → 잔여·`AnsysSpeosLauncher` 개수 측정(종료 안 함).
 
 - script 마지막 줄 = `[GEOM VERDICT] PASS|FAIL steps=N warn=W fail=F`(sc_orchestrate 가 polling 하는 줄. SPEOS 에서는 되읽기·StatusInfo·IsUpToDate 단계 판정), 예외 = `[FATAL]`. Compute 이후에 쓴다.

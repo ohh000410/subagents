@@ -4,9 +4,9 @@ truncated_eps_only.py  (2026-07-09)
 meent가 실제 계산에 쓰는 유효 유전율 = ucell을 fto_half 차수로 truncation한 분포.
 
 air buffer 포함 통합 도메인:
-  [top air 30um] + [wedge 83.3um] + [substrate 20um] + [bot air 10um]  (z=0 @ top, 아래로 증가)
+  [top air] + [wedge] + [substrate] + [bot air]  (z=0 @ top, 아래로 증가; 두께 = 아래 파라미터)
 
-편광별 fto_half: TE=67, TM=65 (형상은 편광 무관이나 truncation 차수만 다름).
+편광별 fto_half 는 다를 수 있다 (형상은 편광 무관이나 truncation 차수만 다름).
 """
 
 import os
@@ -19,31 +19,31 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-# ── 파라미터 (field_absorption_map.py v4와 동일) ──
-LAMBDA_UM  = 10.0
-L_UM       = 60.0
-H_UM       = 83.3
-THETA_TILT = 46.0
-T_SUB      = 20.0
+# ── 파라미터 (예시 값 — 실제 형상으로 바꾼다) ──
+LAMBDA_UM  = 5.0
+L_UM       = 20.0
+H_UM       = 30.0
+THETA_TILT = 30.0
+T_SUB      = 5.0
 
-D_TOP_AIR    = 30.0
-D_BOT_AIR    = 10.0
+D_TOP_AIR    = 10.0
+D_BOT_AIR    = 5.0
 N_SUBDIV_TOP = 3
 N_SUBDIV_BOT = 1
 
 RES_X = 200
 RES_Z = 10
 
-N_PDMS_MEENT = 1.8 - 0.154j
+N_STRUCT_MEENT = 1.5 - 0.1j
 N_AIR        = 1.0 + 0j
 SHEAR        = H_UM * np.tan(np.radians(THETA_TILT))
 
-N_Z = 320  # wedge staircase 층 수 (형상 정의용, solve 아님)
+N_Z = 40  # wedge staircase 층 수 (형상 정의용, solve 아님)
 
 OUT_DIR = r"<존재하지 않음: 2026-08-14 삭제. 새 출력 경로를 지정할 것>"
 
 
-def _pdms_xrange(z_um):
+def _struct_xrange(z_um):
     t  = z_um / H_UM
     xl = SHEAR * t
     xr = L_UM - (L_UM - SHEAR) * t
@@ -62,11 +62,11 @@ def make_ucell_and_thick(N_z, Nx):
 
     for i in reversed(range(N_z)):
         z_mid = (i + 0.5) * dz_wedge
-        xl, xr = _pdms_xrange(z_mid)
+        xl, xr = _struct_xrange(z_mid)
         frac = (xr - xl) / L_UM
         row = np.full(Nx, N_AIR, dtype=complex)
         if frac >= 1.0 - 1e-9:
-            row[:] = N_PDMS_MEENT
+            row[:] = N_STRUCT_MEENT
         elif frac > 1e-9:
             dx = L_UM / Nx
             xl_m, xr_m = xl % L_UM, xr % L_UM
@@ -74,16 +74,16 @@ def make_ucell_and_thick(N_z, Nx):
                 for j in range(Nx):
                     xi = (j + 0.5) * dx
                     if xl_m <= xi < xr_m:
-                        row[j] = N_PDMS_MEENT
+                        row[j] = N_STRUCT_MEENT
             else:
                 for j in range(Nx):
                     xi = (j + 0.5) * dx
                     if xi >= xl_m or xi < xr_m:
-                        row[j] = N_PDMS_MEENT
+                        row[j] = N_STRUCT_MEENT
         layers_n.append(row)
         layers_dz.append(dz_wedge); layer_types.append('wedge')
 
-    layers_n.append(np.full(Nx, N_PDMS_MEENT, dtype=complex))
+    layers_n.append(np.full(Nx, N_STRUCT_MEENT, dtype=complex))
     layers_dz.append(T_SUB); layer_types.append('substrate')
 
     for _ in range(N_SUBDIV_BOT):
@@ -138,14 +138,14 @@ def run(pol_name, fto_half):
     fig, axes = plt.subplots(1, 2, figsize=(11, 8))
     fig.suptitle(f"Fourier-truncated effective permittivity - {pol_name} "
                  f"(fto_half={fto_half}, no solve)\n"
-                 f"PDMS eps={N_PDMS_MEENT**2:.3f}, air=1 | domain: air30+wedge83.3+sub20+air10",
+                 f"structure eps={N_STRUCT_MEENT**2:.3f}, air=1 | domain: air{D_TOP_AIR:g}+wedge{H_UM:g}+sub{T_SUB:g}+air{D_BOT_AIR:g}",
                  fontsize=10)
 
     X, Z = np.meshgrid(x_coords, z_coords)
 
     for ax, data, title, cmap in [
         (axes[0], eps_trunc.real, "Re(eps_truncated)", "viridis"),
-        (axes[1], eps_trunc.imag, "Im(eps_truncated)  (air~0, PDMS<0, ringing visible)", "RdBu"),
+        (axes[1], eps_trunc.imag, "Im(eps_truncated)  (air~0, absorbing<0, ringing visible)", "RdBu"),
     ]:
         vmax = np.abs(data).max()
         pm = ax.pcolormesh(X, Z, data, shading='nearest', cmap=cmap,
@@ -165,16 +165,16 @@ def run(pol_name, fto_half):
 
     # ringing 진단
     im = eps_trunc.imag
-    pdms_im = (N_PDMS_MEENT**2).imag
+    struct_im = (N_STRUCT_MEENT**2).imag
     print(f"[{pol_name}] fto_half={fto_half}  N_layers={N_layers}  "
           f"Re range [{eps_trunc.real.min():.3f}, {eps_trunc.real.max():.3f}]  "
-          f"Im range [{im.min():.3f}, {im.max():.3f}]  (PDMS Im={pdms_im:.3f})")
+          f"Im range [{im.min():.3f}, {im.max():.3f}]  (structure Im={struct_im:.3f})")
     print(f"  saved: {out}")
     return out
 
 
 if __name__ == "__main__":
     print("effective permittivity (truncated eps) only - no solve/field (pure FFT)")
-    run("TE", 67)
-    run("TM", 65)
+    run("TE", 20)
+    run("TM", 20)
     print("Done.")

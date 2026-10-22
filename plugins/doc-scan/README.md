@@ -17,11 +17,11 @@
 
 | 항목 | 값 |
 |---|---|
-| 도구 | `tools\.venv\Scripts\python.exe tools\scan.py` — 마지막 줄 JSON. 없으면 `tools\setup.ps1` |
+| 도구 | `doc-scan\tools\.venv\Scripts\python.exe doc-scan\tools\scan.py` — 마지막 줄 JSON. 없으면 `doc-scan\tools\setup.ps1` |
 | 읽는 형식 | jpg·png·heic(아이폰)·webp·bmp·tif. EXIF 회전 반영 |
 | 쓰는 형식 | color → `<이름>_color.jpg`, gray → `_gray.png`, bw → `_bw.png`, `--pdf <이름>.pdf`(첫 번째 mode 로) |
 
-도구가 쓰는 Python 패키지: `numpy`, `opencv-python`, `pillow`, `pillow-heif`
+도구·예제 코드가 쓰는 Python 패키지: `numpy`, `opencv-python-headless`, `pillow`, `pillow-heif`
 
 ## 처음 쓸 때
 

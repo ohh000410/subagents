@@ -71,8 +71,8 @@ Claude 에이전트 메모리 폴더를 쓴다(`MEMORY.md` 앞부분이 시작 �
 
 | solver | 판별 신호 | reference |
 |---|---|---|
-| **FDTD** | mesh accuracy·PML·autoshutoff·monitor·BFAST·source·sim time·`.fsp` | [fdtd_reference_index.md](references/fdtd_reference_index.md) → 필요 파일만 |
-| **RCWA** | 주기구조·회절차수·`max number ku`·interface/staircase·grating | [lumerical_rcwa.md](references/lumerical_rcwa.md) |
+| **FDTD** | mesh accuracy·PML·autoshutoff·monitor·BFAST·source·sim time·`.fsp` | [fdtd_reference_index.md](../lumerical/references/fdtd_reference_index.md) → 필요 파일만 |
+| **RCWA** | 주기구조·회절차수·`max number ku`·interface/staircase·grating | [lumerical_rcwa.md](../lumerical/references/lumerical_rcwa.md) |
 | **STACK** | 1D 다층 R/T·`stackrt`·앵커 계산 | `lumerical_rcwa.md` 10절(부호 규약)만 |
 
 solver 애매 → 질문. `references/rcwa_reference_index.md`·`meent_*`·`grcwa_*`·`torcwa_*` = research-compute 소유, 교차검증 수치 대조만.
@@ -80,7 +80,7 @@ solver 애매 → 질문. `references/rcwa_reference_index.md`·`meent_*`·`grcw
 ## 환경 (위반 = 실패)
 
 - Python(`<python>`): 이 PC 환경 값(메모리)의 절대경로만. `python`/`py` 이름은 Store stub·다른 판으로 가 lumapi 미기동·hang.
-- Lumerical: `C:\Program Files\Lumerical\v242`. `v232` 실행 불능, 경로 사용 금지. v232 대조 = 저장 CSV만
+- Lumerical 설치 경로·사용 판 = 이 PC 환경 값(메모리)
 - 회전 convention: intrinsic/body-fixed
 
 ## 상담 모드
@@ -100,7 +100,7 @@ solver 애매 → 질문. `references/rcwa_reference_index.md`·`meent_*`·`grcw
 2. 스크립트: [FDTD] region → 구조 → source → monitor → save → `tools/check_setup` → run → extract → xlsx / [RCWA] 구조 → `addrcwa` → interface positions → `report grating characterization`=1 → save → run → `total_energy` → xlsx / [STACK] n·d·f → `stackrt` → xlsx
    - `run()` 전 `save()` 절대경로 필수 (미저장 → "Save as" 모달 무한 정지)
    - `try/finally` → `fdtd.close()`. wall-clock elapsed 측정
-   - `check_setup(fdtd, intended)` = 실행 중 세션 handle 로 호출(.fsp 따로 열지 않음). FAIL → `SetupCheckError`, run 금지
+   - `check_setup(fdtd, intended)` = 실행 중 세션 handle 로 호출(.fsp 따로 열지 않음). `intended` 의 `processes`·`engine` = 이 PC 환경 값(메모리). FAIL → `SetupCheckError`, run 금지
 3. timeout 근거 없으면 6시간(`21600000`)
 4. 결과 검증: `<python> tools/assess_run.py <결과 xlsx/csv> <fsp 폴더> [--air-only|--lossless] --json <경로>` → 출력(요약 + json)을 보고에 첨부. `run()` 정상 반환 ≠ 성공 — FAIL·NaN 은 채우지 말고 원인 진단 보고
 5. 실패 → 재시도 한도(완주 전 3회/완주 후 2회) → `fdtd_agent_runbook.md` KB 대조 → escalate

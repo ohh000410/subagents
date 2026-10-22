@@ -9,7 +9,7 @@ XMP_Template 구조 (핵심만):
   - RX, RY: radius (mm)
   - Sampling: 측정 ray sampling
 - MeasuresVector
-  - Type: 8 = Flux (env 22 .xml 그대로)
+  - Type: 8 = Flux (GUI 에서 export 한 .xml 그대로)
   - MeasureMagnitude, MeasureFunction: 0 (default)
 """
 
@@ -52,7 +52,7 @@ def make_ellipse_flux_template(
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # iter22 export .xml 구조 따름. default option은 같이 유지.
+    # GUI export .xml 구조 따름. default option은 같이 유지.
     # AreaClass + MeasureType=8(Flux)
     xml = f"""<?xml version="1.0" encoding="ISO-8859-1"?>
 <XMP_Template>
@@ -200,7 +200,7 @@ def make_ellipse_flux_template(
 
 
 if __name__ == "__main__":
-    # MPRA focal plane용 — paraboloid bottom r=20mm 영역 ellipse flux
+    # 예: 반경 20 mm 원형 영역의 광속
     p = make_ellipse_flux_template(
         out_path=Path(__file__).parent / "focal_plane_ellipse_r20_flux.xml",
         center_x_mm=0.0, center_y_mm=0.0,

@@ -8,7 +8,7 @@ RIGHT view: shaft Z축 = X 방향, Z=0 이 오른쪽, Z=L 이 왼쪽 (미러). �
 
 ```python
 curves = list(vSide.GetDrawingCurves(None))
-valid  = [(c, get_bounds(c)) for c in curves if get_bounds(c)]
+valid  = [(c, get_bounds(c)) for c in curves]          # get_bounds = inventor_drawing_core.md 「뷰 생성」
 horiz  = [(c,b) for c,b in valid if (b[3]-b[1])<0.01 and (b[2]-b[0])>0.02]
 x_vals = sorted(set([round(b[0],2) for c,b in horiz] + [round(b[2],2) for c,b in horiz]))
 
@@ -36,7 +36,7 @@ ty2 = ty_base + 0.9;  ty3 = ty2 + 0.9;  ty4 = min(ty3 + 0.9, 27.5)
 
 ```python
 end_curves = list(vEnd.GetDrawingCurves(None))   # 순서 INNERMOST → OUTERMOST
-expected_r_cm = [cm(r_inner*scale), cm(r_mid*scale), cm(r_outer*scale)]
+expected_r_cm = [r_inner*scale/10, r_mid*scale/10, r_outer*scale/10]   # 시트 cm = 모델 mm × scale / 10
 r_text = vW_end / 2 + 0.5        # 텍스트 = 중심에서 고정 거리, 모든 원 바깥. leader_ext 방식 금지
 angles_deg = [25, 45, 65]        # inner 얕게, outer 가파르게
 

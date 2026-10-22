@@ -15,9 +15,9 @@
 
 ## 필요한 것
 
-앱·라이브러리는 에이전트 본문(`agents/plot-digitizer.md`)을 보세요.
+- 환경: Python(`<python>`) = 이 PC 환경 값(메모리) — numpy, opencv-python, matplotlib, Pillow
 
-도구가 쓰는 Python 패키지: `matplotlib`, `numpy`, `pillow`
+도구·예제 코드가 쓰는 Python 패키지: `matplotlib`, `numpy`, `pillow`, `pymupdf`
 
 ## 처음 쓸 때
 

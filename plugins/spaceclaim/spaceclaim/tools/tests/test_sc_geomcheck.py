@@ -1,6 +1,7 @@
-"""CPython unit tests for sc_geomcheck judging logic (no SpaceClaim needed).
+"""CPython unit tests for sc_geomcheck judging logic (SpaceClaim is not launched; the compile tests
+load IronPython.dll from the Ansys install, so Ansys must be installed).
 
-py -V:Astral/CPython3.12.13 -m unittest discover -s <tools>/tests -v
+<python> -m unittest discover -s <tools>/tests -v
 """
 import os
 import sys

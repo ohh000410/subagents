@@ -17,6 +17,6 @@
 ## 사용
 
 ```
-py -V:Astral/CPython3.12.13 -I tools/smoke/run_lambert_smoke.py <work_dir> [nbrays]
+<python> -I tools/smoke/run_lambert_smoke.py <work_dir> [nbrays]
 ```
 한 줄 판정 예(2026-10-18): `[ORCH] PASS kind=verdict ... t=50.0s steps=13 fail=0 residual=0 launcher=0->0`, flux 0.8302 W vs 해석 0.8310 W(-0.1 %), `[SMOKE] PASS`.

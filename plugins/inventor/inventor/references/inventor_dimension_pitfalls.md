@@ -65,11 +65,12 @@ b = get_bounds(h_line_curve); y = (b[1]+b[3])/2; x = max(b[0], min(b[2], x_from_
 ```
 2-curve 수직 dim: 각 anchor 는 자기 curve 위 (h-line: mid_x·mid_y / v-line: mid_x·endpoint_y). 두 anchor 가 같은 curve → driven, skip.
 
-## GetDrawingCurves 좌표계 = model-space cm, SCALE 무관
+## GetDrawingCurves 좌표계 = 시트 좌표 cm, SCALE 반영
+
+curve 좌표는 뷰 위치와 SCALE 이 들어간 시트 좌표다(`inventor_drawing_core.md` 「뷰 생성」). 모델 mm 로 바꿀 때는 SCALE 로 나눈다.
 
 ```python
-CM_TO_MM = 10.0            # SCALE 로 나누지 않는다
-dx_mm = (xs[i+1] - xs[i]) * 10
+dx_mm = (xs[i+1] - xs[i]) / SCALE * 10     # SCALE 2 에서 35 mm 구간 = 7.0 cm
 ```
 
 ## GI hint point — 보조선 겹침 방지

@@ -1,6 +1,6 @@
 """
 gpu_test.py — meent GPU(backend=2, device='cuda') 실행 검증 + CPU 대비 속도.
-wedge s1 +60deg TE, fto_half=67, N_z=320. 기대 eps≈0.905 (FDTD 0.906).
+형상(경사 격자)·재질·수렴점은 예시 값 — 실제 형상으로 바꾸고, 교차검증 기준값은 따로 대조한다.
 """
 import os
 os.environ["OMP_NUM_THREADS"] = "1"
@@ -11,11 +11,11 @@ import time
 import numpy as np
 from meent.main import call_mee
 
-LAMBDA = 10.0
-L = 60.0; H = 83.3; TILT = 46.0; TSUB = 20.0
-NPDMS = 1.8 - 0.154j; NAIR = 1.0 + 0j
+LAMBDA = 5.0                                   # 예시 값
+L = 20.0; H = 30.0; TILT = 30.0; TSUB = 5.0
+NSTRUCT = 1.5 - 0.1j; NAIR = 1.0 + 0j
 SHEAR = H * np.tan(np.radians(TILT))
-THETA = 60.0; FTO = 67; NZ = 320
+THETA = 30.0; FTO = 20; NZ = 40
 
 
 def xr_range(z):
@@ -32,7 +32,7 @@ def make_ucell(Nz, Nx):
         frac = (xr - xl) / L
         row = np.full(Nx, NAIR, dtype=complex)
         if frac >= 1.0 - 1e-9:
-            row[:] = NPDMS
+            row[:] = NSTRUCT
         elif frac > 1e-9:
             dx = L / Nx
             xl_m, xr_m = xl % L, xr % L
@@ -40,12 +40,12 @@ def make_ucell(Nz, Nx):
                 xi = (j + 0.5) * dx
                 if xl_m <= xr_m:
                     if xl_m <= xi < xr_m:
-                        row[j] = NPDMS
+                        row[j] = NSTRUCT
                 else:
                     if xi >= xl_m or xi < xr_m:
-                        row[j] = NPDMS
+                        row[j] = NSTRUCT
         layers.append(row)
-    layers.append(np.full(Nx, NPDMS, dtype=complex))
+    layers.append(np.full(Nx, NSTRUCT, dtype=complex))
     ucell = np.array(layers)[:, np.newaxis, :]
     thick = tuple([dz] * Nz + [TSUB])
     return ucell, thick
@@ -78,7 +78,7 @@ def solve(backend, device):
 
 
 if __name__ == "__main__":
-    print(f"wedge s1 +{THETA}deg TE, fto_half={FTO}, N_z={NZ}\n")
+    print(f"example grating +{THETA}deg TE, fto_half={FTO}, N_z={NZ}\n")
 
     eps_cpu, t_cpu = solve(0, "cpu")
     print(f"[CPU  numpy ] eps={eps_cpu:.5f}  time={t_cpu:.1f}s")
@@ -86,5 +86,5 @@ if __name__ == "__main__":
     eps_gpu, t_gpu = solve(2, 1)   # device=1 (정수) — meent setter가 'cuda' 문자열 거부하는 버그 우회
     print(f"[GPU  torch ] eps={eps_gpu:.5f}  time={t_gpu:.1f}s")
 
-    print(f"\n  eps match: |d|={abs(eps_cpu-eps_gpu):.6f}  (expect ~0.905, FDTD 0.906)")
+    print(f"\n  eps match: |d|={abs(eps_cpu-eps_gpu):.6f}")
     print(f"  speed    : GPU/CPU = {t_gpu/t_cpu:.2f}x  ({'GPU faster' if t_gpu<t_cpu else 'CPU faster/equal'})")
