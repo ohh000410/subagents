@@ -2,7 +2,7 @@
 기대: 블록 PASS / kPositive 구멍 PASS / kNegative 구멍 FAIL(무동작) / 반전 extrude FAIL(bbox)."""
 import math, os, sys, time
 import win32com.client as win32
-class K:  # 검증 상수 (gen_py 없이 Dispatch 하면 constants 없음)
+class K:  # 상수 = references/inventor_drawing_core.md 「상수 (실측)」 (gen_py 없이 Dispatch 하면 constants 없음)
     kJoinOperation, kPositiveExtentDirection, kNegativeExtentDirection = 20481, 20993, 20994
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
