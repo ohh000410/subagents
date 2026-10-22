@@ -56,27 +56,36 @@ flowchart LR
 
 ### 📄 문서·그림
 
-| 에이전트 | 하는 일 | 필요한 앱 |
-|---|---|---|
-| [doc-scan](plugins/doc-scan/README.md) | 문서 사진을 스캔본·PDF 로 만듭니다 | 없음 |
-| [plot-digitizer](plugins/plot-digitizer/README.md) | 그래프 이미지에서 수치를 뽑습니다 | 웹 브라우저 |
-| [pptx-figure](plugins/pptx-figure/README.md) | PowerPoint 도형으로 그림을 그립니다 | PowerPoint |
-| [origin-plot](plugins/origin-plot/README.md) | 논문 형식 그래프를 그립니다 | Origin 2019 |
+<table>
+<thead><tr><th width="28%">에이전트</th><th width="72%"><img src="assets/spacer.svg" width="100%" height="1" align="left" alt="">하는 일</th><th>필요한 앱</th></tr></thead>
+<tbody>
+<tr><td nowrap><a href="plugins/doc-scan/README.md">doc-scan</a></td><td>문서 사진을 스캔본·PDF 로 만듭니다</td><td nowrap>없음</td></tr>
+<tr><td nowrap><a href="plugins/plot-digitizer/README.md">plot-digitizer</a></td><td>그래프 이미지에서 수치를 뽑습니다</td><td nowrap>웹 브라우저</td></tr>
+<tr><td nowrap><a href="plugins/pptx-figure/README.md">pptx-figure</a></td><td>PowerPoint 도형으로 그림을 그립니다</td><td nowrap>PowerPoint</td></tr>
+<tr><td nowrap><a href="plugins/origin-plot/README.md">origin-plot</a></td><td>논문 형식 그래프를 그립니다</td><td nowrap>Origin 2019</td></tr>
+</tbody>
+</table>
 
 ### 🛠️ CAD·광학
 
-| 에이전트 | 하는 일 | 필요한 앱 |
-|---|---|---|
-| [inventor](plugins/inventor/README.md) | 부품 3D 모델과 2D 도면을 만듭니다 | Inventor 2027 |
-| [spaceclaim](plugins/spaceclaim/README.md) | SPEOS·ANSYS 용 형상을 만듭니다 | SpaceClaim v261 |
-| [speos](plugins/speos/README.md) | 광학 시뮬레이션을 돌리고 정리합니다 | SPEOS v261 |
+<table>
+<thead><tr><th width="28%">에이전트</th><th width="72%"><img src="assets/spacer.svg" width="100%" height="1" align="left" alt="">하는 일</th><th>필요한 앱</th></tr></thead>
+<tbody>
+<tr><td nowrap><a href="plugins/inventor/README.md">inventor</a></td><td>부품 3D 모델과 2D 도면을 만듭니다</td><td nowrap>Inventor 2027</td></tr>
+<tr><td nowrap><a href="plugins/spaceclaim/README.md">spaceclaim</a></td><td>SPEOS·ANSYS 용 형상을 만듭니다</td><td nowrap>SpaceClaim v261</td></tr>
+<tr><td nowrap><a href="plugins/speos/README.md">speos</a></td><td>광학 시뮬레이션을 돌리고 정리합니다</td><td nowrap>SPEOS v261</td></tr>
+</tbody>
+</table>
 
 ### 🔬 시뮬레이션·계산
 
-| 에이전트 | 하는 일 | 필요한 앱 |
-|---|---|---|
-| [lumerical](plugins/lumerical/README.md) | FDTD·RCWA 시뮬레이션을 돌립니다 | Lumerical v242 |
-| [research-compute](plugins/research-compute/README.md) | RCWA·산란·열전달을 계산합니다 | 없음 |
+<table>
+<thead><tr><th width="28%">에이전트</th><th width="72%"><img src="assets/spacer.svg" width="100%" height="1" align="left" alt="">하는 일</th><th>필요한 앱</th></tr></thead>
+<tbody>
+<tr><td nowrap><a href="plugins/lumerical/README.md">lumerical</a></td><td>FDTD·RCWA 시뮬레이션을 돌립니다</td><td nowrap>Lumerical v242</td></tr>
+<tr><td nowrap><a href="plugins/research-compute/README.md">research-compute</a></td><td>RCWA·산란·열전달을 계산합니다</td><td nowrap>없음</td></tr>
+</tbody>
+</table>
 
 <br>
 
