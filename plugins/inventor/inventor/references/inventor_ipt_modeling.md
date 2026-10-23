@@ -93,7 +93,7 @@ vol_cm3, area_cm2 = mp.Volume, mp.Area   # IPT native 만 정확. STEP→IAM 경
 
 ## 피처 단계 검증 (`tools/step_check.py`)
 
-절차·보고 형식 = agents/inventor.md 2·5번. `read_state(part_doc)` = (Volume cm³, Faces, RangeBox cm). 판정:
+절차·보고 형식 = AGENT.md 2·5번. `read_state(part_doc)` = (Volume cm³, Faces, RangeBox cm). 판정:
 
 | 조건 | 판정 |
 |---|---|

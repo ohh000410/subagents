@@ -1,7 +1,7 @@
 """
 캘리브 JSON 저장·로더 + 값<->픽셀 변환. 추출 스크립트 / check_calibration.py / check_extraction.py 공용.
 
-calib.json = 캘리브 산출물 (agents/plot-digitizer.md 절차 3). 눈금 측정·변환식 확정 시점에 `save` 로 쓰고,
+calib.json = 캘리브 산출물 (AGENT.md 절차 3). 눈금 측정·변환식 확정 시점에 `save` 로 쓰고,
 추출 스크립트는 `load` 후 `from_px`(픽셀 -> 값) 로 변환한다. 검사 도구는 같은 파일의 `to_px` 로 재투영하므로
 추출과 검사가 같은 변환을 쓴다. 사용:
     sys.path.insert(0, os.path.expanduser("<PLUGIN_ROOT>/plot-digitizer/tools"))

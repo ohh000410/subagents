@@ -11,10 +11,12 @@ SPEOS·ANSYS 용 형상을 만듭니다.
 /plugin install spaceclaim@ohh000410-subagents
 ```
 
-설치하면 에이전트 이름은 `spaceclaim:spaceclaim` 입니다.
+설치하면 에이전트 이름은 `spaceclaim:spaceclaim` 입니다. 이 에이전트가 뜰 때만 도는 훅(`hooks/hooks.json`)이 함께 설치되어,
+공통 규칙과 본문을 넣습니다.
 
 ## 필요한 것
 
+- Windows PowerShell(Windows 에 기본으로 있음) — 위 훅이 씁니다.
 | 항목 | 값 |
 |---|---|
 | 설치 위치 | `%AWP_ROOT261%` — Ansys 설치 프로그램이 만드는 환경 변수 |
@@ -33,10 +35,12 @@ SPEOS·ANSYS 용 형상을 만듭니다.
 
 ## 들어 있는 것
 
-- `agents/spaceclaim.md` — 에이전트 정의(공통 규칙 + 본문)
+- `agents/spaceclaim.md` — 에이전트 껍데기(이름·설명·도구·모델, 파일 위치·메모리 안내)
+- `spaceclaim/AGENT.md` — 본문. 에이전트가 뜰 때 훅이 공통 계약과 함께 넣는다
+- `hooks/` — 그 훅(`spaceclaim:spaceclaim` 이 뜰 때만, Windows PowerShell)
 - `spaceclaim/references/` — 11개 파일
 - `spaceclaim/tools/` — 5개 파일
-- `policies/` — 공통 정책(실패 처리, GUI 창 멈춤 대처)
+- `policies/` — 공통 계약(훅이 넣음), 공통 정책(실패 처리, GUI 창 멈춤 대처)
 - `LICENSE` — MIT
 
 ## 라이선스

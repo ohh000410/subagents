@@ -2,6 +2,7 @@
 
 AI 에이전트용 설치·사용 안내. 사람용 소개는 `README.md`.
 이 저장소는 Claude Code 플러그인 마켓플레이스 `ohh000410-subagents` 이고, 플러그인 하나 = 서브에이전트 하나다.
+플러그인마다 그 에이전트가 뜰 때만 도는 SubagentStart 훅(Windows PowerShell)이 공통 규칙과 본문을 넣는다 — Windows 전용.
 
 ## 고르기
 

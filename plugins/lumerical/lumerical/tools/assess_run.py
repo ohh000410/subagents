@@ -285,7 +285,7 @@ def check_sum(rep, label, name, R, T, warn, fail, ev):
 
 def _get_num(rep, label, row, col):
     """Fetch a required numeric R/T cell. Non-finite or missing -> FAIL (never filled).
-    Evidence: agents/lumerical.md execution step 4 + lumerical_rcwa.md s6
+    Evidence: AGENT.md execution step 4 + lumerical_rcwa.md s6
     (silent NaN R/T)."""
     v, kind = _to_float(row.get(col))
     if kind == "num":
@@ -540,7 +540,7 @@ def assess(paths, solver="auto", air_only=False, lossless=False, r_col="R", t_co
         else:
             raise ValueError("unsupported path: %s" % p)
     # Each table's own columns decide its solver. "A log or folder was given" used to decide it for all:
-    # a sound RCWA table with its .fsp folder (the agents/lumerical.md step 4 command) FAILed, and a folder holding
+    # a sound RCWA table with its .fsp folder (the AGENT.md step 4 command) FAILed, and a folder holding
     # FDTD logs let an energy-violating RCWA table through as WARN (cross review 2026-10-22).
     loaded = []
     for t in tables:

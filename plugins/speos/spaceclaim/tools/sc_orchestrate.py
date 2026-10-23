@@ -32,7 +32,7 @@ VERDICT_RE = re.compile(r"\[GEOM VERDICT\] (PASS|FAIL) steps=(\d+) warn=(\d+) fa
 STEP_RE = re.compile(r"\[STEP (PASS|WARN|FAIL)\].*")
 FATAL_RE = re.compile(r"\[FATAL\]")
 
-# A saved .scdocx below this size is not a model (agents/spaceclaim.md: .scdocx > 1KB). The check lives here so that
+# A saved .scdocx below this size is not a model (AGENT.md: .scdocx > 1KB). The check lives here so that
 # the run verdict carries it (cross review 2026-10-22: a 10-byte out passed as [ORCH] PASS).
 MIN_OUT_BYTES = 1024
 

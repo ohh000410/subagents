@@ -11,10 +11,12 @@
 /plugin install plot-digitizer@ohh000410-subagents
 ```
 
-설치하면 에이전트 이름은 `plot-digitizer:plot-digitizer` 입니다.
+설치하면 에이전트 이름은 `plot-digitizer:plot-digitizer` 입니다. 이 에이전트가 뜰 때만 도는 훅(`hooks/hooks.json`)이 함께 설치되어,
+공통 규칙과 본문을 넣습니다.
 
 ## 필요한 것
 
+- Windows PowerShell(Windows 에 기본으로 있음) — 위 훅이 씁니다.
 - 환경: Python(`<python>`) = 이 PC 환경 값(메모리) — numpy, opencv-python, matplotlib, Pillow
 
 도구·예제 코드가 쓰는 Python 패키지: `matplotlib`, `numpy`, `pillow`, `pymupdf`
@@ -26,10 +28,12 @@
 
 ## 들어 있는 것
 
-- `agents/plot-digitizer.md` — 에이전트 정의(공통 규칙 + 본문)
+- `agents/plot-digitizer.md` — 에이전트 껍데기(이름·설명·도구·모델, 파일 위치·메모리 안내)
+- `plot-digitizer/AGENT.md` — 본문. 에이전트가 뜰 때 훅이 공통 계약과 함께 넣는다
+- `hooks/` — 그 훅(`plot-digitizer:plot-digitizer` 이 뜰 때만, Windows PowerShell)
 - `plot-digitizer/references/` — 2개 파일
 - `plot-digitizer/tools/` — 6개 파일
-- `policies/` — 공통 정책(실패 처리, GUI 창 멈춤 대처)
+- `policies/` — 공통 계약(훅이 넣음), 공통 정책(실패 처리, GUI 창 멈춤 대처)
 - `LICENSE` — MIT
 
 ## 라이선스

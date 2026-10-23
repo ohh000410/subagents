@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "SubagentStart": [
+      {
+        "matcher": "^pptx-figure:pptx-figure$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/hooks/inject-agent-context.ps1\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -57,7 +57,7 @@ class Assess(unittest.TestCase):
     EARLY_LOG = ("Starting 50000 total iterations\nautoshutoff criteria are satisfied\n"
                  "Completed 1000 iterations, or 1.2e-12 s of Simulation Time\n")   # early shutoff at 1200 fs
 
-    def test_rcwa_with_its_fsp_folder_passes(self):  # agents/lumerical.md 4단계 명령 그대로 = 정상 RCWA 가 FAIL 이었다
+    def test_rcwa_with_its_fsp_folder_passes(self):  # AGENT.md 4단계 명령 그대로 = 정상 RCWA 가 FAIL 이었다
         t = self.write("rcwa.csv", "case_id,Rs,Ts,Rp,Tp\nc1,0.3,0.6,0.35,0.55\n")
         fsp = self.write("fsp/c1.fsp", "x")
         for args in ([t, os.path.dirname(fsp)], [t, fsp]):
