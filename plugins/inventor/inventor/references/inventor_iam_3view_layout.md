@@ -10,12 +10,12 @@ XY 평면 스케치 비회전체, IAM·IPT 동일:
 | 정면도 (elevation, 앞) | `kBottomViewOrientation` (10757, 화면 위 +Z) | XZ (폭×높이) | 11.5×3.0 |
 | 측면도 (side, 우측) | `kRightViewOrientation` (`kLeft` 는 반전) | YZ (깊이×높이) | 3.0×7.5 |
 
-`kTopViewOrientation` 도 XZ 를 보이지만 화면 위가 −Z 라 Z-up 모델이 뒤집혀 나온다(크기는 같아 크기로는 못 가린다). IPT revolve 에서는 `kFront` = END VIEW(원형), `kRight` = SIDE VIEW(profile) — 회전체와 반대. 레이블은 `add_view_label()` 로 직접 붙인다.
+`kTopViewOrientation` 도 XZ 를 보이지만 화면 위가 −Z 라 Z-up 모델이 뒤집혀 나옴(크기는 같아 크기로는 못 가림). IPT revolve 에서는 `kFront` = END VIEW(원형), `kRight` = SIDE VIEW(profile) — 회전체와 반대. 레이블은 `add_view_label()` 로 직접 붙임.
 
 ## 아래 뷰(BOTTOM VIEW)
 
-`kBottomViewOrientation` = 10757 — `AddBaseView(.., 10757, ..)` 로 바로 만든다(IPT·IAM 같음). 부품 −Y 쪽에서 본 뷰, 화면 오른쪽 +X·위 +Z. kFront 뷰 아래에 둔 `AddProjectedView`(아래 코드)와 같은 뷰다(홈면이 Y=0 인 몰드에서 크기·카메라·곡선 250개까지 같음). 「아래」 는 부품 자신의 Y 축 기준 — Z-up 부품의 −Z 쪽 뷰는 `kBackViewOrientation`(10756, 오른쪽 −X) 이거나 kBottom 뷰 아래 `AddProjectedView`(오른쪽 +X, 위 −Y).
-10767 은 `kFlatPivotRightViewOrientation`(이름상 판금 펼침 뷰용 — 판금 부품은 시험 안 함)이고 일반 부품에서 E_INVALIDARG. `ModelViewName` 은 .ipt 에서 무시된다(10753 + "Bottom" = Front).
+`kBottomViewOrientation` = 10757 — `AddBaseView(.., 10757, ..)` 로 바로 만듦(IPT·IAM 같음). 부품 −Y 쪽에서 본 뷰, 화면 오른쪽 +X·위 +Z. kFront 뷰 아래에 둔 `AddProjectedView`(아래 코드)와 같은 뷰(홈면이 Y=0 인 몰드에서 크기·카메라·곡선 250개까지 같음). 「아래」 는 부품 자신의 Y 축 기준 — Z-up 부품의 −Z 쪽 뷰는 `kBackViewOrientation`(10756, 오른쪽 −X) 이거나 kBottom 뷰 아래 `AddProjectedView`(오른쪽 +X, 위 −Y).
+10767 은 `kFlatPivotRightViewOrientation`(이름상 판금 펼침 뷰용 — 판금 부품은 시험 안 함)이고 일반 부품에서 E_INVALIDARG. `ModelViewName` 은 .ipt 에서 무시됨(10753 + "Bottom" = Front).
 
 ```python
 vp = dvs.AddProjectedView(vg, tg.CreatePoint2d(plan_cx, plan_cy_below), kHiddenLineRemovedDrawingViewStyle)
@@ -55,7 +55,7 @@ for i, c in enumerate(ci_plan[:N_CIRC]):
 if cm_fail:
     raise RuntimeError("centermark %d/%d 실패 -- %s" % (len(cm_fail), N_CIRC, "; ".join("circle[%d]: %s" % (i, e) for i, e in cm_fail)))
 ```
-arc 로 나타나는 원(boss 접선 홀) 은 ci_plan 에 없다 — 별도 처리.
+arc 로 나타나는 원(boss 접선 홀) 은 ci_plan 에 없음 — 별도 처리.
 
 ## A3 레이아웃 공식 (비회전체)
 

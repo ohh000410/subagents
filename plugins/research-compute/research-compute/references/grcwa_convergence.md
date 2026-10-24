@@ -6,7 +6,7 @@ grcwa(순수 python RCWA + autograd, CPU) 수렴·재현성 방법론. **grcwa �
 ## 0. 측정 전제 (안 하면 나머지 무의미)
 - **BLAS=1**: `OMP/OPENBLAS/MKL_NUM_THREADS="1"`를 numpy/grcwa import 前 os.environ. (스레드만 1↔4↔8 바꿔도 15% 흔들림; thread=1만 bit-identical.)
 - **fallback OFF** — wrapper 금지·이유는 [[grcwa_api]] ★ 소유. 발산은 §3 명시 처리.
-- ★ **재현 ≠ 정확 (near-singular)**: BLAS=1은 재현이나 near-singular 점에선 값이 눌려 틀릴 수 있다 → spread(1/4/8)로 감지(§2), 배제하고 참값은 안정 능선(spread≈0).
+- ★ **재현 ≠ 정확 (near-singular)**: BLAS=1은 재현이나 near-singular 점에선 값이 눌려 틀릴 수 있음 → spread(1/4/8)로 감지(§2), 배제하고 참값은 안정 능선(spread≈0).
 - **병렬·캐싱**:
   - 캐싱: `{(nG,N_z,pol):eps}` dict, solve 前 조회. ★ `get_grid_size`만 캐시하고 무거운 solve 결과 안 하는 실수 흔함.
   - 병렬: 독립 점(sweep·median 3점·전각도) 전부 Pool — 표준(워커 수·BLAS=1·메모리 가드)은 [[rcwa_reference_index]] 공통 2. 순차는 path iteration 間뿐(path는 iteration 내부만 병렬).
@@ -19,7 +19,7 @@ grcwa(순수 python RCWA + autograd, CPU) 수렴·재현성 방법론. **grcwa �
 - **신뢰값 = plateau 통계**: 스윕 → 발산점 제거 → 안정구간 mean±std. std=노이즈바닥(사후).
 - **stopping = 포화**: tol 사전에 못 박지 않음. |s| 감소 멈추는 지점. 단조감소 가정 금지 — "최근 몇 스텝 |s| 최소 갱신"으로.
 - **near-singular 판별 = BLAS spread**: 수렴 후보 시 1/4/8, <0.01 진짜/>0.01 near-singular→nG 소폭(±20%, 등비×2 아님) 이동해 능선으로. ★ 반드시 **별도 subprocess로 thread env 변경**(같은 프로세스 os.environ은 numpy에 안 먹어 spread=0 오판).
-- 신뢰 조건 = BLAS 불변 ∧ plateau 내부 ∧ 발산 아님. ★ BLAS spread 일치(=0)만으로는 수렴 증거가 아니다(눌린 저샘플링도 spread=0) — `checks.convergence_line` 은 spread 로 PASS 를 만들지 않는다.
+- 신뢰 조건 = BLAS 불변 ∧ plateau 내부 ∧ 발산 아님. ★ BLAS spread 일치(=0)만으로는 수렴 증거가 아님(눌린 저샘플링도 spread=0) — `checks.convergence_line` 은 spread 로 PASS 를 만들지 않음.
 - **path 이동 (다축·비용가중)**: 시작 경량 (40,20). 매 iter 두 축 |s|. 축 선택 = |s_i|÷cost_i (nG O(nG³) 무거움→같은 |s|면 싼 N_z 먼저), 둘 다 유의미면 동시. |s_i|<노이즈바닥 고정. 보폭 2정수승·축별 독립. ⚠️ greedy(한 축 ×2)는 iteration 늘고 coupled(N_z↑ 시 nG 되살아남) 왕복 비효율.
 
 ## 3. 발산 처리

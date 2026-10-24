@@ -24,7 +24,7 @@ writable: `Geometries, RayFileType(Index), Sources, Sensors, UsesLXP, LXPMaxPath
 ```
 StatusInfo: "Simulation not supported with student license  The simulation includes 54,615 triangles..."
 ```
-face 한도(300) 는 LocalMeshing 으로 못 푼다 → `speos_pitfalls_sim_workflow.md`.
+face 한도(300) 는 LocalMeshing 으로 못 풂 → `speos_pitfalls_sim_workflow.md`.
 
 ```python
 lm = LocalMeshing.GetMethod("Create", System.Type.EmptyTypes).Invoke(None, None)

@@ -6,7 +6,7 @@
 `fdtd.transmission("mon")` = 모니터 법선(+) 방향 normalized net power. 법선(+)과 진행 방향 반대면 음수.
 예 Backward −y injection: R_mon·T_mon 모두 +y normal. 공기만 시뮬 → 음수.
 - R 추출(source 아래 R_mon, Backward): `R = 1 + transmission("R_mon")`. `abs(transmission)` 을 R 로 쓰면 작은 반사를 큰 반사로 오독
-- 배치가 다르면 부호 공식을 재사용하지 않는다. (±R, ±T) 네 조합 중 에너지 보존 `min|1−R−T|` 이 맞고 값이 [0,1] 안인 조합을 택한다(맞는 조합 5e-4 수준, 나머지는 0.7 이상 어긋남)
+- 배치가 다르면 부호 공식을 재사용하지 않음. (±R, ±T) 네 조합 중 에너지 보존 `min|1−R−T|` 이 맞고 값이 [0,1] 안인 조합을 택함(맞는 조합 5e-4 수준, 나머지는 0.7 이상 어긋남)
 
 ## 흡수 큰 구조 (R 작음)
 - (a) baseline 차감 — 가장 robust: 공기만 + 구조 2회. `R_corr = trans_struct − trans_air`, `T_corr = |trans_T_struct|/|trans_T_air|`. 누설 동일 → 차감 제거, monitor 위치 무관
@@ -17,4 +17,4 @@
 소스 뒤 R_mon 은 반사파가 소스면 되통과 → 소스 전류 sheet 가 grazing 반사파 불완전 투과 → ~1% 손실(고각 의존, 정입사 ~0), R 계통적으로 낮음. R+T<1 로 감지, air baseline 로 못 고침 → 고각은 (b).
 
 ## R+T 합 (수동 구조)
-`R+T−1` > 1e-3 = WARN, > 1e-2 = FAIL(`tools/assess_run.py` rt_sum). 정상 결과: 정입사 2D 슬랩 |1−R−T| ≤ 8.1e-4(mesh accuracy 3), 고각 60° air-only |T−1| 0.25~0.7 %(`fdtd_detail_pml.md` 「고각 누설」). 오류는 더 크다 — BFAST p-pol 고각 `transmission()` 3.9~5 %(`fdtd_detail_bfast.md`), 부호 오류 ≥ 0.7(위 「transmission() 부호」). R+T<1 쪽 오류(`abs(transmission)` 오독)는 이 검사로 못 잡는다.
+`R+T−1` > 1e-3 = WARN, > 1e-2 = FAIL(`tools/assess_run.py` rt_sum). 정상 결과: 정입사 2D 슬랩 |1−R−T| ≤ 8.1e-4(mesh accuracy 3), 고각 60° air-only |T−1| 0.25~0.7 %(`fdtd_detail_pml.md` 「고각 누설」). 오류는 더 큼 — BFAST p-pol 고각 `transmission()` 3.9~5 %(`fdtd_detail_bfast.md`), 부호 오류 ≥ 0.7(위 「transmission() 부호」). R+T<1 쪽 오류(`abs(transmission)` 오독)는 이 검사로 검출 못 함.

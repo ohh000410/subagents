@@ -26,10 +26,10 @@ tg = app.TransientGeometry
 - gencache: `win32com.client.gencache.EnsureDispatch("Inventor.Application")` — DrawingDocument 등 CastTo 필요 시. 캐시 `~\AppData\Local\Temp\gen_py\3.12\`
 - 실행 전 Inventor 가 이미 떠 있으면 붙지도 죽이지도 않고 거부·보고(Dispatch 는 실행 중 인스턴스에 붙음). 종료는 자기가 띄운 PID 만: `tools/inventor_session.py` `launch()`/`kill_own(pid)`
 - 기동(`Dispatch` → `SoftwareVersion`) 5.8~10.3 s, `launch()` + 첫 `Documents.Add(part)` ≈ 11.5~12.5 s (연속 실행). 부팅 직후 첫 기동은 미측정
-- 소요 시간(작성자 PC 실측): 기동 + 첫 `Documents.Add` 가 고정비이고(2026-10-22 약 12 s, 2026-08 21 s) 작업 자체는 짧다. 아래는 2026-08 값
-  - IPT(revolve + 구멍 2개 + MassProperties + 저장) 20 s, 피처 21개(+ MassProperties 21회) 23 s — 피처 수는 병목이 아니다(피처 하나 ≈ 0.26 s)
-  - A3 도면(3뷰 + 치수 8개 + 노트 15줄 + IDW·PDF·PNG) 34~36 s. 뷰 렌더 대기는 `sleep(8)` 한 번이면 된다(뷰마다 아님)
-  - 한 스크립트에서 모델링부터 도면까지 이으면 기동 고정비가 한 번만 든다(26.7 s). timeout 은 몇 번 띄우는지부터 세고, 이 규모면 모델 60 s / 도면 120 s
+- 소요 시간(작성자 PC 실측): 기동 + 첫 `Documents.Add` 가 고정비이고(2026-10-22 약 12 s, 2026-08 21 s) 작업 자체는 짧음. 아래는 2026-08 값
+  - IPT(revolve + 구멍 2개 + MassProperties + 저장) 20 s, 피처 21개(+ MassProperties 21회) 23 s — 피처 수는 병목이 아님(피처 하나 ≈ 0.26 s)
+  - A3 도면(3뷰 + 치수 8개 + 노트 15줄 + IDW·PDF·PNG) 34~36 s. 뷰 렌더 대기는 `sleep(8)` 한 번이면 됨(뷰마다 아님)
+  - 한 스크립트에서 모델링부터 도면까지 이으면 기동 고정비가 한 번만 듦(26.7 s). timeout 은 몇 번 띄우는지부터 세고, 이 규모면 모델 60 s / 도면 120 s
 
 ## 상수 (실측)
 
@@ -66,7 +66,7 @@ kMillimeterLengthUnits             = 11269
 kA3DrawingSheetSize                = 9996   # 42×29.7cm
 ```
 
-상수는 위 「상수 (실측)」 블록을 스크립트 맨 위에 그대로 붙여 이름으로 쓴다. `win32.constants.k*` 는 쓰지 않는다 — gen_py 캐시가 있어야 존재해서, 캐시 없는 새 PC 에서는 첫 `CastTo` 전에 쓰면 `AttributeError` 다(`launch()` 의 `Dispatch` 는 캐시를 만들지 않는다). 블록에 없는 값은 추측한 정수로 쓰지 말고 CHM 열거형 페이지에서 읽는다. `kRearViewOrientation` 이라는 상수는 없다.
+상수는 위 「상수 (실측)」 블록을 스크립트 맨 위에 그대로 붙여 이름으로 씀. `win32.constants.k*` 는 쓰지 않음 — gen_py 캐시가 있어야 존재해서, 캐시 없는 새 PC 에서는 첫 `CastTo` 전에 쓰면 `AttributeError` (`launch()` 의 `Dispatch` 는 캐시를 만들지 않음). 블록에 없는 값은 추측한 정수로 쓰지 말고 CHM 열거형 페이지에서 읽음. `kRearViewOrientation` 이라는 상수는 없음.
 
 뷰 방향 — 부품 자신의 축 기준. `view.Camera` 되읽기 실측: Front·Back·Top·Bottom 은 IPT·IAM 모두이고 PDF 의 구멍 위치와도 일치, Right·Left·ISO 는 IPT 카메라 되읽기만:
 
@@ -79,7 +79,7 @@ kA3DrawingSheetSize                = 9996   # 42×29.7cm
 | `kRightViewOrientation` 10755 | +X | −Z | +Y |
 | `kLeftViewOrientation` 10758 | −X | +Z | +Y |
 
-ISO 보는 쪽: TopRight 10759 (+X,+Y,+Z) · TopLeft 10760 (−X,+Y,+Z) · BottomRight 10761 (+X,−Y,+Z) · BottomLeft 10762 (−X,−Y,+Z). Top/Bottom 은 Y 축 기준이라 Z-up 부품(XY 스케치 + Z 돌출)의 정면도는 kBottom 이다(kTop 은 위아래가 뒤집힘). 뷰 방향 확인 = `view.Camera` 의 `Eye`·`Target`·`UpVector` 되읽기: 보는 방향 = Target − Eye, 화면 오른쪽 = 보는 방향 × UpVector.
+ISO 보는 쪽: TopRight 10759 (+X,+Y,+Z) · TopLeft 10760 (−X,+Y,+Z) · BottomRight 10761 (+X,−Y,+Z) · BottomLeft 10762 (−X,−Y,+Z). Top/Bottom 은 Y 축 기준이라 Z-up 부품(XY 스케치 + Z 돌출)의 정면도는 kBottom (kTop 은 위아래가 뒤집힘). 뷰 방향 확인 = `view.Camera` 의 `Eye`·`Target`·`UpVector` 되읽기: 보는 방향 = Target − Eye, 화면 오른쪽 = 보는 방향 × UpVector.
 
 ## Drawing 시작 패턴
 
@@ -126,7 +126,7 @@ time.sleep(6)                  # 모든 뷰 추가 후 렌더 대기 — 없으�
 
 뷰 스타일: SIDE(profile) = `kHiddenLineDrawingViewStyle` (bore 점선) / END(circles), ISO = `kHiddenLineRemovedDrawingViewStyle`.
 
-`GetDrawingCurves` 의 좌표(`StartPoint`·`EndPoint`·`CenterPoint`·`Evaluator2D`)는 시트 좌표 cm 다 — 뷰 위치와 SCALE 이 들어 있고 `CreateGeometryIntent` 힌트 점과 같은 공간이다. 전원·edge-on 원은 `StartPoint`/`EndPoint` 가 None 이라 박스는 `RangeBox` 로 읽는다:
+`GetDrawingCurves` 의 좌표(`StartPoint`·`EndPoint`·`CenterPoint`·`Evaluator2D`)는 시트 좌표 cm — 뷰 위치와 SCALE 이 들어 있고 `CreateGeometryIntent` 힌트 점과 같은 공간. 전원·edge-on 원은 `StartPoint`/`EndPoint` 가 None 이라 박스는 `RangeBox` 로 읽음:
 
 ```python
 def get_bounds(c):   # (x_min, y_min, x_max, y_max), 시트 cm
@@ -157,9 +157,9 @@ part_doc.Close(True)
 app.Quit()
 ```
 
-- **PDF 로 저장할 도면의 노트는 ASCII 로 쓴다.** 노트에 한글이 있으면 PDF 저장 때 'Published with a warning(s)' 창(Font Tahoma for symbol … was replaced by font 맑은 고딕)이 떠서 `SaveAs2(pdf, True)`·TranslatorAddIn 모두 비대화형 세션이 멈춘다(PDF 파일은 창이 뜨기 전에 써진다). 제목란 iProperty 의 한글은 미확인
-- `AddByRectangle` 의 사각형 폭으로는 줄이 바뀌지 않는다 — 줄바꿈은 `\n`. `AddFitted` 의 Point1 은 정렬에 따라 다르다 — 왼쪽 정렬이면 좌상단, 가운데 정렬이면 중심(CHM)
-- `SaveAs2(pdf, True)` 와 TranslatorAddIn `SaveCopyAs` 는 같은 PDF 를 만든다(ASCII 노트, 바이트 동일)
+- **PDF 로 저장할 도면의 노트는 ASCII 로 씀.** 노트에 한글이 있으면 PDF 저장 때 'Published with a warning(s)' 창(Font Tahoma for symbol … was replaced by font 맑은 고딕)이 떠서 `SaveAs2(pdf, True)`·TranslatorAddIn 모두 비대화형 세션이 멈춤(PDF 파일은 창이 뜨기 전에 써짐). 제목란 iProperty 의 한글은 미확인
+- `AddByRectangle` 의 사각형 폭으로는 줄이 바뀌지 않음 — 줄바꿈은 `\n`. `AddFitted` 의 Point1 은 정렬에 따라 다름 — 왼쪽 정렬이면 좌상단, 가운데 정렬이면 중심(CHM)
+- `SaveAs2(pdf, True)` 와 TranslatorAddIn `SaveCopyAs` 는 같은 PDF 를 만듦(ASCII 노트, 바이트 동일)
 
 PDF 검증:
 ```python

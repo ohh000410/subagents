@@ -1,6 +1,6 @@
 # SPEOS reference 목차
 
-작업에 필요한 파일만 읽는다.
+작업에 필요한 파일만 읽음.
 
 - 기본 workflow, namespace/import, DocumentOpen, config encoding: [speos_sim_core.md](speos_sim_core.md)
 - Material, SourceSurface, OrientedFace: [speos_sim_optics.md](speos_sim_optics.md)

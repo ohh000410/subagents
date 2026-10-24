@@ -12,7 +12,7 @@
 
 - 실행 전 compile check. 다른 SpaceClaim 이 떠 있으면 최대 300 s **대기**(죽이지 않음). 대기 후에도 남으면 launch 하지 않고 `kind=seat_busy`(FAIL) 로 바로 반환.
 - 종료는 자기가 띄운 PID 만(자연 종료 30 s 대기 → `-Force`). 이름으로 SpaceClaim·AnsysSpeosLauncher 일괄 종료 금지. `AnsysSpeosLauncher` 는 `launcher_before/after` 로 측정만.
-- script 는 Compute 이후 마지막 줄에 `[GEOM VERDICT] PASS|FAIL steps=N warn=W fail=F`(SPEOS 에서는 되읽기·StatusInfo·IsUpToDate 판정), 예외는 `[FATAL]`. 경로는 env 변수로 받는다.
+- script 는 Compute 이후 마지막 줄에 `[GEOM VERDICT] PASS|FAIL steps=N warn=W fail=F`(SPEOS 에서는 되읽기·StatusInfo·IsUpToDate 판정), 예외는 `[FATAL]`. 경로는 env 변수로 받음.
 
 ## 사용
 

@@ -30,7 +30,7 @@ DocumentOpen.Execute(r"C:\...\<name>.scdocx")   # 헤드리스 OK. load 후 Sket
 root = GetRootPart(); bodies = list(root.GetBodies())
 ```
 
-확장자를 `.step` 으로 주면 `DocumentSave.Execute` 가 STEP AP214(HOOPS Exchange)로 내보낸다 — 별도 export API 는 필요 없다(scdocx 238 KB → step 234 KB).
+확장자를 `.step` 으로 주면 `DocumentSave.Execute` 가 STEP AP214(HOOPS Exchange)로 내보냄 — 별도 export API 필요 없음(scdocx 238 KB → step 234 KB).
 
 ## DesignEdge / Modeler.Edge
 

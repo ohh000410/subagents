@@ -28,7 +28,7 @@ ty_base = cy + vH/2 + 1.2
 ty2 = ty_base + 0.9;  ty3 = ty2 + 0.9;  ty4 = min(ty3 + 0.9, 27.5)
 ```
 
-전체 span = 2-curve (왼쪽 끝 curve + 오른쪽 끝 curve 각각 GI). 같은 curve 양 끝점 → driven(핑크). 단차 없는 단일 원통은 실루엣 선이 하나라 축 양 끝단의 edge-on 원(별개 curve) 을 앵커로 쓴다.
+전체 span = 2-curve (왼쪽 끝 curve + 오른쪽 끝 curve 각각 GI). 같은 curve 양 끝점 → driven(핑크). 단차 없는 단일 원통은 실루엣 선이 하나라 축 양 끝단의 edge-on 원(별개 curve) 을 앵커로 씀.
 
 ## END VIEW 지름 치수 (kFrontViewOrientation)
 
@@ -48,7 +48,7 @@ for i, c in enumerate(end_curves):
     gd.AddDiameter(tg.CreatePoint2d(tx, ty), sheet.CreateGeometryIntent(c, tg.CreatePoint2d(px, py)))
 ```
 
-`GetDrawingCurves` 는 단 수보다 많은 curve 를 반환할 수 있다 → `[:N_STEPS]` 슬라이싱. 초과 curve 에 Ø 를 붙이면 유령 치수.
+`GetDrawingCurves` 는 단 수보다 많은 curve 를 반환할 수 있음 → `[:N_STEPS]` 슬라이싱. 초과 curve 에 Ø 를 붙이면 유령 치수.
 
 ## 중심마크
 

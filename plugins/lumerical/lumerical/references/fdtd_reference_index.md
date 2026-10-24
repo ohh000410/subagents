@@ -1,6 +1,6 @@
 # Lumerical FDTD reference 목차
 
-작업에 필요한 파일만 읽는다.
+작업에 필요한 파일만 읽음.
 
 - RCWA·STACK → [lumerical_rcwa.md](lumerical_rcwa.md) (solver 다름)
 - 버전 **v242**(2024 R2.3)

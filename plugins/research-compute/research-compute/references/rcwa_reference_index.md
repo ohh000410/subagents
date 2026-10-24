@@ -1,10 +1,10 @@
 # rcwa_reference_index — **순수 python RCWA** reference 라우팅 인덱스 (research-compute 소유)
 
-> ⚠️ **범위**: 이 인덱스는 **python 라이브러리 RCWA(meent · grcwa · torcwa)** 전용이다. 호출자가 "python RCWA"를 지정했을 때만 이 경로로 돈다.
+> ⚠️ **범위**: 이 인덱스는 **python 라이브러리 RCWA(meent · grcwa · torcwa)** 전용. 호출자가 "python RCWA"를 지정했을 때만 이 경로로 진행.
 >
-> **Lumerical RCWA는 여기 없다** — `lumerical` 에이전트 관할이다. 라이선스로 도는 solver 전부(FDTD·RCWA·STACK)가 그쪽이다.
+> **Lumerical RCWA는 여기 없음** — `lumerical` 에이전트 관할. 라이선스로 도는 solver 전부(FDTD·RCWA·STACK)가 그쪽.
 >
-> 두 계열은 **다른 구현**이다. 아래의 수렴 예산(fto/nG)·부호규약·GPU 결론·near-singular 격리 절차를 **Lumerical RCWA에 그대로 옮기지 마라.** 실측 대비: 같은 경사 격자의 +60° near-singular 지점에서 grcwa는 BLAS 스레드 의존 near-singular로 spread 0.013~0.017인데 Lumerical RCWA는 bit-identical(spread 0.0)이다. 교차검증 수치 대조 목적으로만 서로 참조한다.
+> 두 계열은 **다른 구현**. 아래의 수렴 예산(fto/nG)·부호규약·GPU 결론·near-singular 격리 절차를 **Lumerical RCWA에 그대로 옮기지 마라.** 실측 대비: 같은 경사 격자의 +60° near-singular 지점에서 grcwa는 BLAS 스레드 의존 near-singular로 spread 0.013~0.017인데 Lumerical RCWA는 bit-identical(spread 0.0). 교차검증 수치 대조 목적으로만 서로 참조.
 
 RCWA 작업의 최상위 라우팅. 라이브러리별 **자체완결**: 수렴/calibration = `<lib>_convergence`(+`<lib>_api`), **단순 스윕만이면 `<lib>_api`만**. 항상 필요한 공통(부호·격리)은 이 파일, 상황별 상세는 아래 전용 파일로 분리(안 열면 로드 안 됨).
 
@@ -38,7 +38,7 @@ RCWA 작업의 최상위 라우팅. 라이브러리별 **자체완결**: 수렴/
 | torcwa | **eps 직접** | e^{-iωt} | eps = 2.24**+**0.3j |
 
 부호 틀리면 gain 매질 → **R>1 폭발로 즉시 감지**(torcwa R=417 실측).
-FDTD(Lumerical 2D) 교차검증 시 **편광 라벨 스왑** 주의: Lumerical `pol_angle=0`=p-pol/TM, `90`=s-pol/TE — GUI 표기와 반대다.
+FDTD(Lumerical 2D) 교차검증 시 **편광 라벨 스왑** 주의: Lumerical `pol_angle=0`=p-pol/TM, `90`=s-pol/TE — GUI 표기와 반대.
 
 ## 공통 2 — GPU/병렬 (결론)
 

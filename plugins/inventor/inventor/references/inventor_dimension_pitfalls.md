@@ -42,8 +42,8 @@ note = gn.AddByRectangle(tg.CreatePoint2d(19.0, 9.5), tg.CreatePoint2d(26.0, 7.5
                          "<StyleOverride FontSize='0.22'>THIRD ANGLE PROJECTION</StyleOverride>")
 ```
 
-- 이 노트만 정렬하려면 `note.HorizontalJustification` = `HorizontalTextAlignmentEnum`(19969 가운데 · 19970 왼쪽 · 19971 오른쪽). 정렬을 바꿔도 상자는 움직이지 않고 `note.Position.X` 가 기준점(가운데 = 글자 중심, 오른쪽 = 오른쪽 끝)이 된다 — 정렬 뒤 `Position` 을 준다. 8963 은 `kEnglishSystemOfMeasure` 값이라 노트·스타일 어디에 써도 E_INVALIDARG.
-- `note.TextStyle.*`(FontSize·HorizontalJustification) 는 도면 공용 스타일('Note Text (ANSI)')이다 — 값은 받지만 한 노트에 쓰면 모든 노트가 바뀌고 마지막 값이 이긴다. 노트마다 다른 크기는 텍스트의 `<StyleOverride FontSize=..>`(한 도면에 0.28·0.20 공존 확인).
+- 이 노트만 정렬하려면 `note.HorizontalJustification` = `HorizontalTextAlignmentEnum`(19969 가운데 · 19970 왼쪽 · 19971 오른쪽). 정렬을 바꿔도 상자는 움직이지 않고 `note.Position.X` 가 기준점(가운데 = 글자 중심, 오른쪽 = 오른쪽 끝)이 됨 — 정렬 뒤 `Position` 을 설정. 8963 은 `kEnglishSystemOfMeasure` 값이라 노트·스타일 어디에 써도 E_INVALIDARG.
+- `note.TextStyle.*`(FontSize·HorizontalJustification) 는 도면 공용 스타일('Note Text (ANSI)') — 값은 받지만 한 노트에 쓰면 모든 노트가 바뀌고 마지막 값이 이김. 노트마다 다른 크기는 텍스트의 `<StyleOverride FontSize=..>`(한 도면에 0.28·0.20 공존 확인).
 
 ## 치수 배치 — 뷰별 역할, 중복 금지
 
@@ -70,7 +70,7 @@ b = get_bounds(h_line_curve); y = (b[1]+b[3])/2; x = max(b[0], min(b[2], x_from_
 
 ## GetDrawingCurves 좌표계 = 시트 좌표 cm, SCALE 반영
 
-curve 좌표는 뷰 위치와 SCALE 이 들어간 시트 좌표다(`inventor_drawing_core.md` 「뷰 생성」). 모델 mm 로 바꿀 때는 SCALE 로 나눈다.
+curve 좌표는 뷰 위치와 SCALE 이 들어간 시트 좌표(`inventor_drawing_core.md` 「뷰 생성」). 모델 mm 로 바꿀 때는 SCALE 로 나눔.
 
 ```python
 dx_mm = (xs[i+1] - xs[i]) / SCALE * 10     # SCALE 2 에서 35 mm 구간 = 7.0 cm
@@ -78,7 +78,7 @@ dx_mm = (xs[i+1] - xs[i]) / SCALE * 10     # SCALE 2 에서 35 mm 구간 = 7.0 c
 
 ## GI hint point — 보조선 겹침 방지
 
-hint 를 뷰 중심으로 두면 보조선이 뷰를 가로질러 치수선까지 내려온다. hint = 치수가 나가는 방향의 뷰 가장자리.
+hint 를 뷰 중심으로 두면 보조선이 뷰를 가로질러 치수선까지 내려옴. hint = 치수가 나가는 방향의 뷰 가장자리.
 
 ```python
 DH("F_W", 80, cl['obj'], x0, y0, cr['obj'], x_end, y0, xm, y0-D1)      # 아래 치수 → hint Y = y0

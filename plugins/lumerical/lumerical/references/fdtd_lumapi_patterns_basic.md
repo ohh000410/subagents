@@ -2,9 +2,9 @@
 
 import → 결과 추출. 고급(커스텀 n,k / TFSF / Override mesh / BFAST) → `fdtd_lumapi_patterns_advanced.md`.
 
-## 실패를 흡수하지 않는다 (모든 패턴에 우선)
+## 실패를 흡수하지 않음 (모든 패턴에 우선)
 
-- 파일 없음·포맷 불일치에 sentinel 문자열(`"parse_fail"` 등) 반환 금지. `open()`·정규식 예외를 그대로 둔다
+- 파일 없음·포맷 불일치에 sentinel 문자열(`"parse_fail"` 등) 반환 금지. `open()`·정규식 예외를 그대로 둠
 - 모르는 값을 요청값·기본값으로 채워 기록 금지
 - 부호 이상에 `abs()` 금지 — 부호는 배치 의존(`fdtd_principles_extraction.md`)
 - 조건을 바꿔 자동 재실행 금지. cap 도달·이상값 = 플래그 컬럼으로 기록, 처방은 호출자
@@ -56,7 +56,7 @@ fdtd.addplane(injection_axis="z", direction="forward", x_span=L_m, y_span=L_m, z
 
 ### 도메인 축 span 통일 (source·monitor·local mesh)
 
-면축(injection 수직, 2D: x / 3D: x·z) span 은 FDTD 도메인 폭에 맞춘다. 경계 종류 무관 — 도메인 밖은 clip, 작으면 그만큼 누락.
+면축(injection 수직, 2D: x / 3D: x·z) span 은 FDTD 도메인 폭에 맞춤. 경계 종류 무관 — 도메인 밖은 clip, 작으면 그만큼 누락.
 
 | 요소 | 면축 | 전파축 |
 |---|---|---|
@@ -66,7 +66,7 @@ fdtd.addplane(injection_axis="z", direction="forward", x_span=L_m, y_span=L_m, z
 
 - source 면축 span < 도메인 → 도메인 일부 미조사. Bloch 면 unit cell 균일 평면파까지 깨짐. `addplane()` 후 면축 span 미설정 금지(기본 span 의존 → L 커지면 under-cover)
 - monitor 면축 < 도메인 → flux 누락, R/T 과소
-- local mesh 를 경사 구조의 한 객체 bbox 로 잡으면 span = 그 객체의 가로 이동량(shear) → shear < L 이면 구조 일부가 coarse 로 남는다
+- local mesh 를 경사 구조의 한 객체 bbox 로 잡으면 span = 그 객체의 가로 이동량(shear) → shear < L 이면 구조 일부가 coarse 로 남음
 
 ```python
 for obj in ("src", "T_mon", "R_mon"):
@@ -93,9 +93,9 @@ fdtd.setglobalmonitor("frequency points", 300)
 ```
 
 ### source 파장 대역은 소스 본체에
-- `addplane()` 은 `override global source settings`=1 로 만들어지고, 그 순간의 전역 소스 대역(새 프로젝트 기본 400–700 nm)을 자기 `wavelength start/stop` 에 복사한다. override=1 인 동안 `setglobalsource()` 는 전역 값만 바꾸고 소스는 자기 값을 쓴다 — 오류·경고 없이 대역이 잘리고 R+T 도 맞아 정상처럼 보인다
-- `deleteall()` 은 전역 대역을 되돌리지 않아, 재사용 세션에선 우연히 값이 같아 가려지고 새 세션에서 드러난다. 주파수 모니터는 소스 본체가 아니라 전역 소스 대역을 샘플한다
-- 소스 객체에 `set("wavelength start/stop")` 를 쓰고 `setglobalsource()` 도 같은 값으로 쓴 뒤, `getnamed`·`getglobalsource` 로 둘 다 되읽는다. `setglobalmonitor` 에는 파장 대역 속성이 없다
+- `addplane()` 은 `override global source settings`=1 로 만들어지고, 그 순간의 전역 소스 대역(새 프로젝트 기본 400–700 nm)을 자기 `wavelength start/stop` 에 복사. override=1 인 동안 `setglobalsource()` 는 전역 값만 바꾸고 소스는 자기 값을 씀 — 오류·경고 없이 대역이 잘리고 R+T 도 맞아 정상처럼 보임
+- `deleteall()` 은 전역 대역을 되돌리지 않아, 재사용 세션에선 우연히 값이 같아 가려지고 새 세션에서 드러남. 주파수 모니터는 소스 본체가 아니라 전역 소스 대역을 샘플
+- 소스 객체에 `set("wavelength start/stop")` 를 쓰고 `setglobalsource()` 도 같은 값으로 쓴 뒤, `getnamed`·`getglobalsource` 로 둘 다 되읽음. `setglobalmonitor` 에는 파장 대역 속성이 없음
 
 ## 저장 & 실행
 
@@ -118,7 +118,7 @@ for case_id, params in sweep:
     fdtd.save(os.path.join(OUT_DIR, f"{case_id}.fsp"))   # case 마다 다른 .fsp — 같은 경로면 _p0.log 를 덮어 행-로그 대조가 깨진다
     fdtd.run()
 ```
-case 마다 `.fsp`·`_p0.log` 가 따로 남아야 한다(`fdtd_pitfalls_api.md` case_id 규칙, `tools/assess_run.py` 의 `log_shared` FAIL).
+case 마다 `.fsp`·`_p0.log` 가 따로 남아야 함(`fdtd_pitfalls_api.md` case_id 규칙, `tools/assess_run.py` 의 `log_shared` FAIL).
 같은 .fsp 가 이전 GUI 에 열려 있으면 충돌 → 새 `lumapi.FDTD()` 인스턴스.
 
 ## Cleanup
@@ -134,7 +134,7 @@ finally:
     fdtd.close()
 del fdtd
 ```
-`close()` 를 `except: pass` 로 감싸지 않는다. GUI 보존은 사용자가 "GUI 남겨" 명시 시만.
+`close()` 를 `except: pass` 로 감싸지 않음. GUI 보존은 사용자가 "GUI 남겨" 명시 시만.
 
 ## 결과 추출 — 스펙트럼
 

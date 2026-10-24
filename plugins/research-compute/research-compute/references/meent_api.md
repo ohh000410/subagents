@@ -11,7 +11,7 @@ meent 0.12.0: GPU 지원 RCWA(numpy/torch/jax backend) + autodiff(gradient 최�
 2. **n_bot = 1.0**(air), 기판은 ucell **마지막 층**으로 명시.
 3. **phi=None** = 1D TE/TM. phi=0 넣으면 conical formulation으로 전환(느리고 결과 다름).
 4. **ucell 층 순서**: z-slice 쌓는 방향 주의 — 뒤집으면 eps가 **균질 슬랩값**으로 나와 즉시 감지. 위(tip, 좁은 쪽)→아래(base, 넓은 쪽) 순서 확인.
-5. **fto (Fourier order)**: **fto_half** = 0차 중심으로 한쪽 최대 차수, 총 유지 orders = **2·fto_half + 1**. 경사 입사면 propagating 차수가 비대칭((1+|sinθ_inc|)·L/λ 쪽이 큼)이지만 fto_half는 ±대칭이라 큰 쪽을 커버하면 된다. ★ 수렴점은 [[meent_convergence]] 2D path가 s로 찾으니 하한을 미리 계산할 필요 없음(시작 경량, path가 올림).
+5. **fto (Fourier order)**: **fto_half** = 0차 중심으로 한쪽 최대 차수, 총 유지 orders = **2·fto_half + 1**. 경사 입사면 propagating 차수가 비대칭((1+|sinθ_inc|)·L/λ 쪽이 큼)이지만 fto_half는 ±대칭이라 큰 쪽을 커버하면 됨. ★ 수렴점은 [[meent_convergence]] 2D path가 s로 찾으니 하한을 미리 계산할 필요 없음(시작 경량, path가 올림).
 
 ## 검증
 - 교차검증 게이트 통과.

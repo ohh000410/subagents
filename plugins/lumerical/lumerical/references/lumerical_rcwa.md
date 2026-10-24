@@ -4,7 +4,7 @@ Lumerical 라이선스 RCWA·STACK. 순수 python RCWA(meent/grcwa/torcwa) = `re
 
 ## 0. 버전 — v242 만
 
-v232 RCWA 는 `Im(eps)` 를 버린다 (`n = sqrt(Re(eps))`) → 모든 구조 `R+T = 1.000000`, 금속 S-행렬 비유니터리(`R_TM = 3.724`). v242 에서 해소 — 손실 유전체 TMM 8자리, 금속 Fresnel 3.6e-15 일치.
+v232 RCWA 는 `Im(eps)` 를 버림 (`n = sqrt(Re(eps))`) → 모든 구조 `R+T = 1.000000`, 금속 S-행렬 비유니터리(`R_TM = 3.724`). v242 에서 해소 — 손실 유전체 TMM 8자리, 금속 Fresnel 3.6e-15 일치.
 
 ## 1. 라이선스
 
@@ -49,7 +49,7 @@ te = fdtd.getresult("RCWA","total_energy")   # keys: lambda f theta phi Rs Ts Rp
 | 무금속 유전체 | n_z | 단조, 차수 p≈2. ku 수렴 (spread 3e-6/1.2e-4) |
 | 얇은 금속 코팅 | ku | n_z 비단조·plateau 없음. ku 67→200 에서 eps 0.58 이동, 268 에서도 상승 |
 
-임계 ku ≈ L/(2·w) (w = 가장 좁은 수평 폭, 경사 코팅이면 두께/cos(경사)). 분해능 L/(2·ku+1) 이 w 보다 커지면 수렴하지 않는다 — 위 금속 코팅은 ku 67 이 임계의 약 1/3 이었다. feature/주기 비로 ku 예산 선계산.
+임계 ku ≈ L/(2·w) (w = 가장 좁은 수평 폭, 경사 코팅이면 두께/cos(경사)). 분해능 L/(2·ku+1) 이 w 보다 커지면 수렴하지 않음 — 위 금속 코팅은 ku 67 이 임계의 약 1/3 이었음. feature/주기 비로 ku 예산 선계산.
 가짜 plateau: Al s/TE li-off 0.03 평탄 vs 같은 구조 TM 0.84 → 모순 (평면 Al 60° R_s 0.9938 / R_p 0.9754). 편광 간·해석해 정합성 같이 판정.
 
 ## 5. `use li factorization`
@@ -70,7 +70,7 @@ RCWA = in-process. 결과 자체 검사만:
 
 ## 8. 비용 (양 편광 동시)
 
-스케일링 n_z^1.3~1.5, ku^1.5~2. setup 0.2 s. 형상마다 절대 시간은 다르니 첫 calibration 의 실측으로 timeout 을 정한다.
+스케일링 n_z^1.3~1.5, ku^1.5~2. setup 0.2 s. 형상마다 절대 시간은 다르니 첫 calibration 의 실측으로 timeout 을 정함.
 
 ## 9. API 함정
 

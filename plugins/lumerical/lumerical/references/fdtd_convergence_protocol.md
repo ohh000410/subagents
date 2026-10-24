@@ -13,7 +13,7 @@ sweep·물리값 신뢰 전 자가진단. 원리 → [fdtd_principles_convergenc
 
 ## 1. 종료노브 — 높이Δ
 
-R 모니터를 여러 y 높이에 두고 R 편차(공간)를 autoshutoff sweep 에 대해 본다. 부족 → 정재파로 높이별 R 출렁. 충분 → 높이 무관.
+R 모니터를 여러 y 높이에 두고 R 편차(공간)를 autoshutoff sweep 에 대해 확인. 부족 → 정재파로 높이별 R 출렁. 충분 → 높이 무관.
 
 | source | 노브 | 값 |
 |---|---|---|

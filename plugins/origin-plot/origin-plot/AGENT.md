@@ -10,7 +10,7 @@ OriginLab Origin 그래프 전문가.
 - 원본 `.opju`: `app.Load`만. 산출물: 다른 경로, `app.Save(r"...")`, 백슬래시 경로
 - 검증 도구: `tools/origin_verify.py` (사용법·`intended` 스키마 = docstring, 검사별 근거 = 보고의 `ref` 칸·각 검사 주석의 references 파일, 개요 `tools/README.md`). 세션 시작·LabTalk 전송·종료는 이 도구로만
 
-## 스타일 기본값 5 (작성자 기본값 — 사용자가 다르게 정하면 그대로 따른다)
+## 스타일 기본값 5 (작성자 기본값 — 사용자가 다르게 정하면 그대로 따름)
 
 1. 그래프 1 = 파일 1. 패널·subplot·multi-layer: 명시 요청 시만
 2. 그림 안 글씨: 제목(짧은 식별자)·축 제목·눈금·범례만. 수치 라벨·주석·콜아웃·참조선 라벨·부제 금지
@@ -30,7 +30,7 @@ OriginLab Origin 그래프 전문가.
 3. 스크립트 끝난 뒤 `<python> ${CLAUDE_PLUGIN_ROOT}/origin-plot/tools/origin_verify.py --after` → FAIL = 남은 PID·창을 보고. 다음 Origin 실행은 PASS 뒤에만
 4. png 확인
 
-검증 분담 — 둘 다 필수, 서로 대체하지 않는다:
+검증 분담 — 둘 다 필수, 서로 대체하지 않음:
 - `verify`·`ex` = 값으로 되읽히는 것: 데이터 행/열, 축 범위, 범례 위치, 페이지·레이어·폴더 수, 묻힌 문장 실패, 세션 상태. FAIL = 저장 없이 종료됨 → 원인 수정 후 재실행
 - png = 눈으로만 판정되는 것: 스타일 기본값 5, 색·선·심볼, 글자 크기, 범례-곡선·프레임 미접촉(픽셀), 3D 시점. `verify` PASS ≠ 그림이 맞다는 뜻
 

@@ -1,6 +1,6 @@
 # SpaceClaim reference 목차
 
-작업에 필요한 파일만 읽는다.
+작업에 필요한 파일만 읽음.
 
 - Launch mode, orchestrator polling, headless: [spaceclaim_launch_modes.md](spaceclaim_launch_modes.md) — 공용 함수·피처별 기하 판정은 [../tools/README.md](../tools/README.md)
 - IronPython 2.7 문법, encoding, process cleanup: [spaceclaim_pitfalls_ironpython.md](spaceclaim_pitfalls_ironpython.md)

@@ -1,6 +1,6 @@
 ﻿# Inventor 도면 API reference 목차
 
-Inventor 2027 Drawing COM API. 작업에 필요한 파일만 읽는다.
+Inventor 2027 Drawing COM API. 작업에 필요한 파일만 읽음.
 
 - 공통 도면 생성, Inventor 연결, 상수, DrawingDocument, A3 좌표계, PDF/IDW 저장: [inventor_drawing_core.md](inventor_drawing_core.md)
 - IPT 직접 생성, revolve/extrude/hole/mass property: [inventor_ipt_modeling.md](inventor_ipt_modeling.md)

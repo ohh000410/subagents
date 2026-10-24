@@ -1,6 +1,6 @@
 # plot-digitizer/tools
 
-plot-digitizer 에이전트 도구. 검증 도구 범위 = 실제로 일어났던 사고 유형만. **경고·보고만** 한다 — 점·눈금을 자동 삭제·제외·보정하지 않는다.
+plot-digitizer 에이전트 도구. 검증 도구 범위 = 실제로 일어났던 사고 유형만. **경고·보고만** 함 — 점·눈금을 자동 삭제·제외·보정하지 않음.
 
 | 파일 | 시점 | 입력 | 출력 |
 |---|---|---|---|
@@ -12,8 +12,8 @@ plot-digitizer 에이전트 도구. 검증 도구 범위 = 실제로 일어났�
 
 - calib.json = 캘리브 산출물: 눈금 측정·변환식 확정 시점에 `calib_model.save`, 추출 스크립트는 `load` + `from_px` 로 변환. 스키마 = `calib_model.py` docstring. 픽셀 = 원본 전체 이미지 좌표. cartesian 선형 축 / polar(반원·전원) radial 선형만.
 - 기준: 눈금 재투영 1 px (`--tol-px`), 빈 구간 = x 간격 > 중앙값 × 3 (`--gap-factor`), 눈금 발자국 = 테두리에서 `tick_len_px`(실측값) + 눈금선 ±2 px (`--near-px`).
-- `near_tick` 은 calib 에 `tick_len_px`·`tick_sides` 가 있을 때만. 이웃과 튀는 고립점은 flag 하지 않는다(실제 데이터일 수 있음).
-- 행 자체가 CSV 시작·끝에서 빠진 경우(곡선 앞부분 통째 누락)는 잡지 못한다 — overlay 로 확인.
+- `near_tick` 은 calib 에 `tick_len_px`·`tick_sides` 가 있을 때만. 이웃과 튀는 고립점은 flag 하지 않음(실제 데이터일 수 있음).
+- 행 자체가 CSV 시작·끝에서 빠진 경우(곡선 앞부분 통째 누락)는 잡지 못함 — overlay 로 확인.
 - 하지 않는 것: 로그·범주형 축, 패널 자동 분할, 점별 불확도 전파.
 - 검사별 근거 = `../references/calibration_extraction.md` 의 절(각 파일 docstring 에 표시).
 

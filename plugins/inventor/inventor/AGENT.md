@@ -30,10 +30,10 @@
 ## 작업 절차
 
 1. 요청 분석 → `references/inventor_drawing_api.md`에서 필요 reference만 선택. 돌출(ExtrudeFeatures)은 `references/inventor_ipt_modeling.md` 「Extrude」
-2. 스크립트: 모델링 = 스케치 → 피처 → `read_state` 되읽기 → `step_check` → `SaveAs2`. **피처마다** `step_check` 실행(`sys.path` 에 `${CLAUDE_PLUGIN_ROOT}/inventor/tools`, `from step_check import step_check, read_state, step_summary`). 이론 dV 직접 계산 → `exp_dV_cm3`, base extrude 는 `exp_bbox` 도. `[STEP FAIL]` = 그 자리에서 원인 수정 후 재실행, 다음 피처로 진행 금지. 판정 기준·함정 = `references/inventor_ipt_modeling.md` 「피처 단계 검증」. 도면 = 모델 → Drawing → 뷰 배치 → 치수 → 스펙 노트(ASCII — 한글은 PDF 저장 때 경고 창으로 멈춘다) → PDF
+2. 스크립트: 모델링 = 스케치 → 피처 → `read_state` 되읽기 → `step_check` → `SaveAs2`. **피처마다** `step_check` 실행(`sys.path` 에 `${CLAUDE_PLUGIN_ROOT}/inventor/tools`, `from step_check import step_check, read_state, step_summary`). 이론 dV 직접 계산 → `exp_dV_cm3`, base extrude 는 `exp_bbox` 도. `[STEP FAIL]` = 그 자리에서 원인 수정 후 재실행, 다음 피처로 진행 금지. 판정 기준·함정 = `references/inventor_ipt_modeling.md` 「피처 단계 검증」. 도면 = 모델 → Drawing → 뷰 배치 → 치수 → 스펙 노트(ASCII — 한글은 PDF 저장 때 경고 창으로 멈춤) → PDF
    - 진행 마커 필수: 주요 단계 전후 `print("[t=%.1fs] STEP..." % (time.time()-t0), flush=True)`. Inventor 모달·hang = 예외 없는 정지
    - timeout: 기동+`Documents.Add` ≈ 12~21s = 고정비(2026-10-22 약 12s, 2026-08 21s), 예상치 아님
-3. 실행 전 Inventor 프로세스 확인. 이미 떠 있으면 **붙지도(COM Dispatch 는 실행 중 인스턴스에 붙는다) 죽이지도 말고** 멈춰서 PID·창 제목을 보고. 기동은 `tools/inventor_session.py` 의 `launch()` (거부 + 자기 PID 확보), 수동이면 띄우기 전후 PID 목록 비교
+3. 실행 전 Inventor 프로세스 확인. 이미 떠 있으면 **붙지도(COM Dispatch 는 실행 중 인스턴스에 붙음) 죽이지도 말고** 멈춰서 PID·창 제목을 보고. 기동은 `tools/inventor_session.py` 의 `launch()` (거부 + 자기 PID 확보), 수동이면 띄우기 전후 PID 목록 비교
 4. 종료 = `try/finally`의 `finally`. 문서 객체는 `try` 전에 생성:
    ```python
    app = ...; draw_doc = ...; part_doc = ...
